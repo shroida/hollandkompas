@@ -43,6 +43,7 @@ dependencies:
   youtube_player_iframe: ^6.0.2
   build_runner: ^2.15.1
   riverpod_generator: ^4.0.3
+  flutter_dotenv: ^6.0.1
 
 dev_dependencies:
   flutter_test:
