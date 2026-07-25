@@ -3,16 +3,25 @@ name: Keep Supabase Alive
 on:
   schedule:
     - cron: '0 0 * * 0,5'
-
   workflow_dispatch:
 
 jobs:
   ping:
     runs-on: ubuntu-latest
-
     steps:
+      - uses: actions/checkout@v4
+
       - name: Ping Supabase Database
         run: |
-          curl "${{ secrets.SUPABASE_URL }}/rest/v1/test_connection?select=id&limit=1" \
-          -H "apikey: ${{ secrets.SUPABASE_KEY }}" \
-          -H "Authorization: Bearer ${{ secrets.SUPABASE_KEY }}"
+          curl -f -sS "${{ secrets.SUPABASE_URL }}/rest/v1/test_connection?select=id&limit=1" \
+          -H "apikey: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}" \
+          -H "Authorization: Bearer ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}"
+
+      - name: Keep repository active
+        run: |
+          date > .github/last-ping.txt
+          git config user.name "keep-alive-bot"
+          git config user.email "actions@github.com"
+          git add .github/last-ping.txt
+          git commit -m "chore: keep-alive ping $(date +'%Y-%m-%d')" || echo "No changes to commit"
+          git push
