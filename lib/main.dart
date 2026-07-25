@@ -1,13 +1,29 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'core/supabase/supabase_config.dart';
 
-class SupabaseConfig {
-  static Future<void> init() async {
-    await Supabase.initialize(
-      url: 'https://luemujpnocpxmaomtyd.supabase.co',
-      publishableKey: 'sb_publishable_AM0TsYrIr5uYjH4isEukDA_GPJ3ILP_',
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await dotenv.load(fileName: ".env");
+
+  await SupabaseConfig.init();
+
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: Scaffold(
+        body: Center(
+          child: Text("HollandKompas"),
+        ),
+      ),
     );
   }
-
-  static SupabaseClient get client =>
-      Supabase.instance.client;
 }
