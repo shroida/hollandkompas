@@ -7,8 +7,8 @@ import 'package:hollandkompas/holland_kompas.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  await HiveService.init();
   await SupabaseConfig.init();
+  await HiveService.init();
 
   runApp(
     const ProviderScope(
