@@ -48,4 +48,86 @@ final class SettingsBoxProvider
   }
 }
 
-String _$settingsBoxHash() => r'9e709a5a5f6e969bba6f098a7e02e9a45e0132fd';
+String _$settingsBoxHash() => r'1f8e8cd8a1cd87a0a498ccea753ffccfc96e24f2';
+
+@ProviderFor(userBox)
+final userBoxProvider = UserBoxProvider._();
+
+final class UserBoxProvider
+    extends $FunctionalProvider<Box<dynamic>, Box<dynamic>, Box<dynamic>>
+    with $Provider<Box<dynamic>> {
+  UserBoxProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'userBoxProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$userBoxHash();
+
+  @$internal
+  @override
+  $ProviderElement<Box<dynamic>> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  Box<dynamic> create(Ref ref) {
+    return userBox(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(Box<dynamic> value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<Box<dynamic>>(value),
+    );
+  }
+}
+
+String _$userBoxHash() => r'5c9afd8ff755c3bd78851516bc71742dc58130cb';
+
+@ProviderFor(cacheBox)
+final cacheBoxProvider = CacheBoxProvider._();
+
+final class CacheBoxProvider
+    extends $FunctionalProvider<Box<dynamic>, Box<dynamic>, Box<dynamic>>
+    with $Provider<Box<dynamic>> {
+  CacheBoxProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'cacheBoxProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$cacheBoxHash();
+
+  @$internal
+  @override
+  $ProviderElement<Box<dynamic>> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  Box<dynamic> create(Ref ref) {
+    return cacheBox(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(Box<dynamic> value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<Box<dynamic>>(value),
+    );
+  }
+}
+
+String _$cacheBoxHash() => r'9e0b20e1fccaebffcf32f3281137274b986efc4a';
