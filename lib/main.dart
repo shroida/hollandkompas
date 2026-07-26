@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hollandkompas/core/config/supabase_config.dart';
 
-import 'app.dart';
+import 'holland_kompas.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -11,7 +11,7 @@ void main() async {
 
   runApp(
     const ProviderScope(
-      child: App(),
+      child: HollandKompas(),
     ),
   );
 }
