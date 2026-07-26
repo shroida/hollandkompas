@@ -1,26 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:hollandkompas/core/supabase_config.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hollandkompas/core/config/supabase_config.dart';
+
+import 'app.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await SupabaseConfig.init();
 
-  runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: Scaffold(
-        body: Center(
-          child: Text("HollandKompas"),
-        ),
-      ),
-    );
-  }
+  runApp(
+    const ProviderScope(
+      child: App(),
+    ),
+  );
 }
