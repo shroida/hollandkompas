@@ -47,4 +47,4 @@ final class AppNameProvider extends $FunctionalProvider<String, String, String>
   }
 }
 
-String _$appNameHash() => r'94b273d77454d1ac70f37949704d3733bb990863';
+String _$appNameHash() => r'99af15c0eeaa79334c55a06b5ae85efff3bc8465';
