@@ -13,13 +13,4 @@ class AppLocale extends _$AppLocale {
   void changeLanguage(String languageCode) {
     state = Locale(languageCode);
   }
-
-  bool get isArabic =>
-      state.languageCode == 'ar';
-
-  bool get isDutch =>
-      state.languageCode == 'nl';
-
-  bool get isGerman =>
-      state.languageCode == 'de';
 }
