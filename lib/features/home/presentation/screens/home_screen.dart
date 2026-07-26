@@ -1,14 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:hollandkompas/core/responsive/responsive_builder.dart';
 
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
+
+class HomePage extends StatelessWidget {
+  const HomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(
-        child: Text('HollandKompas'),
-      ),
+    return ResponsiveBuilder(
+      mobile: const MobileHomeView(),
+      tablet: const TabletHomeView(),
+      desktop: const DesktopHomeView(),
     );
   }
 }
