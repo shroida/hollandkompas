@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'app_colors.dart';
 
 class AppTheme {
-  static const _fontFamily = 'Cairo';
-
   static final lightTheme = ThemeData(
     useMaterial3: true,
-    fontFamily: _fontFamily,
 
     colorScheme: const ColorScheme.light(
       primary: AppColors.primary,
@@ -67,36 +65,37 @@ class AppTheme {
       ),
     ),
 
-    textTheme: const TextTheme(
-      headlineLarge: TextStyle(
-        fontSize: 32,
-        fontWeight: FontWeight.w700,
-        color: AppColors.foreground,
-      ),
-      headlineMedium: TextStyle(
-        fontSize: 24,
-        fontWeight: FontWeight.w600,
-        color: AppColors.foreground,
-      ),
-      titleLarge: TextStyle(
-        fontSize: 20,
-        fontWeight: FontWeight.w600,
-        color: AppColors.foreground,
-      ),
-      bodyLarge: TextStyle(
-        fontSize: 16,
-        color: AppColors.foreground,
-      ),
-      bodyMedium: TextStyle(
-        fontSize: 14,
-        color: AppColors.foreground,
+    textTheme: GoogleFonts.cairoTextTheme(
+      const TextTheme(
+        headlineLarge: TextStyle(
+          fontSize: 32,
+          fontWeight: FontWeight.w700,
+          color: AppColors.foreground,
+        ),
+        headlineMedium: TextStyle(
+          fontSize: 24,
+          fontWeight: FontWeight.w600,
+          color: AppColors.foreground,
+        ),
+        titleLarge: TextStyle(
+          fontSize: 20,
+          fontWeight: FontWeight.w600,
+          color: AppColors.foreground,
+        ),
+        bodyLarge: TextStyle(
+          fontSize: 16,
+          color: AppColors.foreground,
+        ),
+        bodyMedium: TextStyle(
+          fontSize: 14,
+          color: AppColors.foreground,
+        ),
       ),
     ),
   );
 
   static final darkTheme = ThemeData(
     useMaterial3: true,
-    fontFamily: _fontFamily,
 
     colorScheme: const ColorScheme.dark(
       primary: AppColors.primary,
@@ -143,5 +142,7 @@ class AppTheme {
         ),
       ),
     ),
+
+    textTheme: GoogleFonts.cairoTextTheme(),
   );
 }
