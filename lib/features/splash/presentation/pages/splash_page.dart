@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hollandkompas/features/splash/providers/splash_provider.dart';
 
-import '../providers/splash_provider.dart';
 
 class SplashPage extends ConsumerStatefulWidget {
   final VoidCallback onDone;
