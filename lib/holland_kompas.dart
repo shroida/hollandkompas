@@ -17,26 +17,16 @@ class HollandKompas extends ConsumerWidget {
       appLocaleProvider,
     );
 
-   return MaterialApp.router(
-  debugShowCheckedModeBanner: false,
-  title: 'HollandKompas',
+    return MaterialApp.router(
+    debugShowCheckedModeBanner: false,
+    title: 'HollandKompas',
 
-  routerConfig: appRouter,
+    theme: AppTheme.lightTheme,
+    darkTheme: AppTheme.darkTheme,
+    themeMode: ThemeMode.system,
 
-  theme: AppTheme.lightTheme,
-  darkTheme: AppTheme.darkTheme,
-
-  locale: locale,
-
-  builder: (context, child) {
-    return Directionality(
-      textDirection:
-          locale.languageCode == 'ar'
-              ? TextDirection.rtl
-              : TextDirection.ltr,
-      child: child!,
-    );
-  },
-);
+    routerConfig: appRouter,
+    locale: locale,
+  );
   }
 }
