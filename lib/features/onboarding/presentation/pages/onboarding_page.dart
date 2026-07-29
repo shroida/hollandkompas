@@ -1,103 +1,170 @@
 import 'package:flutter/material.dart';
-
 import '../../models/onboarding_slide.dart';
 
 class OnboardingPage extends StatelessWidget {
   const OnboardingPage({
     super.key,
     required this.slide,
-    required this.tablet,
+    required this.isMobile,
+    required this.isTablet,
+    required this.isDesktop,
   });
 
   final OnboardingSlide slide;
-  final bool tablet;
+  final bool isMobile;
+  final bool isTablet;
+  final bool isDesktop;
 
   @override
   Widget build(BuildContext context) {
+    if (isDesktop) {
+      return Directionality(
+        textDirection: TextDirection.rtl,
+        child: Row(
+          children: [
+            Expanded(
+              flex: 5,
+              child: _HeroSection(
+                slide: slide,
+                emojiSize: 140,
+              ),
+            ),
+
+            Expanded(
+              flex: 4,
+              child: _ContentSection(
+                slide: slide,
+                titleSize: 42,
+                descSize: 20,
+                padding: 56,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     return Directionality(
       textDirection: TextDirection.rtl,
       child: SingleChildScrollView(
         child: Column(
           children: [
-            /// Hero Section
-            Container(
-              height: tablet ? 360 : 260,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: slide.gradient,
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-              ),
-              child: Center(
-                child: Text(
-                  slide.emoji,
-                  style: TextStyle(
-                    fontSize: tablet ? 120 : 80,
-                  ),
-                ),
-              ),
+            _HeroSection(
+              slide: slide,
+              emojiSize: isTablet ? 120 : 80,
+              height: isTablet ? 360 : 260,
             ),
 
-            Padding(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                crossAxisAlignment:
-                    CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    slide.titleNl,
-                    textDirection:
-                        TextDirection.ltr,
-                    style: const TextStyle(
-                      color: Color(0xFFFF6B00),
-                      fontWeight:
-                          FontWeight.w600,
-                    ),
-                  ),
-
-                  const SizedBox(height: 8),
-
-                  Text(
-                    slide.titleAr,
-                    style: TextStyle(
-                      fontSize:
-                          tablet ? 40 : 30,
-                      fontWeight:
-                          FontWeight.bold,
-                    ),
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  Text(
-                    slide.descAr,
-                    style: TextStyle(
-                      fontSize:
-                          tablet ? 18 : 15,
-                      height: 1.7,
-                    ),
-                  ),
-
-                  const SizedBox(height: 24),
-
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: slide.tags
-                        .map(
-                          (tag) => Chip(
-                            label: Text(tag),
-                          ),
-                        )
-                        .toList(),
-                  ),
-                ],
-              ),
+            _ContentSection(
+              slide: slide,
+              titleSize: isTablet ? 40 : 30,
+              descSize: isTablet ? 18 : 15,
+              padding: isTablet ? 32 : 24,
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _HeroSection extends StatelessWidget {
+  const _HeroSection({
+    required this.slide,
+    required this.emojiSize,
+    this.height,
+  });
+
+  final OnboardingSlide slide;
+  final double emojiSize;
+  final double? height;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: height,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: slide.gradient,
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      child: Center(
+        child: Text(
+          slide.emoji,
+          style: TextStyle(
+            fontSize: emojiSize,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ContentSection extends StatelessWidget {
+  const _ContentSection({
+    required this.slide,
+    required this.titleSize,
+    required this.descSize,
+    required this.padding,
+  });
+
+  final OnboardingSlide slide;
+  final double titleSize;
+  final double descSize;
+  final double padding;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.all(padding),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            slide.titleNl,
+            textDirection: TextDirection.ltr,
+            style: const TextStyle(
+              color: Color(0xFFFF6B00),
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+
+          const SizedBox(height: 8),
+
+          Text(
+            slide.titleAr,
+            style: TextStyle(
+              fontSize: titleSize,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          Text(
+            slide.descAr,
+            style: TextStyle(
+              fontSize: descSize,
+              height: 1.7,
+            ),
+          ),
+
+          const SizedBox(height: 32),
+
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: slide.tags.map((tag) {
+              return Chip(
+                label: Text(tag),
+              );
+            }).toList(),
+          ),
+        ],
       ),
     );
   }
