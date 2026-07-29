@@ -7,6 +7,7 @@ class OnboardingSlide {
   final String descAr;
   final List<String> tags;
   final List<Color> gradient;
+  final String? image;
 
   const OnboardingSlide({
     required this.emoji,
@@ -15,5 +16,6 @@ class OnboardingSlide {
     required this.descAr,
     required this.tags,
     required this.gradient,
+    this.image,
   });
 }
