@@ -65,39 +65,97 @@ class _LevelSelectionScreenState
                     final selected =
                         selectedLevel == level.$1;
 
-                    return InkWell(
-                      onTap: () {
-                        setState(() {
-                          selectedLevel =
-                              level.$1;
-                        });
-                      },
-                      child: Card(
-                        color: selected
-                            ? const Color(
-                                0xFFFFF4ED,
-                              )
-                            : null,
-                        child: Center(
-                          child: Column(
-                            mainAxisAlignment:
-                                MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                level.$1,
-                                style:
-                                    const TextStyle(
-                                  fontSize: 24,
-                                  fontWeight:
-                                      FontWeight.bold,
-                                ),
+                return InkWell(
+                    borderRadius: BorderRadius.circular(20),
+                    onTap: () {
+                      setState(() {
+                        selectedLevel = level.$1;
+                      });
+                    },
+                    child: AnimatedScale(
+                      scale: selected ? 1.05 : 1.0,
+                      duration: const Duration(milliseconds: 250),
+                      curve: Curves.easeOut,
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 250),
+                        curve: Curves.easeOut,
+                        decoration: BoxDecoration(
+                          color: selected
+                              ? const Color(0xFFFFF4ED)
+                              : Theme.of(context).cardColor,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: selected
+                                ? const Color(0xFFFF6B00)
+                                : Colors.grey.shade300,
+                            width: 2,
+                          ),
+                          boxShadow: [
+                            if (selected)
+                              BoxShadow(
+                                color: const Color(
+                                  0xFFFF6B00,
+                                ).withValues(alpha: .20),
+                                blurRadius: 20,
+                                spreadRadius: 2,
+                                offset: const Offset(0, 8),
                               ),
-                              Text(level.$2),
-                            ],
+                          ],
+                        ),
+                        child: Center(
+                          child: AnimatedSwitcher(
+                            duration: const Duration(milliseconds: 250),
+                            child: Column(
+                              key: ValueKey(selected),
+                              mainAxisAlignment:
+                                  MainAxisAlignment.center,
+                              children: [
+                                AnimatedOpacity(
+                                  opacity: selected ? 1 : 0,
+                                  duration:
+                                      const Duration(milliseconds: 250),
+                                  child: const Icon(
+                                    Icons.check_circle,
+                                    color: Color(0xFFFF6B00),
+                                    size: 18,
+                                  ),
+                                ),
+
+                                const SizedBox(height: 6),
+
+                                Text(
+                                  level.$1,
+                                  style: TextStyle(
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                    color: selected
+                                        ? const Color(0xFF0D1117)
+                                        : Theme.of(context)
+                                            .colorScheme
+                                            .onSurface,
+                                  ),
+                                ),
+
+                                const SizedBox(height: 2),
+
+                                Text(
+                                  level.$2,
+                                  style: TextStyle(
+                                    color: selected
+                                        ? const Color(0xFF374151)
+                                        : Theme.of(context)
+                                            .colorScheme
+                                            .onSurface
+                                            .withValues(alpha: .7),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ),
-                    );
+                    ),
+                  );
                   },
                 ),
 
