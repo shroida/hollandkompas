@@ -67,7 +67,6 @@ class OnboardingPage extends StatelessWidget {
     );
   }
 }
-
 class _HeroSection extends StatelessWidget {
   const _HeroSection({
     required this.slide,
@@ -83,7 +82,6 @@ class _HeroSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       height: height,
-      width: double.infinity,
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: slide.gradient,
@@ -91,18 +89,46 @@ class _HeroSection extends StatelessWidget {
           end: Alignment.bottomRight,
         ),
       ),
-      child: Center(
-        child: Text(
-          slide.emoji,
-          style: TextStyle(
-            fontSize: emojiSize,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          if (slide.image != null)
+            Opacity(
+              opacity: .35,
+              child: Image.network(
+                slide.image!,
+                fit: BoxFit.cover,
+              ),
+            ),
+
+          Center(
+            child: TweenAnimationBuilder(
+              duration: const Duration(
+                milliseconds: 600,
+              ),
+              tween: Tween(
+                begin: .8,
+                end: 1.0,
+              ),
+              builder: (_, value, child) {
+                return Transform.scale(
+                  scale: value,
+                  child: child,
+                );
+              },
+              child: Text(
+                slide.emoji,
+                style: TextStyle(
+                  fontSize: emojiSize,
+                ),
+              ),
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
 }
-
 class _ContentSection extends StatelessWidget {
   const _ContentSection({
     required this.slide,

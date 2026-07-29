@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hollandkompas/core/responsive/responsive_extension.dart';
 import 'package:hollandkompas/features/onboarding/data/onboarding_data.dart';
-import 'package:hollandkompas/features/onboarding/presentation/pages/onboarding_page.dart';
+import 'package:hollandkompas/features/onboarding/presentation/widgets/onboarding_page.dart';
 import 'package:hollandkompas/features/onboarding/presentation/widgets/dots_indicator.dart';
 
 class OnboardingScreen extends StatefulWidget {
