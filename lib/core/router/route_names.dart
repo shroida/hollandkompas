@@ -4,4 +4,6 @@ class RouteNames {
   static const register = 'register';
   static const profile = 'profile';
   static const splash = 'splash';
+  static const onboarding = 'onboarding';
+
 }
