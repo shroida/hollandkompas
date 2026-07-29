@@ -224,15 +224,41 @@ class _SplashPageState extends ConsumerState<SplashPage>
                         width: 240,
                         child: Column(
                           children: [
-                            LinearProgressIndicator(
-                              value: progress / 100,
-                              minHeight: 6,
-                              borderRadius: BorderRadius.circular(100),
-                              backgroundColor:
-                                  Colors.white.withValues(alpha: .20),
-                              valueColor:
-                                  const AlwaysStoppedAnimation(Colors.white),
-                            ),
+                  TweenAnimationBuilder<double>(
+  duration: const Duration(milliseconds: 250),
+  curve: Curves.easeOutCubic,
+  tween: Tween(
+    begin: 0,
+    end: progress / 100,
+  ),
+  builder: (context, value, _) {
+    return Container(
+      width: double.infinity,
+      height: 8,
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: .15),
+        borderRadius: BorderRadius.circular(100),
+      ),
+      child: Align(
+        alignment: Alignment.centerRight,
+        child: FractionallySizedBox(
+          widthFactor: value,
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(100),
+              gradient: const LinearGradient(
+                colors: [
+                  Colors.white,
+                  Color(0xFFFFF3E8),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  },
+),
                             const SizedBox(height: 10),
                             const Text(
                               'جاري التحميل...',
