@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:hollandkompas/features/onboarding/data/onboarding_data.dart';
+import 'package:hollandkompas/features/onboarding/presentation/widgets/dots_indicator.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -30,10 +32,10 @@ class _OnboardingScreenState
                     currentPage = index;
                   });
                 },
-                itemCount: slides.length,
+                itemCount: onboardingSlides.length,
                 itemBuilder: (_, index) {
                   return OnboardingPage(
-                    slide: slides[index],
+                    slide: onboardingSlides[index],
                     tablet: tablet,
                   );
                 },
@@ -41,7 +43,7 @@ class _OnboardingScreenState
             ),
 
             DotsIndicator(
-              count: slides.length,
+              count: onboardingSlides.length,
               currentIndex: currentPage,
             ),
 
@@ -53,7 +55,7 @@ class _OnboardingScreenState
                 child: ElevatedButton(
                   onPressed: () {
                     if (currentPage <
-                        slides.length - 1) {
+                        onboardingSlides.length - 1) {
                       controller.nextPage(
                         duration:
                             const Duration(
