@@ -1,8 +1,7 @@
-import 'dart:ui';
+import 'package:flutter/material.dart';
+import '../models/onboarding_slide.dart';
 
-import 'package:hollandkompas/features/onboarding/models/onboarding_slide.dart';
-
-final slides = [
+const onboardingSlides = [
   OnboardingSlide(
     emoji: '🇳🇱',
     titleAr: 'تعلم الهولندية بسهولة',
@@ -18,6 +17,23 @@ final slides = [
     gradient: [
       Color(0xFFFF6B00),
       Color(0xFFE55A00),
+    ],
+  ),
+
+  OnboardingSlide(
+    emoji: '🎯',
+    titleAr: 'دروس مخصصة',
+    titleNl: 'Persoonlijke lessen',
+    descAr:
+        'تعلم حسب مستواك الحالي وسرعتك الخاصة.',
+    tags: [
+      'أهداف',
+      'خطة يومية',
+      'ذكاء اصطناعي',
+    ],
+    gradient: [
+      Color(0xFF1E3A8A),
+      Color(0xFF2563EB),
     ],
   ),
 ];
