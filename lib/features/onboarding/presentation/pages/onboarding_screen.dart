@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hollandkompas/core/responsive/responsive_extension.dart';
 import 'package:hollandkompas/features/onboarding/data/onboarding_data.dart';
+import 'package:hollandkompas/features/onboarding/presentation/widgets/level_selection_screen.dart';
 import 'package:hollandkompas/features/onboarding/presentation/widgets/onboarding_page.dart';
 import 'package:hollandkompas/features/onboarding/presentation/widgets/dots_indicator.dart';
 
@@ -86,17 +87,29 @@ class _OnboardingScreenState
                         ? 64
                         : 56,
                 child: ElevatedButton(
-                  onPressed: () {
-                    if (currentPage <
-                        onboardingSlides.length - 1) {
-                      controller.nextPage(
-                        duration: const Duration(
-                          milliseconds: 350,
-                        ),
-                        curve: Curves.easeOut,
-                      );
-                    }
-                  },
+                onPressed: () {
+                if (currentPage <
+                    onboardingSlides.length - 1) {
+
+                  controller.nextPage(
+                    duration: const Duration(
+                      milliseconds: 350,
+                    ),
+                    curve: Curves.easeOut,
+                  );
+
+                } else {
+
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          const LevelSelectionScreen(),
+                    ),
+                  );
+
+                }
+              },
                   child: Text(
                     'التالي',
                     style: TextStyle(

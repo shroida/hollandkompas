@@ -16,57 +16,61 @@ class OnboardingPage extends StatelessWidget {
   final bool isTablet;
   final bool isDesktop;
 
-  @override
-  Widget build(BuildContext context) {
-    if (isDesktop) {
-      return Directionality(
-        textDirection: TextDirection.rtl,
-        child: Row(
-          children: [
-            Expanded(
-              flex: 5,
-              child: OnboardingHero(
-                slide: slide,
-                emojiSize: 140,
-              ),
-            ),
-
-            Expanded(
-              flex: 4,
-              child: _ContentSection(
-                slide: slide,
-                titleSize: 42,
-                descSize: 20,
-                padding: 56,
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
+ @override
+Widget build(BuildContext context) {
+  if (isDesktop) {
     return Directionality(
       textDirection: TextDirection.rtl,
-      child: SingleChildScrollView(
-        child: Column(
-          children: [
-            OnboardingHero(
+      child: Row(
+        children: [
+          Expanded(
+            flex: 5,
+            child: OnboardingHero(
               slide: slide,
-              emojiSize: isTablet ? 120 : 80,
-              height: isTablet ? 360 : 260,
+              emojiSize: 140,
             ),
+          ),
 
-            _ContentSection(
-              slide: slide,
-              titleSize: isTablet ? 40 : 30,
-              descSize: isTablet ? 18 : 15,
-              padding: isTablet ? 32 : 24,
+          Expanded(
+            flex: 4,
+            child: Center(
+              child: SingleChildScrollView(
+                child: _ContentSection(
+                  slide: slide,
+                  titleSize: 42,
+                  descSize: 20,
+                  padding: 56,
+                ),
+              ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
+
+  return Directionality(
+    textDirection: TextDirection.rtl,
+    child: SingleChildScrollView(
+      child: Column(
+        children: [
+          OnboardingHero(
+            slide: slide,
+            emojiSize: isTablet ? 120 : 80,
+            height: isTablet ? 360 : 260,
+          ),
+
+          _ContentSection(
+            slide: slide,
+            titleSize: isTablet ? 40 : 30,
+            descSize: isTablet ? 18 : 15,
+            padding: isTablet ? 32 : 24,
+          ),
+        ],
+      ),
+    ),
+  );
+}
 }
 class _ContentSection extends StatelessWidget {
   const _ContentSection({
