@@ -27,7 +27,6 @@ Widget build(BuildContext context) {
             flex: 5,
             child: OnboardingHero(
               slide: slide,
-              emojiSize: 140,
             ),
           ),
 
@@ -56,7 +55,6 @@ Widget build(BuildContext context) {
         children: [
           OnboardingHero(
             slide: slide,
-            emojiSize: isTablet ? 120 : 80,
             height: isTablet ? 360 : 260,
           ),
 

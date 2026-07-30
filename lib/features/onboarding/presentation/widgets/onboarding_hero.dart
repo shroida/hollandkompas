@@ -5,12 +5,10 @@ import 'package:hollandkompas/features/onboarding/models/onboarding_slide.dart';
 class OnboardingHero extends StatelessWidget {
   const OnboardingHero({super.key, 
     required this.slide,
-    required this.emojiSize,
     this.height,
   });
 
   final OnboardingSlide slide;
-  final double emojiSize;
   final double? height;
 
   @override
@@ -51,12 +49,7 @@ class OnboardingHero extends StatelessWidget {
                   child: child,
                 );
               },
-              child: Text(
-                slide.emoji,
-                style: TextStyle(
-                  fontSize: emojiSize,
-                ),
-              ),
+            
             ),
           ),
         ],

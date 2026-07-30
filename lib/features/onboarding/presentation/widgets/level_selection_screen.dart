@@ -32,12 +32,7 @@ class _LevelSelectionScreenState
               mainAxisAlignment:
                   MainAxisAlignment.center,
               children: [
-                const Text(
-                  '🎯',
-                  style: TextStyle(fontSize: 70),
-                ),
-
-                const SizedBox(height: 20),
+              const SizedBox(height: 20),
 
                 const Text(
                   'اختر مستواك الحالي',

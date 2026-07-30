@@ -1,7 +1,6 @@
 import 'dart:ui';
 
 class OnboardingSlide {
-  final String emoji;
   final String titleAr;
   final String titleNl;
   final String descAr;
@@ -10,7 +9,6 @@ class OnboardingSlide {
   final String? image;
 
   const OnboardingSlide({
-    required this.emoji,
     required this.titleAr,
     required this.titleNl,
     required this.descAr,

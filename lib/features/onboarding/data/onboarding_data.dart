@@ -3,7 +3,6 @@ import '../models/onboarding_slide.dart';
 
 const onboardingSlides = [
   OnboardingSlide(
-    emoji: '🇳🇱',
     image:
         'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=1200',
     titleAr: 'تعلم الهولندية بسهولة',
@@ -23,7 +22,6 @@ const onboardingSlides = [
   ),
 
   OnboardingSlide(
-    emoji: '🎯',
     image:
         'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=1200',
     titleAr: 'دروس يومية مخصصة',
@@ -42,7 +40,6 @@ const onboardingSlides = [
   ),
 
   OnboardingSlide(
-    emoji: '🧠',
     image:
         'https://images.unsplash.com/photo-1488190211105-8b0e65b80b4e?w=1200',
     titleAr: 'بطاقات ذكية للحفظ',
@@ -61,7 +58,6 @@ const onboardingSlides = [
   ),
 
   OnboardingSlide(
-    emoji: '🏆',
     image:
         'https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=1200',
     titleAr: 'تتبع تقدمك اليومي',
