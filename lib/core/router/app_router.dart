@@ -1,4 +1,5 @@
 import 'package:go_router/go_router.dart';
+import 'package:hollandkompas/features/auth/presentation/pages/login_screen.dart';
 
 import 'package:hollandkompas/features/home/presentation/screens/home_screen.dart';
 import 'package:hollandkompas/features/onboarding/presentation/pages/onboarding_screen.dart';
@@ -22,6 +23,10 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/onboarding',
       builder: (context, state) => const OnboardingScreen(),
+    ),
+    GoRoute(
+      path: '/login',
+      builder: (context, state) => const LoginScreen(),
     ),
   ],
 );
