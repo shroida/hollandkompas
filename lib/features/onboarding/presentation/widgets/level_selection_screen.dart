@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 class LevelSelectionScreen extends StatefulWidget {
   const LevelSelectionScreen({super.key});
@@ -160,7 +161,10 @@ class _LevelSelectionScreenState
                   width: double.infinity,
                   height: 60,
                   child: ElevatedButton(
-                    onPressed: () {},
+                      onPressed: () {
+                      context.go( '/login');
+                    },
+                    
                     child: const Text(
                       'ابدأ رحلتك 🚀',
                     ),
