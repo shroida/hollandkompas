@@ -1,6 +1,7 @@
 import 'package:go_router/go_router.dart';
 
 import 'package:hollandkompas/features/auth/presentation/pages/login_screen.dart';
+import 'package:hollandkompas/features/auth/presentation/pages/register_screen.dart';
 
 
 import 'package:hollandkompas/features/home/presentation/screens/home_screen.dart';
@@ -35,13 +36,13 @@ final appRouter = GoRouter(
       ),
     ),
 
-    // GoRoute(
-    //   path: '/register',
-    //   builder: (context, state) => RegisterScreen(
-    //     onLogin: () => context.go('/login'),
-    //     onBack: () => context.pop(),
-    //   ),
-    // ),
+    GoRoute(
+      path: '/register',
+      builder: (context, state) => RegisterScreen(
+        onLogin: () => context.go('/login'),
+        onBack: () => context.pop(),
+      ),
+    ),
 
     // GoRoute(
     //   path: '/forgot-password',
