@@ -1,5 +1,7 @@
 import 'package:hollandkompas/features/auth/data/models/user_model.dart';
 import 'package:hollandkompas/features/auth/domain/entities/app_user.dart';
+import 'package:hollandkompas/features/auth/domain/enums/dutch_level.dart';
+import 'package:hollandkompas/features/auth/domain/enums/user_role.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 abstract class AuthRemoteDataSource {
@@ -38,8 +40,8 @@ class SupabaseAuthRemoteDataSource
     id: user.id,
     fullName: name,
     email: email,
-    level: level,
-    role: 'student',
+    level: DutchLevel.values.firstWhere((v) => v.name == level),
+    role: UserRole.student,
   );
 
   await client.from('profiles').insert(model.toJson());

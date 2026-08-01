@@ -1,9 +1,12 @@
+import '../enums/dutch_level.dart';
+import '../enums/user_role.dart';
+
 class AppUser {
   final String id;
   final String email;
   final String fullName;
-  final String level;
-  final String role;
+  final DutchLevel level;
+  final UserRole role;
 
   const AppUser({
     required this.id,
