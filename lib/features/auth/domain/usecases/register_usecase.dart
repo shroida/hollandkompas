@@ -1,3 +1,4 @@
+import 'package:hollandkompas/features/auth/domain/entities/app_user.dart';
 import 'package:hollandkompas/features/auth/domain/repositories/auth_repository.dart';
 
 class RegisterUseCase {
@@ -5,7 +6,7 @@ class RegisterUseCase {
 
   const RegisterUseCase(this.repository);
 
-  Future<void> call({
+  Future<AppUser> call({
     required String fullName,
     required String email,
     required String password,
