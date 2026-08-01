@@ -4,7 +4,7 @@ import 'package:hollandkompas/features/auth/domain/repositories/auth_repository.
 class RegisterUseCase {
   final AuthRepository repository;
 
-  const RegisterUseCase(this.repository);
+  RegisterUseCase(this.repository);
 
   Future<AppUser> call({
     required String fullName,

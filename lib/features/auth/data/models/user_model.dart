@@ -16,8 +16,8 @@ class UserModel extends AppUser {
       id: json['id'] as String,
       fullName: json['full_name'] as String,
       email: json['email'] as String,
-      level: DutchLevel.values.byName(json['level']),
-      role: UserRole.values.byName(json['role']),
+      level: DutchLevel.values.byName(json['level'] as String),
+      role: UserRole.values.byName(json['role'] as String),
     );
   }
 
@@ -26,8 +26,8 @@ class UserModel extends AppUser {
       'id': id,
       'full_name': fullName,
       'email': email,
-      'level': level,
-      'role': role,
+      'level': level.name,
+      'role': role.name,
     };
   }
 }

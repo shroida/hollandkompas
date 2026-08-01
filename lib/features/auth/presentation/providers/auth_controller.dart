@@ -1,12 +1,16 @@
-import 'package:flutter_riverpod/legacy.dart';
-import '../../domain/usecases/register_usecase.dart';
+import 'package:hollandkompas/features/auth/domain/providers/register_usecase_provider.dart';
+import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'auth_state.dart';
+import 'register_usecase_provider.dart';
 
-class AuthController extends StateNotifier<AuthState> {
-  final RegisterUseCase registerUseCase;
+part 'auth_controller.g.dart';
 
-  AuthController(this.registerUseCase)
-      : super(const AuthState());
+@riverpod
+class AuthController extends _$AuthController {
+  @override
+  AuthState build() {
+    return const AuthState();
+  }
 
   Future<void> register({
     required String fullName,
@@ -20,7 +24,7 @@ class AuthController extends StateNotifier<AuthState> {
     );
 
     try {
-      final user = await registerUseCase(
+      final user = await ref.read(registerUseCaseProvider)(
         fullName: fullName,
         email: email,
         password: password,

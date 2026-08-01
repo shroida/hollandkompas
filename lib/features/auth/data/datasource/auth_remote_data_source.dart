@@ -12,40 +12,40 @@ abstract class AuthRemoteDataSource {
     required String level,
   });
 }
-class SupabaseAuthRemoteDataSource
-    implements AuthRemoteDataSource {
 
+class SupabaseAuthRemoteDataSource implements AuthRemoteDataSource {
   final SupabaseClient client;
 
-  SupabaseAuthRemoteDataSource(this.client);
+  const SupabaseAuthRemoteDataSource(this.client);
+
   @override
- Future<AppUser> register({
-  required String name,
-  required String email,
-  required String password,
-  required String level,
-}) async {
-  final response = await client.auth.signUp(
-    email: email,
-    password: password,
-  );
+  Future<AppUser> register({
+    required String name,
+    required String email,
+    required String password,
+    required String level,
+  }) async {
+    final response = await client.auth.signUp(
+      email: email,
+      password: password,
+    );
 
-  final user = response.user;
+    final user = response.user;
 
-  if (user == null) {
-    throw Exception("Registration failed");
+    if (user == null) {
+      throw Exception('Registration failed');
+    }
+
+    final model = UserModel(
+      id: user.id,
+      fullName: name,
+      email: email,
+      level: DutchLevel.values.byName(level.toLowerCase()),
+      role: UserRole.student,
+    );
+
+    await client.from('profiles').insert(model.toJson());
+
+    return model;
   }
-
-  final model = UserModel(
-    id: user.id,
-    fullName: name,
-    email: email,
-    level: DutchLevel.values.byName(level),
-    role: UserRole.student,
-  );
-
-  await client.from('profiles').insert(model.toJson());
-
-  return model;
-}
 }
