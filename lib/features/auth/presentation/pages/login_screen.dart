@@ -1,8 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:hollandkompas/core/theme/app_colors.dart';
-// =============================================================================
-// LOGIN SCREEN
-// =============================================================================
 class LoginScreen extends StatefulWidget {
   final VoidCallback onLogin;
   final VoidCallback? onRegister;
@@ -39,71 +36,8 @@ class _LoginScreenState extends State<LoginScreen> {
         backgroundColor: AppColors.background,
         body: Column(
           children: [
-            /// Top Header with Gradient and Curved Bottom
-            SizedBox(
-              height: 220,
-              child: Stack(
-                children: [
-                  Container(
-                    decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [AppColors.primary, AppColors.headerBlue],
-                        begin: Alignment.topRight,
-                        end: Alignment.bottomLeft,
-                      ),
-                    ),
-                    child: Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            width: 64,
-                            height: 64,
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(18),
-                            ),
-                            alignment: Alignment.center,
-                            child: const Text("🇳🇱", style: TextStyle(fontSize: 32)),
-                          ),
-                          const SizedBox(height: 10),
-                          const Text(
-                            "HollandKompas",
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 22,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            "بوصلتك نحو اللغة الهولندية",
-                            style: TextStyle(
-                              color: Colors.white.withOpacity(0.8),
-                              fontSize: 13,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  Align(
-                    alignment: Alignment.bottomCenter,
-                    child: Container(
-                      height: 28,
-                      decoration: const BoxDecoration(
-                        color: AppColors.background,
-                        borderRadius: BorderRadius.vertical(
-                          top: Radius.circular(32),
-                        ),
-                      ),
-                    ),
-                  )
-                ],
-              ),
-            ),
+            HeaderAuth(),
 
-            /// Scrollable Form Content
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
@@ -299,9 +233,7 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
   }
-}
-
-// =============================================================================
+}// =============================================================================
 // REGISTER SCREEN
 // =============================================================================
 class RegisterScreen extends StatefulWidget {
