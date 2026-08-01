@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hollandkompas/core/responsive/responsive_extension.dart';
 import 'package:hollandkompas/core/theme/app_colors.dart';
 import 'package:hollandkompas/features/auth/presentation/widgets/auth_text_field.dart';
@@ -118,7 +119,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                 size: 20,
                               ),
                               onPressed: widget.onBack ??
-                                  () => Navigator.maybePop(context),
+                                  () =>context.pop(),
                             ),
                           ),
                         _buildAnimatedContent(context),

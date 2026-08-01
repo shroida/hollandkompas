@@ -33,7 +33,7 @@ final appRouter = GoRouter(
       builder: (context, state) => LoginScreen(
         onLogin: () => context.go('/home'),
         onRegister: () => context.go('/register'),
-        onForgot: () => context.go('/forgot-password'),
+        onForgot: () => context.push('/forgot-password'),
       ),
     ),
 
