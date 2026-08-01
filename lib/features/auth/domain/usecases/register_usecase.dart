@@ -1,16 +1,17 @@
-import 'package:hollandkompas/features/auth/domain/entities/app_user.dart';
-import 'package:hollandkompas/features/auth/domain/repositories/auth_repository.dart';
+import '../entities/app_user.dart';
+import '../enums/dutch_level.dart';
+import '../repositories/auth_repository.dart';
 
 class RegisterUseCase {
   final AuthRepository repository;
 
-  RegisterUseCase(this.repository);
+  const RegisterUseCase(this.repository);
 
   Future<AppUser> call({
     required String fullName,
     required String email,
     required String password,
-    required String level,
+    required DutchLevel level,
   }) {
     return repository.register(
       name: fullName,

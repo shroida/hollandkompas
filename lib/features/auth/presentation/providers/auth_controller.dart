@@ -1,7 +1,8 @@
-import 'package:hollandkompas/features/auth/domain/providers/register_usecase_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+import '../../domain/enums/dutch_level.dart';
+import '../../domain/providers/register_usecase_provider.dart';
 import 'auth_state.dart';
-import 'register_usecase_provider.dart';
 
 part 'auth_controller.g.dart';
 
@@ -16,7 +17,7 @@ class AuthController extends _$AuthController {
     required String fullName,
     required String email,
     required String password,
-    required String level,
+    required DutchLevel level,
   }) async {
     state = state.copyWith(
       isLoading: true,
@@ -24,12 +25,12 @@ class AuthController extends _$AuthController {
     );
 
     try {
-      final user = await ref.read(registerUseCaseProvider)(
-        fullName: fullName,
-        email: email,
-        password: password,
-        level: level,
-      );
+      final user = await ref.read(registerUseCaseProvider).call(
+            fullName: fullName,
+            email: email,
+            password: password,
+            level: level,
+          );
 
       state = state.copyWith(
         isLoading: false,

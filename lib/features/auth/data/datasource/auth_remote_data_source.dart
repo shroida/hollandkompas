@@ -9,7 +9,7 @@ abstract class AuthRemoteDataSource {
     required String name,
     required String email,
     required String password,
-    required String level,
+    required DutchLevel level,
   });
 }
 
@@ -23,7 +23,7 @@ class SupabaseAuthRemoteDataSource implements AuthRemoteDataSource {
     required String name,
     required String email,
     required String password,
-    required String level,
+    required DutchLevel level,
   }) async {
     final response = await client.auth.signUp(
       email: email,
@@ -40,7 +40,7 @@ class SupabaseAuthRemoteDataSource implements AuthRemoteDataSource {
       id: user.id,
       fullName: name,
       email: email,
-      level: DutchLevel.values.byName(level.toLowerCase()),
+      level: level,
       role: UserRole.student,
     );
 

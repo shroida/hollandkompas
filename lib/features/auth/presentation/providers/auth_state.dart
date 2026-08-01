@@ -6,7 +6,7 @@ class AuthState {
   final String? error;
 
   const AuthState({
-    this.isLoading = false,
+    this.isLoading =false,
     this.user,
     this.error,
   });
