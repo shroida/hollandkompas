@@ -37,4 +37,9 @@ class AppColors {
   static const darkAccent = Color(0xFF1A1208);
 
   static const darkBorder = Color(0x1AE6EAF4);
+
+  static const Color primaryDark = Color(0xFFE55A00);
+  static const Color headerBlue = Color(0xFF1E3A8A);
+  static const Color cardBg = Colors.white;
+  static const Color textForeground = Color(0xFF111827);
 }

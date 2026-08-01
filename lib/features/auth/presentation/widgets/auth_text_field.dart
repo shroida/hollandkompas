@@ -1,88 +1,72 @@
-import 'package:flutter/material.dart';
 
-import '../../../../core/theme/app_colors.dart';
+import 'package:flutter/material.dart';
+import 'package:hollandkompas/core/theme/app_colors.dart';
 
 class AuthTextField extends StatelessWidget {
+  final String label;
+  final String hint;
+  final IconData? icon;
+  final Widget? suffix;
+  final bool obscureText;
+  final TextEditingController? controller;
+  final TextInputType keyboardType;
+  final ValueChanged<String>? onChanged;
+
   const AuthTextField({
     super.key,
     required this.label,
-    required this.controller,
-    this.hint,
+    required this.hint,
     this.icon,
-    this.obscureText = false,
     this.suffix,
-    this.keyboardType,
-    this.textInputAction,
-    this.onSubmitted,
+    this.obscureText = false,
+    this.controller,
+    this.keyboardType = TextInputType.text,
+    this.onChanged,
   });
-
-  final String label;
-  final String? hint;
-  final IconData? icon;
-  final bool obscureText;
-  final Widget? suffix;
-  final TextEditingController controller;
-  final TextInputType? keyboardType;
-  final TextInputAction? textInputAction;
-  final ValueChanged<String>? onSubmitted;
 
   @override
   Widget build(BuildContext context) {
-    final isLtr =
-        keyboardType == TextInputType.emailAddress ||
-        obscureText;
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textForeground,
+          ),
         ),
-
-        const SizedBox(height: 8),
-
-        Directionality(
-          textDirection:
-              isLtr ? TextDirection.ltr : TextDirection.rtl,
-          child: TextField(
-            controller: controller,
-            obscureText: obscureText,
-            keyboardType: keyboardType,
-            textInputAction: textInputAction,
-            onSubmitted: onSubmitted,
-            decoration: InputDecoration(
-              hintText: hint,
-
-              filled: true,
-              fillColor: AppColors.card,
-
-              prefixIcon:
-                  icon != null ? Icon(icon, size: 20) : null,
-
-              suffixIcon: suffix,
-
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 18,
-                vertical: 18,
-              ),
-
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(18),
-                borderSide: const BorderSide(
-                  color: AppColors.border,
-                ),
-              ),
-
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(18),
-                borderSide: const BorderSide(
-                  color: AppColors.primary,
-                  width: 2,
-                ),
-              ),
+        const SizedBox(height: 6),
+        TextField(
+          controller: controller,
+          obscureText: obscureText,
+          keyboardType: keyboardType,
+          onChanged: onChanged,
+          textDirection: (keyboardType == TextInputType.emailAddress || obscureText)
+              ? TextDirection.ltr
+              : TextDirection.rtl,
+          decoration: InputDecoration(
+            hintText: hint,
+            hintStyle: const TextStyle(
+              color: AppColors.mutedForeground,
+              fontSize: 14,
+            ),
+            prefixIcon: icon != null
+                ? Icon(icon, color: AppColors.mutedForeground, size: 20)
+                : null,
+            suffixIcon: suffix,
+            filled: true,
+            fillColor: Colors.white,
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: const BorderSide(color: AppColors.border),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: const BorderSide(color: AppColors.primary, width: 2),
             ),
           ),
         ),
@@ -90,3 +74,4 @@ class AuthTextField extends StatelessWidget {
     );
   }
 }
+
