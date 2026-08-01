@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hollandkompas/core/config/env.dart';
 import 'package:hollandkompas/core/responsive/responsive_extension.dart';
 import 'package:hollandkompas/core/theme/app_colors.dart';
+import 'package:hollandkompas/features/auth/domain/enums/dutch_level.dart';
+import 'package:hollandkompas/features/auth/presentation/providers/auth_controller.dart';
+import 'package:hollandkompas/features/auth/presentation/providers/auth_state.dart';
 import 'package:hollandkompas/features/auth/presentation/widgets/auth_text_field.dart';
 import 'package:hollandkompas/features/auth/presentation/widgets/header_auth.dart';
 class RegisterScreen extends ConsumerStatefulWidget {
@@ -37,22 +41,60 @@ class _RegisterScreenState
     passwordController.dispose();
     super.dispose();
   }
+@override
+void initState() {
+  super.initState();
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: context.isMobile ? _buildMobileAppBar(context) : null,
-      body: SafeArea(
-        top: context.isMobile,
-        child: context.isMobile
-            ? _buildMobileLayout(context)
-            : _buildDesktopTabletLayout(context),
-      ),
-    );
-  }
+  ref.listenManual(
+    authControllerProvider,
+    (previous, next){
 
-  /// Mobile App Bar
+      if(next.error != null){
+
+        ScaffoldMessenger.of(context)
+        .showSnackBar(
+          SnackBar(
+            content: Text(next.error!),
+          ),
+        );
+
+      }
+
+
+      if(next.user != null){
+
+        ScaffoldMessenger.of(context)
+        .showSnackBar(
+          const SnackBar(
+            content:
+            Text("Account created successfully"),
+          ),
+        );
+
+
+        widget.onLogin();
+
+      }
+
+    },
+  );
+}
+@override
+Widget build(BuildContext context) {
+  final state = ref.watch(authControllerProvider);
+
+  return Scaffold(
+    backgroundColor: AppColors.background,
+    appBar: context.isMobile ? _buildMobileAppBar(context) : null,
+    body: SafeArea(
+  top: context.isMobile,
+  child: context.isMobile
+      ? _buildMobileLayout(context, state)
+      : _buildDesktopTabletLayout(context, state),
+),
+  );
+}
+
   PreferredSizeWidget _buildMobileAppBar(BuildContext context) {
     return AppBar(
       backgroundColor: Colors.transparent,
@@ -88,19 +130,17 @@ class _RegisterScreenState
     );
   }
 
-  /// Mobile Layout: Vertical Single Scroll View
-  Widget _buildMobileLayout(BuildContext context) {
+  Widget _buildMobileLayout(BuildContext context, AuthState state) {
     return SingleChildScrollView(
       padding: EdgeInsets.symmetric(
         horizontal: context.pagePadding,
         vertical: 16,
       ),
-      child: _buildFormContent(context),
+      child: _buildFormContent(context, state),
     );
   }
 
-  /// Tablet & Desktop Layout: Split dual-pane view
-  Widget _buildDesktopTabletLayout(BuildContext context) {
+  Widget _buildDesktopTabletLayout(BuildContext context, AuthState state) {
     return Row(
       children: [
         // Side Branding Banner
@@ -159,7 +199,7 @@ class _RegisterScreenState
                           ),
                         ),
                         const SizedBox(height: 24),
-                        _buildFormContent(context),
+                        _buildFormContent(context, state),
                       ],
                     ),
                   ),
@@ -172,8 +212,7 @@ class _RegisterScreenState
     );
   }
 
-  /// Main Form Body Content
-  Widget _buildFormContent(BuildContext context) {
+  Widget _buildFormContent(BuildContext context, AuthState state) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
@@ -345,23 +384,48 @@ class _RegisterScreenState
                       ]
                     : [],
               ),
-              child: ElevatedButton(
-                onPressed: agreed ? widget.onLogin : null,
-                style: ElevatedButton.styleFrom(
+               child: ElevatedButton(
+            onPressed: !agreed || state.isLoading
+                ? null
+                : () async {
+                    await ref
+                        .read(authControllerProvider.notifier)
+                        .register(
+                          fullName: nameController.text.trim(),
+                          email: emailController.text.trim(),
+                          password: passwordController.text.trim(),
+                          level: DutchLevel.values.byName(
+                            selectedLevel.toLowerCase(),
+                          ),
+                        );print("URL: ${Env.supabaseUrl}");
+print("KEY: ${Env.supabasePublishableKey}");
+                        print("Register button pressed");
+                        print("${state.isLoading} ${state.error} ${state.user}  ");
+
+                  },                style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.transparent,
                   shadowColor: Colors.transparent,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),
                 ),
-                child: const Text(
-                  "إنشاء الحساب 🚀",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
+              child: state.isLoading
+    ? const SizedBox(
+        width: 22,
+        height: 22,
+        child: CircularProgressIndicator(
+          strokeWidth: 2,
+          color: Colors.white,
+        ),
+      )
+    : const Text(
+        "إنشاء الحساب 🚀",
+        style: TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+          fontSize: 16,
+        ),
+      ),
               ),
             ),
           ),

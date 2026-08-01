@@ -1,51 +1,58 @@
-import 'package:hollandkompas/features/auth/data/models/user_model.dart';
 import 'package:hollandkompas/features/auth/domain/entities/app_user.dart';
 import 'package:hollandkompas/features/auth/domain/enums/dutch_level.dart';
 import 'package:hollandkompas/features/auth/domain/enums/user_role.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-abstract class AuthRemoteDataSource {
-  Future<AppUser> register({
-    required String name,
-    required String email,
-    required String password,
-    required DutchLevel level,
-  });
-}
+class SupabaseAuthRemoteDataSource  {
 
-class SupabaseAuthRemoteDataSource implements AuthRemoteDataSource {
   final SupabaseClient client;
 
-  const SupabaseAuthRemoteDataSource(this.client);
+  SupabaseAuthRemoteDataSource (this.client);
 
-  @override
+
   Future<AppUser> register({
     required String name,
     required String email,
     required String password,
     required DutchLevel level,
   }) async {
-    final response = await client.auth.signUp(
+
+    final response =
+        await client.auth.signUp(
       email: email,
       password: password,
     );
 
+
     final user = response.user;
 
     if (user == null) {
-      throw Exception('Registration failed');
+      throw Exception(
+        "Registration failed"
+      );
     }
 
-    final model = UserModel(
+
+    await client
+        .from('profiles')
+        .insert({
+
+      'id': user.id,
+      'full_name': name,
+      'email': email,
+      'level': level.name,
+      'role': 'student',
+
+    });
+
+
+    return AppUser(
       id: user.id,
-      fullName: name,
       email: email,
+      fullName: name,
       level: level,
       role: UserRole.student,
     );
 
-    await client.from('profiles').insert(model.toJson());
-
-    return model;
   }
 }

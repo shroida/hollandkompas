@@ -5,7 +5,7 @@ import 'package:hollandkompas/features/auth/domain/repositories/auth_repository.
 import '../datasource/auth_remote_data_source.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
-  final AuthRemoteDataSource remote;
+  final SupabaseAuthRemoteDataSource  remote;
 
   AuthRepositoryImpl(this.remote);
 
