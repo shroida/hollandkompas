@@ -162,7 +162,7 @@ class _LevelSelectionScreenState
                   height: 60,
                   child: ElevatedButton(
                       onPressed: () {
-                      context.go( '/login');
+                      context.go( '/register');
                     },
                     
                     child: const Text(
