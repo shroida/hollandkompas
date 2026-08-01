@@ -40,8 +40,8 @@ class SupabaseAuthRemoteDataSource
     id: user.id,
     fullName: name,
     email: email,
-    level: DutchLevel.values.firstWhere((v) => v.name == level),
-    role: UserRole.student,
+level: DutchLevel.values.byName(json['level']),
+role: UserRole.values.byName(json['role']),
   );
 
   await client.from('profiles').insert(model.toJson());
