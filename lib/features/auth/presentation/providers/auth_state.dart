@@ -1,4 +1,4 @@
-import 'package:hollandkompas/features/auth/domain/entities/app_user.dart';
+import '../../domain/entities/app_user.dart';
 
 class AuthState {
   final bool isLoading;
@@ -6,7 +6,7 @@ class AuthState {
   final String? error;
 
   const AuthState({
-    this.isLoading =false,
+    this.isLoading = false,
     this.user,
     this.error,
   });

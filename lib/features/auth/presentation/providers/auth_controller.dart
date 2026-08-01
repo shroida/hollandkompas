@@ -25,12 +25,13 @@ class AuthController extends _$AuthController {
     );
 
     try {
-      final user = await ref.read(registerUseCaseProvider).call(
-            fullName: fullName,
-            email: email,
-            password: password,
-            level: level,
-          );
+      final user =
+          await ref.read(registerUseCaseProvider).call(
+                fullName: fullName,
+                email: email,
+                password: password,
+                level: level,
+              );
 
       state = state.copyWith(
         isLoading: false,
