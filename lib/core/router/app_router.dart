@@ -1,4 +1,5 @@
 import 'package:go_router/go_router.dart';
+import 'package:hollandkompas/features/auth/presentation/pages/forgot_password_screen.dart';
 
 import 'package:hollandkompas/features/auth/presentation/pages/login_screen.dart';
 import 'package:hollandkompas/features/auth/presentation/pages/register_screen.dart';
@@ -44,12 +45,12 @@ final appRouter = GoRouter(
       ),
     ),
 
-    // GoRoute(
-    //   path: '/forgot-password',
-    //   builder: (context, state) => ForgotPasswordScreen(
-    //     onBack: () => context.pop(),
-    //     onLogin: () => context.go('/login'),
-    //   ),
-    // ),
+    GoRoute(
+      path: '/forgot-password',
+      builder: (context, state) => ForgotPasswordScreen(
+        onBack: () => context.pop(),
+        onLogin: () => context.go('/login'),
+      ),
+    ),
   ],
 );
