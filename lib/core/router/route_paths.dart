@@ -5,4 +5,5 @@ class RoutePaths {
   static const profile = '/profile';
   static const splash = '/splash';
   static const onboarding = '/onboarding';
+  static const forgotPassword = '/forgot-password';
 }
