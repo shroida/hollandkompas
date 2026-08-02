@@ -76,4 +76,28 @@ class AuthController extends _$AuthController {
     );
   }
 }
+Future<void> forgotPassword({
+  required String email,
+}) async {
+  state = state.copyWith(
+    isLoading: true,
+    error: null,
+  );
+
+  try {
+    await ref.read(forgotPasswordUseCaseProvider).call(
+      email: email,
+    );
+
+    state = state.copyWith(
+      isLoading: false,
+      error: null,
+    );
+  } catch (e) {
+    state = state.copyWith(
+      isLoading: false,
+      error: e.toString().replaceFirst("Exception: ", ""),
+    );
+  }
+}
 }
