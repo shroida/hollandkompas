@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hollandkompas/core/responsive/responsive_extension.dart';
 import 'package:hollandkompas/core/theme/app_colors.dart';
+import 'package:hollandkompas/features/auth/presentation/providers/auth_controller.dart';
+import 'package:hollandkompas/features/auth/presentation/providers/auth_state.dart';
 import 'package:hollandkompas/features/auth/presentation/widgets/auth_text_field.dart';
 import 'package:hollandkompas/features/auth/presentation/widgets/header_auth.dart';
 
-class ForgotPasswordScreen extends StatefulWidget {
+class ForgotPasswordScreen extends ConsumerStatefulWidget {
   final VoidCallback onLogin;
   final VoidCallback? onBack;
 
@@ -16,10 +19,10 @@ class ForgotPasswordScreen extends StatefulWidget {
   });
 
   @override
-  State<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
+  ConsumerState<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
 }
 
-class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
+class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   final emailController = TextEditingController();
   bool isSent = false;
 
@@ -34,17 +37,41 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       setState(() => isSent = true);
     }
   }
+@override
+void initState() {
+  super.initState();
 
+  ref.listenManual(
+    authControllerProvider,
+    (previous, next) {
+      if (!mounted) return;
+
+      if (next.error != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(next.error!),
+            backgroundColor: Colors.red,
+          ),
+        );
+      } else if (!next.isLoading) {
+        setState(() {
+          isSent = true;
+        });
+      }
+    },
+  );
+}
   @override
   Widget build(BuildContext context) {
+    final state = ref.watch(authControllerProvider);
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: context.isMobile ? _buildMobileAppBar(context) : null,
       body: SafeArea(
         top: context.isMobile,
         child: context.isMobile
-            ? _buildMobileLayout(context)
-            : _buildDesktopTabletLayout(context),
+            ? _buildMobileLayout(context, state)
+            : _buildDesktopTabletLayout(context, state),
       ),
     );
   }
@@ -66,20 +93,20 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   }
 
   /// Mobile Layout
-  Widget _buildMobileLayout(BuildContext context) {
+  Widget _buildMobileLayout(BuildContext context,AuthState state) {
     return Center(
       child: SingleChildScrollView(
         padding: EdgeInsets.symmetric(
           horizontal: context.pagePadding,
           vertical: 16,
         ),
-        child: _buildAnimatedContent(context),
+        child: _buildAnimatedContent(context, state),
       ),
     );
   }
 
   /// Tablet & Desktop Layout
-  Widget _buildDesktopTabletLayout(BuildContext context) {
+  Widget _buildDesktopTabletLayout(BuildContext context,AuthState state) {
     return Row(
       children: [
         // Side Branding Banner
@@ -122,7 +149,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                   () =>context.pop(),
                             ),
                           ),
-                        _buildAnimatedContent(context),
+                        _buildAnimatedContent(context, state),
                       ],
                     ),
                   ),
@@ -136,19 +163,19 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   }
 
   /// Smooth State Switcher
-  Widget _buildAnimatedContent(BuildContext context) {
+  Widget _buildAnimatedContent(BuildContext context,AuthState state) {
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 300),
       switchInCurve: Curves.easeOut,
       switchOutCurve: Curves.easeIn,
       child: !isSent
-          ? _buildFormState(context)
+          ? _buildFormState(context, state)
           : _buildSuccessState(context),
     );
   }
 
   /// Form View State
-  Widget _buildFormState(BuildContext context) {
+  Widget _buildFormState(BuildContext context, AuthState state) {
     return Column(
       key: const ValueKey("FormState"),
       mainAxisSize: MainAxisSize.min,
@@ -200,43 +227,67 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         ),
         const SizedBox(height: 24),
 
-        SizedBox(
-          width: double.infinity,
-          height: 52,
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [AppColors.primary, AppColors.primaryDark],
-              ),
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.primary.withValues(alpha: 0.3),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
+       SizedBox(
+        width: double.infinity,
+        height: 52,
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [
+                AppColors.primary,
+                AppColors.primaryDark,
               ],
             ),
-            child: ElevatedButton(
-              onPressed: _handleSubmit,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.transparent,
-                shadowColor: Colors.transparent,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                ),
-              ),
-              child: const Text(
-                "إرسال رابط الاستعادة 🚀",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: ElevatedButton(
+            onPressed: state.isLoading
+                ? null
+                : () {
+                    if (emailController.text.trim().isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            "Please enter your email.",
+                          ),
+                        ),
+                      );
+                      return;
+                    }
+
+                    ref
+                        .read(authControllerProvider.notifier)
+                        .forgotPassword(
+                          email: emailController.text.trim(),
+                        );
+                  },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.transparent,
+              shadowColor: Colors.transparent,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
               ),
             ),
+            child: state.isLoading
+                ? const SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 2,
+                    ),
+                  )
+                : const Text(
+                    "إرسال رابط الاستعادة 🚀",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
           ),
         ),
+      )                        
       ],
     );
   }
