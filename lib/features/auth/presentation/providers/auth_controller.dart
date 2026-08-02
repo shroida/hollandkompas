@@ -44,4 +44,32 @@ class AuthController extends _$AuthController {
       );
     }
   }
+
+Future<void> login({
+  required String email,
+  required String password,
+}) async {
+  state = state.copyWith(
+    isLoading: true,
+    error: null,
+  );
+
+  try {
+    final user = await ref.read(loginUseCaseProvider)(
+      email: email,
+      password: password,
+    );
+
+    state = state.copyWith(
+      isLoading: false,
+      user: user,
+      isAuthenticated: true,
+    );
+  } catch (e) {
+    state = state.copyWith(
+      isLoading: false,
+      error: e.toString(),
+    );
+  }
+}
 }
