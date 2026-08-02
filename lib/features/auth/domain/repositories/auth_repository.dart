@@ -8,4 +8,12 @@ abstract class AuthRepository {
     required String password,
     required DutchLevel level,
   });
+   Future<AppUser> login({
+    required String email,
+    required String password,
+  });
+
+  Future<void> logout();
+
+  Future<AppUser?> getCurrentUser();
 }
