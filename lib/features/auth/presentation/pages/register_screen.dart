@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hollandkompas/core/config/env.dart';
 import 'package:hollandkompas/core/responsive/responsive_extension.dart';
 import 'package:hollandkompas/core/theme/app_colors.dart';
 import 'package:hollandkompas/features/auth/domain/enums/dutch_level.dart';
@@ -397,10 +396,8 @@ Widget build(BuildContext context) {
                           level: DutchLevel.values.byName(
                             selectedLevel.toLowerCase(),
                           ),
-                        );print("URL: ${Env.supabaseUrl}");
-print("KEY: ${Env.supabasePublishableKey}");
-                        print("Register button pressed");
-                        print("${state.isLoading} ${state.error} ${state.user}  ");
+                        );
+                      
 
                   },                style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.transparent,

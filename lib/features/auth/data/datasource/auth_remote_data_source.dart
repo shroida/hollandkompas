@@ -57,7 +57,7 @@ class SupabaseAuthRemoteDataSource  {
   }
 
   
-  Future<AppUser> login({
+    Future<AppUser> login({
     required String email,
     required String password,
   }) async {
@@ -69,7 +69,7 @@ class SupabaseAuthRemoteDataSource  {
     final authUser = response.user;
 
     if (authUser == null) {
-      throw Exception("Login failed");
+      throw Exception('Invalid email or password');
     }
 
     final profile = await client

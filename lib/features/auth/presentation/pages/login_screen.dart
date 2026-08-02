@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hollandkompas/core/responsive/responsive_extension.dart';
 import 'package:hollandkompas/core/theme/app_colors.dart';
+import 'package:hollandkompas/features/auth/presentation/providers/auth_controller.dart';
+import 'package:hollandkompas/features/auth/presentation/providers/auth_state.dart';
 import 'package:hollandkompas/features/auth/presentation/widgets/auth_text_field.dart';
 import 'package:hollandkompas/features/auth/presentation/widgets/header_auth.dart';
 
@@ -35,18 +37,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final state = ref.watch(authControllerProvider);
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
         top: false,
         child: context.isMobile
-            ? _buildMobileLayout(context)
-            : _buildDesktopTabletLayout(context),
+            ? _buildMobileLayout(context, state)
+            : _buildDesktopTabletLayout(context, state),
       ),
     );
   }
 
-  Widget _buildMobileLayout(BuildContext context) {
+  Widget _buildMobileLayout(BuildContext context, AuthState state) {
     return Column(
       children: [
         const HeaderAuth(),
@@ -56,14 +59,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               horizontal: context.pagePadding,
               vertical: 16,
             ),
-            child: _buildFormContent(context),
+            child: _buildFormContent(context, state),
           ),
         ),
       ],
     );
   }
 
-  Widget _buildDesktopTabletLayout(BuildContext context) {
+  Widget _buildDesktopTabletLayout(BuildContext context, AuthState state) {
     return Row(
       children: [
         // Branding Banner Side Panel
@@ -88,7 +91,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                   child: Padding(
                     padding: EdgeInsets.all(context.isDesktop ? 32 : 16),
-                    child: _buildFormContent(context),
+                    child: _buildFormContent(context, state),
                   ),
                 ),
               ),
@@ -99,7 +102,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     );
   }
 
-  Widget _buildFormContent(BuildContext context) {
+    Widget _buildFormContent(BuildContext context, AuthState state,
+    ) {    
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
@@ -189,26 +193,56 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               ],
             ),
             child: ElevatedButton(
-              onPressed: widget.onLogin,
-              style: ElevatedButton.styleFrom(
+            onPressed: state.isLoading
+            ? null
+            : () async {
+                await ref.read(authControllerProvider.notifier).login(
+                  email: emailController.text.trim(),
+                  password: passwordController.text.trim(),
+                );
+
+                final authState = ref.read(authControllerProvider);
+
+                if (mounted && authState.user != null) {
+                  widget.onLogin();
+                }
+              },
+               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.transparent,
                 shadowColor: Colors.transparent,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
                 ),
               ),
-              child: const Text(
-                "تسجيل الدخول",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
+              child: state.isLoading
+              ? const SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: CircularProgressIndicator(
+                    color: Colors.white,
+                    strokeWidth: 2,
+                  ),
+                )
+              : const Text(
+                  "تسجيل الدخول",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
                 ),
-              ),
             ),
           ),
         ),
-
+        if (state.error != null) ...[
+          const SizedBox(height: 12),
+          Text(
+            state.error!,
+            style: const TextStyle(
+              color: Colors.red,
+            ),
+          ),
+        ],
         const SizedBox(height: 24),
 
         /// Divider
