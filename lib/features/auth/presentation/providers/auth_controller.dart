@@ -1,3 +1,4 @@
+import 'package:hollandkompas/features/auth/domain/providers/login_usecase_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../domain/enums/dutch_level.dart';
@@ -44,32 +45,30 @@ class AuthController extends _$AuthController {
       );
     }
   }
-
-Future<void> login({
-  required String email,
-  required String password,
-}) async {
-  state = state.copyWith(
-    isLoading: true,
-    error: null,
-  );
-
-  try {
-    final user = await ref.read(loginUseCaseProvider)(
-      email: email,
-      password: password,
-    );
-
+  Future<void> login({
+    required String email,
+    required String password,
+  }) async {
     state = state.copyWith(
-      isLoading: false,
-      user: user,
-      isAuthenticated: true,
+      isLoading: true,
+      error: null,
     );
-  } catch (e) {
-    state = state.copyWith(
-      isLoading: false,
-      error: e.toString(),
-    );
+
+    try {
+      final user = await ref.read(loginUseCaseProvider).call(
+        email: email,
+        password: password,
+      );
+
+      state = state.copyWith(
+        isLoading: false,
+        user: user,
+      );
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: e.toString(),
+      );
+    }
   }
-}
 }
