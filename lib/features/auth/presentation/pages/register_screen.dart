@@ -390,12 +390,14 @@ Widget build(BuildContext context) {
                     await ref
                         .read(authControllerProvider.notifier)
                         .register(
-                          fullName: nameController.text.trim(),
+                          firstName: nameController.text.trim().split(' ').first,
+                          lastName: nameController.text.trim().split(' ').last,
                           email: emailController.text.trim(),
                           password: passwordController.text.trim(),
                           level: DutchLevel.values.byName(
                             selectedLevel.toLowerCase(),
                           ),
+                          phoneNumber: '', 
                         );
                       
 

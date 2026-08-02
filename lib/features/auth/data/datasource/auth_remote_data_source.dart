@@ -11,10 +11,12 @@ class SupabaseAuthRemoteDataSource  {
 
 
   Future<AppUser> register({
-    required String name,
+    required String firstName,
+    required String lastName,
     required String email,
     required String password,
     required DutchLevel level,
+    required String phoneNumber,
   }) async {
 
     final response =
@@ -38,7 +40,8 @@ class SupabaseAuthRemoteDataSource  {
         .insert({
 
       'id': user.id,
-      'full_name': name,
+      'first_name': firstName,
+      'last_name': lastName,
       'email': email,
       'level': level.name,
       'role': 'student',
@@ -49,9 +52,11 @@ class SupabaseAuthRemoteDataSource  {
     return AppUser(
       id: user.id,
       email: email,
-      fullName: name,
+      firstName: firstName,
+      lastName: lastName,
       level: level,
       role: UserRole.student,
+      phoneNumber: phoneNumber,
     );
 
   }
@@ -81,9 +86,11 @@ class SupabaseAuthRemoteDataSource  {
     return AppUser(
       id: authUser.id,
       email: profile['email'],
-      fullName: profile['full_name'],
+      firstName: profile['first_name'],
+      lastName: profile['last_name'],
       level: DutchLevel.values.byName(profile['level']),
       role: UserRole.values.byName(profile['role']),
+      phoneNumber: profile['phone_number'],
     );
   }
 
@@ -105,9 +112,11 @@ class SupabaseAuthRemoteDataSource  {
     return AppUser(
       id: authUser.id,
       email: profile['email'],
-      fullName: profile['full_name'],
+      firstName: profile['first_name'],
+      lastName: profile['last_name'],
       level: DutchLevel.values.byName(profile['level']),
       role: UserRole.values.byName(profile['role']),
+      phoneNumber: profile['phone_number'],
     );
   }
 }

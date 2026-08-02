@@ -8,16 +8,20 @@ class RegisterUseCase {
   const RegisterUseCase(this.repository);
 
   Future<AppUser> call({
-    required String fullName,
+    required String firstName,
+    required String lastName,
     required String email,
     required String password,
     required DutchLevel level,
+    required String phoneNumber,
   }) {
     return repository.register(
-      name: fullName,
+      firstName: firstName,
+      lastName: lastName,
       email: email,
       password: password,
       level: level,
+      phoneNumber: phoneNumber,
     );
   }
 }

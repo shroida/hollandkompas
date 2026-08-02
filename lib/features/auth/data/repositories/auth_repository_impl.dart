@@ -11,16 +11,20 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<AppUser> register({
-    required String name,
+    required String firstName,
+    required String lastName,
     required String email,
     required String password,
     required DutchLevel level,
+    required String phoneNumber,
   }) {
     return remote.register(
-      name: name,
+      firstName: firstName,
+      lastName: lastName,
       email: email,
       password: password,
       level: level,
+      phoneNumber: phoneNumber,
     );
   }
   

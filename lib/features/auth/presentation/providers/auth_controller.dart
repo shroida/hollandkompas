@@ -15,10 +15,12 @@ class AuthController extends _$AuthController {
   }
 
   Future<void> register({
-    required String fullName,
+    required String firstName,
+    required String lastName,
     required String email,
     required String password,
     required DutchLevel level,
+    required String phoneNumber,
   }) async {
     state = state.copyWith(
       isLoading: true,
@@ -28,10 +30,12 @@ class AuthController extends _$AuthController {
     try {
       final user =
           await ref.read(registerUseCaseProvider).call(
-                fullName: fullName,
+                firstName: firstName,
+                lastName: lastName,
                 email: email,
                 password: password,
                 level: level,
+                phoneNumber: phoneNumber,
               );
 
       state = state.copyWith(
