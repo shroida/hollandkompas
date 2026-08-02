@@ -56,9 +56,10 @@ class SupabaseAuthRemoteDataSource  {
 
   }
 
+  
   Future<AppUser> login({
-  required String email,
-  required String password,
+    required String email,
+    required String password,
   }) async {
     final response = await client.auth.signInWithPassword(
       email: email,
@@ -68,7 +69,7 @@ class SupabaseAuthRemoteDataSource  {
     final authUser = response.user;
 
     if (authUser == null) {
-      throw Exception('Login failed');
+      throw Exception("Login failed");
     }
 
     final profile = await client
@@ -79,32 +80,34 @@ class SupabaseAuthRemoteDataSource  {
 
     return AppUser(
       id: authUser.id,
-      email: profile['email'] as String,
-      fullName: profile['full_name'] as String,
-      level: DutchLevel.values.byName(profile['level'] as String),
-      role: UserRole.values.byName(profile['role'] as String),
+      email: profile['email'],
+      fullName: profile['full_name'],
+      level: DutchLevel.values.byName(profile['level']),
+      role: UserRole.values.byName(profile['role']),
     );
   }
+
   Future<void> logout() async {
     await client.auth.signOut();
   }
+
   Future<AppUser?> getCurrentUser() async {
-  final authUser = client.auth.currentUser;
+    final authUser = client.auth.currentUser;
 
-  if (authUser == null) return null;
+    if (authUser == null) return null;
 
-  final profile = await client
-      .from('profiles')
-      .select()
-      .eq('id', authUser.id)
-      .single();
+    final profile = await client
+        .from('profiles')
+        .select()
+        .eq('id', authUser.id)
+        .single();
 
-  return AppUser(
-    id: authUser.id,
-    email: profile['email'],
-    fullName: profile['full_name'],
-    level: DutchLevel.values.byName(profile['level']),
-    role: UserRole.values.byName(profile['role']),
-  );
+    return AppUser(
+      id: authUser.id,
+      email: profile['email'],
+      fullName: profile['full_name'],
+      level: DutchLevel.values.byName(profile['level']),
+      role: UserRole.values.byName(profile['role']),
+    );
   }
 }
