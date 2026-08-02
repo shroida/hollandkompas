@@ -101,4 +101,26 @@ Future<void> forgotPassword({
     );
   }
 }
+
+  Future<void> updatePassword(String password) async {
+    state = state.copyWith(
+      isLoading: true,
+      error: null,
+    );
+
+    try {
+      await ref
+          .read(authRepositoryProvider)
+          .updatePassword(password);
+
+      state = state.copyWith(
+        isLoading: false,
+      );
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: _mapAuthError(e),
+      );
+    }
+  }
 }
