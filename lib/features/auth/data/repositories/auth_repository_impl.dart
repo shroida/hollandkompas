@@ -23,4 +23,19 @@ class AuthRepositoryImpl implements AuthRepository {
       level: level,
     );
   }
+  
+  @override
+  Future<AppUser?> getCurrentUser() {
+    return remote.getCurrentUser();
+  }
+  
+  @override
+  Future<AppUser> login({required String email, required String password}) {
+    return remote.login(email: email, password: password);
+  }
+  
+  @override
+  Future<void> logout() {
+    return remote.logout();
+  }
 }
