@@ -147,4 +147,17 @@ class SupabaseAuthRemoteDataSource  {
       phoneNumber: profile['phone_number'],
     );
   }
+  Future<void> forgotPassword({
+    required String email,
+  }) async {
+    try {
+      await client.auth.resetPasswordForEmail(email);
+    } on AuthException catch (e) {
+      throw Exception(e.message);
+    } catch (_) {
+      throw Exception(
+        'Something went wrong. Please try again.',
+      );
+    }
+  }
 }

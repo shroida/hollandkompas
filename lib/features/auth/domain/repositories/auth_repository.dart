@@ -18,4 +18,8 @@ abstract class AuthRepository {
   Future<void> logout();
 
   Future<AppUser?> getCurrentUser();
+
+  Future<void> forgotPassword({
+    required String email,
+  });
 }
