@@ -32,11 +32,6 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     super.dispose();
   }
 
-  void _handleSubmit() {
-    if (emailController.text.trim().isNotEmpty) {
-      setState(() => isSent = true);
-    }
-  }
 @override
 void initState() {
   super.initState();
