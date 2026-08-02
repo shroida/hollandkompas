@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:hollandkompas/features/auth/domain/entities/app_user.dart';
 import 'package:hollandkompas/features/auth/domain/enums/dutch_level.dart';
 import 'package:hollandkompas/features/auth/domain/enums/user_role.dart';
@@ -17,6 +18,7 @@ class SupabaseAuthRemoteDataSource  {
     required String password,
     required DutchLevel level,
     required String phoneNumber,
+    
   }) async {
 
     final response =
@@ -34,19 +36,22 @@ class SupabaseAuthRemoteDataSource  {
       );
     }
 
-
-    await client
-        .from('profiles')
-        .insert({
-
-      'id': user.id,
-      'first_name': firstName,
-      'last_name': lastName,
-      'email': email,
-      'level': level.name,
-      'role': 'student',
-
-    });
+    try {
+      await client.from('profiles').insert({
+        'id': user.id,
+        'first_name': firstName,
+        'last_name': lastName,
+        'email': email,
+        'phone_number': phoneNumber,
+        'level': level.name,
+        'role': UserRole.student.name,
+      });
+    } catch (e, stackTrace) {
+      debugPrint("INSERT PROFILE ERROR");
+      debugPrint(e.toString());
+      debugPrint(stackTrace.toString());
+      rethrow;
+    }
 
 
     return AppUser(
@@ -66,10 +71,11 @@ class SupabaseAuthRemoteDataSource  {
     required String email,
     required String password,
   }) async {
-    final response = await client.auth.signInWithPassword(
-      email: email,
-      password: password,
-    );
+    try {
+      final response = await client.auth.signInWithPassword(
+        email: email,
+        password: password,
+      );
 
     final authUser = response.user;
 
@@ -91,7 +97,29 @@ class SupabaseAuthRemoteDataSource  {
       level: DutchLevel.values.byName(profile['level']),
       role: UserRole.values.byName(profile['role']),
       phoneNumber: profile['phone_number'],
+    );} on AuthException catch (e) {
+    switch (e.message.toLowerCase()) {
+      case 'invalid login credentials':
+        throw Exception('Incorrect email or password.');
+
+      case 'email not confirmed':
+        throw Exception('Please verify your email before logging in.');
+
+      case 'user not found':
+        throw Exception('No account exists with this email.');
+
+      case 'too many requests':
+        throw Exception('Too many login attempts. Please try again later.');
+
+      default:
+        throw Exception(e.message);
+    }
+  } catch (_) {
+    throw Exception(
+      'Something went wrong. Please try again.',
     );
+  }
+
   }
 
   Future<void> logout() async {

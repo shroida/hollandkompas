@@ -39,37 +39,53 @@ class AuthTextField extends StatelessWidget {
         ),
         const SizedBox(height: 6),
         TextField(
-          controller: controller,
-          obscureText: obscureText,
-          keyboardType: keyboardType,
-          onChanged: onChanged,
-          textDirection: (keyboardType == TextInputType.emailAddress || obscureText)
-              ? TextDirection.ltr
-              : TextDirection.rtl,
-          decoration: InputDecoration(
-            hintText: hint,
-            hintStyle: const TextStyle(
-              color: AppColors.mutedForeground,
-              fontSize: 14,
-            ),
-            prefixIcon: icon != null
-                ? Icon(icon, color: AppColors.mutedForeground, size: 20)
-                : null,
-            suffixIcon: suffix,
-            filled: true,
-            fillColor: Colors.white,
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: const BorderSide(color: AppColors.border),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: const BorderSide(color: AppColors.primary, width: 2),
-            ),
+      controller: controller,
+      obscureText: obscureText,
+      keyboardType: keyboardType,
+      onChanged: onChanged,
+      style: const TextStyle(
+        color: AppColors.textForeground,
+        fontSize: 15,
+        fontWeight: FontWeight.w500,
+      ),
+      textDirection: (keyboardType == TextInputType.emailAddress || obscureText)
+          ? TextDirection.ltr
+          : TextDirection.rtl,
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle: const TextStyle(
+          color: AppColors.mutedForeground,
+          fontSize: 14,
+        ),
+        prefixIcon: icon != null
+            ? Icon(
+                icon,
+                color: AppColors.mutedForeground,
+                size: 20,
+              )
+            : null,
+        suffixIcon: suffix,
+        filled: true,
+        fillColor: Colors.white,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(
+            color: AppColors.border,
           ),
         ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(
+            color: AppColors.primary,
+            width: 2,
+          ),
+        ),
+      ),
+    )
       ],
     );
   }

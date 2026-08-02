@@ -22,10 +22,17 @@ class RegisterScreen extends ConsumerStatefulWidget {
       _RegisterScreenState();
 }
 
-class _RegisterScreenState
-    extends ConsumerState<RegisterScreen> {  final nameController = TextEditingController();
-  final emailController = TextEditingController();
-  final passwordController = TextEditingController();
+class _RegisterScreenState    extends ConsumerState<RegisterScreen> {  
+      
+    final firstNameController = TextEditingController();
+
+    final lastNameController = TextEditingController();
+
+    final phoneController = TextEditingController();
+
+    final emailController = TextEditingController();
+
+    final passwordController = TextEditingController();
 
   bool showPassword = false;
   String selectedLevel = 'A1';
@@ -35,7 +42,9 @@ class _RegisterScreenState
 
   @override
   void dispose() {
-    nameController.dispose();
+    firstNameController.dispose();
+    lastNameController.dispose();
+    phoneController.dispose();
     emailController.dispose();
     passwordController.dispose();
     super.dispose();
@@ -216,12 +225,30 @@ Widget build(BuildContext context) {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        AuthTextField(
-          controller: nameController,
-          label: "الاسم الكامل",
-          hint: "أدخل اسمك",
-          icon: Icons.person_outline,
+       
+      
+        Row(
+          children: [
+            Expanded(
+              child: AuthTextField(
+                controller: firstNameController,
+                label: "الاسم الأول",
+                hint: "Ahmed",
+                icon: Icons.person_outline,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: AuthTextField(
+                controller: lastNameController,
+                label: "اسم العائلة",
+                hint: "Kareem",
+                icon: Icons.person_outline,
+              ),
+            ),
+          ],
         ),
+       
         const SizedBox(height: 16),
 
         AuthTextField(
@@ -230,6 +257,15 @@ Widget build(BuildContext context) {
           hint: "example@email.com",
           icon: Icons.mail_outline,
           keyboardType: TextInputType.emailAddress,
+        ),
+        const SizedBox(height: 16),
+
+        AuthTextField(
+          controller: phoneController,
+          label: "رقم الهاتف",
+          hint: "+20xxxxxxxxxx",
+          icon: Icons.phone_outlined,
+          keyboardType: TextInputType.phone,
         ),
         const SizedBox(height: 16),
 
@@ -252,7 +288,6 @@ Widget build(BuildContext context) {
         ),
         const SizedBox(height: 20),
 
-        /// Dutch Level Selector Grid
         const Text(
           "مستواك في الهولندية",
           style: TextStyle(
@@ -390,14 +425,14 @@ Widget build(BuildContext context) {
                     await ref
                         .read(authControllerProvider.notifier)
                         .register(
-                          firstName: nameController.text.trim().split(' ').first,
-                          lastName: nameController.text.trim().split(' ').last,
+                          firstName: firstNameController.text.trim(),
+                          lastName: lastNameController.text.trim(),
                           email: emailController.text.trim(),
                           password: passwordController.text.trim(),
                           level: DutchLevel.values.byName(
                             selectedLevel.toLowerCase(),
                           ),
-                          phoneNumber: '', 
+                          phoneNumber: phoneController.text.trim(),
                         );
                       
 

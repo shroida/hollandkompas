@@ -50,29 +50,30 @@ class AuthController extends _$AuthController {
     }
   }
   Future<void> login({
-    required String email,
-    required String password,
-  }) async {
+  required String email,
+  required String password,
+}) async {
+  state = state.copyWith(
+    isLoading: true,
+    error: null,
+  );
+
+  try {
+    final user = await ref.read(loginUseCaseProvider).call(
+          email: email,
+          password: password,
+        );
+
     state = state.copyWith(
-      isLoading: true,
+      isLoading: false,
+      user: user,
       error: null,
     );
-
-    try {
-      final user = await ref.read(loginUseCaseProvider).call(
-        email: email,
-        password: password,
-      );
-
-      state = state.copyWith(
-        isLoading: false,
-        user: user,
-      );
-    } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e.toString(),
-      );
-    }
+  } catch (e) {
+    state = state.copyWith(
+      isLoading: false,
+      error: e.toString(),
+    );
   }
+}
 }

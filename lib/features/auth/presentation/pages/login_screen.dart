@@ -34,7 +34,30 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     passwordController.dispose();
     super.dispose();
   }
+@override
+void initState() {
+  super.initState();
 
+  ref.listenManual<AuthState>(
+    authControllerProvider,
+    (previous, next) {
+      if (!mounted) return;
+
+      if (next.error != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(next.error!),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+
+      if (next.user != null) {
+        widget.onLogin(); // Navigate to Home
+      }
+    },
+  );
+}
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(authControllerProvider);
@@ -194,19 +217,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             ),
             child: ElevatedButton(
             onPressed: state.isLoading
-            ? null
-            : () async {
-                await ref.read(authControllerProvider.notifier).login(
-                  email: emailController.text.trim(),
-                  password: passwordController.text.trim(),
-                );
-
-                final authState = ref.read(authControllerProvider);
-
-                if (mounted && authState.user != null) {
-                  widget.onLogin();
-                }
-              },
+                ? null
+                : () {
+                    ref.read(authControllerProvider.notifier).login(
+                          email: emailController.text.trim(),
+                          password: passwordController.text.trim(),
+                        );
+                  },
                style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.transparent,
                 shadowColor: Colors.transparent,
@@ -214,7 +231,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   borderRadius: BorderRadius.circular(16),
                 ),
               ),
-              child: state.isLoading
+             child: state.isLoading
               ? const SizedBox(
                   width: 22,
                   height: 22,
