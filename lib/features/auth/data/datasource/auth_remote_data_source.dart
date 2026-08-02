@@ -55,4 +55,34 @@ class SupabaseAuthRemoteDataSource  {
     );
 
   }
+
+  Future<AppUser> login({
+  required String email,
+  required String password,
+}) async {
+  final response = await client.auth.signInWithPassword(
+    email: email,
+    password: password,
+  );
+
+  final authUser = response.user;
+
+  if (authUser == null) {
+    throw Exception('Login failed');
+  }
+
+  final profile = await client
+      .from('profiles')
+      .select()
+      .eq('id', authUser.id)
+      .single();
+
+  return AppUser(
+    id: authUser.id,
+    email: profile['email'] as String,
+    fullName: profile['full_name'] as String,
+    level: DutchLevel.values.byName(profile['level'] as String),
+    role: UserRole.values.byName(profile['role'] as String),
+  );
+}
 }
