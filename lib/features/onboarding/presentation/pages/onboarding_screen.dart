@@ -1,20 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hollandkompas/core/responsive/responsive_extension.dart';
 import 'package:hollandkompas/features/onboarding/data/onboarding_data.dart';
 import 'package:hollandkompas/features/onboarding/presentation/widgets/level_selection_screen.dart';
 import 'package:hollandkompas/features/onboarding/presentation/widgets/onboarding_page.dart';
 import 'package:hollandkompas/features/onboarding/presentation/widgets/dots_indicator.dart';
 
-class OnboardingScreen extends StatefulWidget {
+class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
 
   @override
-  State<OnboardingScreen> createState() =>
+  ConsumerState<OnboardingScreen> createState() =>
       _OnboardingScreenState();
 }
 
 class _OnboardingScreenState
-    extends State<OnboardingScreen> {
+    extends ConsumerState<OnboardingScreen> {
   final controller = PageController();
 
   int currentPage = 0;

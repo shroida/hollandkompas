@@ -3,6 +3,7 @@ import 'package:hollandkompas/features/auth/presentation/pages/forgot_password_s
 
 import 'package:hollandkompas/features/auth/presentation/pages/login_screen.dart';
 import 'package:hollandkompas/features/auth/presentation/pages/register_screen.dart';
+import 'package:hollandkompas/features/auth/presentation/pages/reset_password_screen.dart';
 
 
 import 'package:hollandkompas/features/home/presentation/screens/home_screen.dart';
@@ -52,5 +53,10 @@ final appRouter = GoRouter(
         onLogin: () => context.go('/login'),
       ),
     ),
+    GoRoute(
+      path: '/reset-password',
+      builder: (context, state) =>
+          const ResetPasswordScreen(),
+        ),
   ],
 );

@@ -6,5 +6,6 @@ class RouteNames {
   static const splash = 'splash';
   static const onboarding = 'onboarding';
   static const forgotPassword = 'forgot-password';
+  static const resetPassword = 'reset-password';
 
 }

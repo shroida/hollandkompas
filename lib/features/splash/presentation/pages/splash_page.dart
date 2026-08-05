@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hollandkompas/features/splash/providers/splash_provider.dart';
 import 'package:hollandkompas/features/splash/widgets/bottom_dutch_flag.dart';
 import 'package:hollandkompas/features/splash/widgets/center_content.dart';
@@ -24,25 +25,34 @@ class _SplashPageState extends ConsumerState<SplashPage>
   late AnimationController _pulseController;
 
   @override
-  void initState() {
-    super.initState();
+void initState() {
+  super.initState();
 
-    _logoController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 900),
-    );
+  _logoController = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 900),
+  );
 
-    _pulseController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 2),
-    )..repeat();
+  _pulseController = AnimationController(
+    vsync: this,
+    duration: const Duration(seconds: 2),
+  )..repeat();
 
-    _logoController.forward();
+  _logoController.forward();
 
-    Future.microtask(() {
-      ref.read(splashProvider.notifier).start(widget.onDone);
+  Future.microtask(() {
+    ref.read(splashProvider.notifier).start(() {
+      final uri = Uri.base;
+
+      if (uri.queryParameters.containsKey('code')) {
+        context.go('/reset-password');
+        return;
+      }
+
+      widget.onDone();
     });
-  }
+  });
+}
 
   @override
   void dispose() {

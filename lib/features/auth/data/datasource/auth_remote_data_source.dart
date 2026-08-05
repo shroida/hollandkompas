@@ -154,10 +154,17 @@ class SupabaseAuthRemoteDataSource  {
       await client.auth.resetPasswordForEmail(email);
     } on AuthException catch (e) {
       throw Exception(e.message);
-    } catch (_) {
-      throw Exception(
-        'Something went wrong. Please try again.',
-      );
-    }
+    }catch (e, stack) {
+  debugPrint(e.toString());
+  debugPrintStack(stackTrace: stack);
+  rethrow;
+}
   }
+  Future<void> updatePassword(String password) async {
+  await client.auth.updateUser(
+    UserAttributes(
+      password: password,
+    ),
+  );
+}
 }

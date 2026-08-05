@@ -1,3 +1,5 @@
+import 'package:hollandkompas/core/network/supabase_client_provider.dart';
+import 'package:hollandkompas/features/auth/data/providers/auth_repository_provider.dart';
 import 'package:hollandkompas/features/auth/domain/providers/forgot_password_usecase_provider.dart';
 import 'package:hollandkompas/features/auth/domain/providers/login_usecase_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -119,7 +121,9 @@ Future<void> forgotPassword({
     } catch (e) {
       state = state.copyWith(
         isLoading: false,
-        error: _mapAuthError(e),
+        error: e is AppException
+            ? e.message
+            : "ssssss went wrong.",
       );
     }
   }
