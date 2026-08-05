@@ -168,11 +168,15 @@ class SupabaseAuthRemoteDataSource  {
     }
   }
   
-  Future<void> updatePassword(String password) async {
-  await client.auth.updateUser(
-    UserAttributes(
-      password: password,
-    ),
-  );
+ Future<void> updatePassword(String password) async {
+  try {
+    await client.auth.updateUser(
+      UserAttributes(password: password),
+    );
+  } catch (e, stackTrace) {
+    debugPrint("UPDATE PASSWORD ERROR: $e");
+    debugPrintStack(stackTrace: stackTrace);
+    rethrow;
+  }
 }
 }

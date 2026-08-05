@@ -105,26 +105,26 @@ Future<void> forgotPassword({
 }
 
   Future<void> updatePassword(String password) async {
+  state = state.copyWith(
+    isLoading: true,
+    error: null,
+  );
+
+  try {
+    await ref.read(authRepositoryProvider).updatePassword(password);
+
     state = state.copyWith(
-      isLoading: true,
-      error: null,
+      isLoading: false,
     );
+  } catch (e, stackTrace) {
+    print("UPDATE PASSWORD ERROR:");
+    print(e);
+    print(stackTrace);
 
-    try {
-      await ref
-          .read(authRepositoryProvider)
-          .updatePassword(password);
-
-      state = state.copyWith(
-        isLoading: false,
-      );
-    } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        error: e is AppException
-            ? e.message
-            : "ssssss went wrong.",
-      );
-    }
+    state = state.copyWith(
+      isLoading: false,
+      error: e.toString(),
+    );
   }
+}
 }
