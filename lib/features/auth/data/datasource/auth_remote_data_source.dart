@@ -1,8 +1,8 @@
-import 'package:flutter/material.dart';
 import 'package:hollandkompas/features/auth/domain/entities/app_user.dart';
 import 'package:hollandkompas/features/auth/domain/enums/dutch_level.dart';
 import 'package:hollandkompas/features/auth/domain/enums/user_role.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter/foundation.dart';
 
 class SupabaseAuthRemoteDataSource  {
 
@@ -145,21 +145,29 @@ class SupabaseAuthRemoteDataSource  {
       level: DutchLevel.values.byName(profile['level']),
       role: UserRole.values.byName(profile['role']),
       phoneNumber: profile['phone_number'],
+      
     );
   }
+
+
+
   Future<void> forgotPassword({
     required String email,
   }) async {
     try {
-      await client.auth.resetPasswordForEmail(email);
+      final redirectUrl = kIsWeb
+          ? '${Uri.base.origin}/reset-password'
+          : 'hollandkompas://reset-password';
+
+      await client.auth.resetPasswordForEmail(
+        email,
+        redirectTo: redirectUrl,
+      );
     } on AuthException catch (e) {
       throw Exception(e.message);
-    }catch (e, stack) {
-  debugPrint(e.toString());
-  debugPrintStack(stackTrace: stack);
-  rethrow;
-}
+    }
   }
+  
   Future<void> updatePassword(String password) async {
   await client.auth.updateUser(
     UserAttributes(
