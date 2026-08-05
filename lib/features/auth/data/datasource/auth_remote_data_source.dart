@@ -145,7 +145,7 @@ class SupabaseAuthRemoteDataSource  {
       level: DutchLevel.values.byName(profile['level']),
       role: UserRole.values.byName(profile['role']),
       phoneNumber: profile['phone_number'],
-      
+
     );
   }
 
@@ -155,14 +155,14 @@ class SupabaseAuthRemoteDataSource  {
     required String email,
   }) async {
     try {
-      final redirectUrl = kIsWeb
-          ? '${Uri.base.origin}/reset-password'
-          : 'hollandkompas://reset-password';
+     final redirectUrl = kIsWeb
+    ? '${Uri.base.origin}/reset-password'
+    : 'hollandkompas://reset-password';
 
-      await client.auth.resetPasswordForEmail(
-        email,
-        redirectTo: redirectUrl,
-      );
+    await client.auth.resetPasswordForEmail(
+      email,
+      redirectTo: redirectUrl,
+    );
     } on AuthException catch (e) {
       throw Exception(e.message);
     }

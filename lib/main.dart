@@ -16,10 +16,11 @@ void main() async {
   debugPrint("EVENT: ${data.event}");
   debugPrint("SESSION: ${data.session != null}");
 
+Supabase.instance.client.auth.onAuthStateChange.listen((data) {
   if (data.event == AuthChangeEvent.passwordRecovery) {
-    debugPrint("PASSWORD RECOVERY");
     appRouter.go('/reset-password');
   }
+});
 });
   runApp(
     const ProviderScope(
