@@ -51,37 +51,37 @@ if (!ref.mounted) return;
       );
     }
   }
-  Future<void> login({
+Future<void> login({
   required String email,
   required String password,
 }) async {
   state = state.copyWith(
-  isLoading: true,
-  error: null,
-  user: null,
-);
+    isLoading: true,
+    user: null,
+    error: null,
+  );
 
   try {
-        final user = await ref.read(loginUseCaseProvider).call(
-        email: email,
-        password: password,
-      );
+    final user = await ref.read(loginUseCaseProvider).call(
+      email: email,
+      password: password,
+    );
 
-      if (!ref.mounted) return;
+    if (!ref.mounted) return;
 
-      state = state.copyWith(
-        isLoading: false,
-        error: null,
-        user: user,
-      );
+    state = state.copyWith(
+      isLoading: false,
+      user: user,
+      error: null,
+    );
   } catch (e) {
-      if (!ref.mounted) return;
+    if (!ref.mounted) return;
 
     state = state.copyWith(
       isLoading: false,
       user: null,
-      error: e.toString(),
-);
+      error: e.toString().replaceFirst('Exception: ', ''),
+    );
   }
 }
 Future<void> forgotPassword({

@@ -52,9 +52,11 @@ void initState() {
         );
       }
 
-      if (next.user != null) {
-        widget.onLogin();
-      }
+    if (!next.isLoading &&
+    next.error == null &&
+    next.user != null) {
+    widget.onLogin();
+       }
     },
   );
 }
