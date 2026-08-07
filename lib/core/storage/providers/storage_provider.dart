@@ -7,15 +7,15 @@ part 'storage_provider.g.dart';
 
 @Riverpod(keepAlive: true)
 Box settingsBox(Ref ref) {
-  return Hive.box(HiveBoxes.settings);
+  return Hive.box(HiveBoxes.settingsBox);
 }
 
 @Riverpod(keepAlive: true)
 Box userBox(Ref ref) {
-  return Hive.box(HiveBoxes.user);
+  return Hive.box(HiveBoxes.userBox);
 }
 
 @Riverpod(keepAlive: true)
 Box cacheBox(Ref ref) {
-  return Hive.box(HiveBoxes.cache);
+  return Hive.box(HiveBoxes.cacheBox);
 }

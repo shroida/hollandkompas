@@ -132,12 +132,12 @@ class SupabaseAuthRemoteDataSource {
 
     return AppUser(
       id: authUser.id,
-      email: profile['email'] as String,
-      firstName: profile['first_name'] as String,
-      lastName: profile['last_name'] as String,
-      level: DutchLevel.values.byName(profile['level'] as String),
-      role: UserRole.values.byName(profile['role'] as String),
-      phoneNumber: profile['phone_number'] as String,
+      email: profile['email'],
+      firstName: profile['first_name'],
+      lastName: profile['last_name'],
+      level: DutchLevel.values.byName(profile['level']),
+      role: UserRole.values.byName(profile['role']),
+      phoneNumber: profile['phone_number'],
     );
   }
 

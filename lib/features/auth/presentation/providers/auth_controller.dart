@@ -136,4 +136,14 @@ if (!ref.mounted) return;
     );
   }
 }
+Future<void> loadCurrentUser() async {
+  state = state.copyWith(isLoading: true);
+
+  final user = await ref.read(authRepositoryProvider).getCurrentUser();
+
+  state = state.copyWith(
+    isLoading: false,
+    user: user,
+  );
+}
 }
