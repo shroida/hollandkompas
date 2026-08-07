@@ -39,7 +39,7 @@ class AuthController extends _$AuthController {
                 level: level,
                 phoneNumber: phoneNumber,
               );
-
+if (!ref.mounted) return;
       state = state.copyWith(
         isLoading: false,
         user: user,
@@ -56,26 +56,32 @@ class AuthController extends _$AuthController {
   required String password,
 }) async {
   state = state.copyWith(
-    isLoading: true,
-    error: null,
-  );
+  isLoading: true,
+  error: null,
+  user: null,
+);
 
   try {
-    final user = await ref.read(loginUseCaseProvider).call(
-          email: email,
-          password: password,
-        );
+        final user = await ref.read(loginUseCaseProvider).call(
+        email: email,
+        password: password,
+      );
+
+      if (!ref.mounted) return;
+
+      state = state.copyWith(
+        isLoading: false,
+        error: null,
+        user: user,
+      );
+  } catch (e) {
+      if (!ref.mounted) return;
 
     state = state.copyWith(
       isLoading: false,
-      user: user,
-      error: null,
-    );
-  } catch (e) {
-    state = state.copyWith(
-      isLoading: false,
+      user: null,
       error: e.toString(),
-    );
+);
   }
 }
 Future<void> forgotPassword({
@@ -90,12 +96,14 @@ Future<void> forgotPassword({
     await ref.read(forgotPasswordUseCaseProvider).call(
       email: email,
     );
-
+if (!ref.mounted) return;
     state = state.copyWith(
       isLoading: false,
       error: null,
     );
   } catch (e) {
+      if (!ref.mounted) return;
+
     state = state.copyWith(
       isLoading: false,
       error: e.toString().replaceFirst("Exception: ", ""),
@@ -111,11 +119,13 @@ Future<void> forgotPassword({
 
   try {
     await ref.read(authRepositoryProvider).updatePassword(password);
-
+if (!ref.mounted) return;
     state = state.copyWith(
       isLoading: false,
     );
   } catch (e, stackTrace) {
+      if (!ref.mounted) return;
+
     print("UPDATE PASSWORD ERROR:");
     print(e);
     print(stackTrace);

@@ -53,7 +53,7 @@ void initState() {
       }
 
       if (next.user != null) {
-        widget.onLogin(); // Navigate to Home
+        widget.onLogin();
       }
     },
   );

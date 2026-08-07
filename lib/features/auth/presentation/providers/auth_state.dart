@@ -10,16 +10,15 @@ class AuthState {
     this.user,
     this.error,
   });
-
-  AuthState copyWith({
-    bool? isLoading,
-    AppUser? user,
-    String? error,
-  }) {
-    return AuthState(
-      isLoading: isLoading ?? this.isLoading,
-      user: user ?? this.user,
-      error: error,
-    );
-  }
+AuthState copyWith({
+  bool? isLoading,
+  AppUser? user,
+  String? error,
+}) {
+  return AuthState(
+    isLoading: isLoading ?? this.isLoading,
+    user: user ?? this.user,
+    error: error,
+  );
+}
 }
