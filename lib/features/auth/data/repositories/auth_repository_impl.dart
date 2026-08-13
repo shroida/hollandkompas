@@ -6,7 +6,7 @@ import 'package:hollandkompas/features/auth/domain/repositories/auth_repository.
 import '../datasource/auth_remote_data_source.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
-  final SupabaseAuthRemoteDataSource  remote;
+  final SupabaseAuthRemoteDataSource remote;
 
   AuthRepositoryImpl(this.remote);
 
@@ -19,7 +19,6 @@ class AuthRepositoryImpl implements AuthRepository {
     required DutchLevel level,
     required String phoneNumber,
     required UserRole role,
-    
   }) {
     return remote.register(
       firstName: firstName,
@@ -31,17 +30,17 @@ class AuthRepositoryImpl implements AuthRepository {
       role: role,
     );
   }
-  
+
   @override
   Future<AppUser?> getCurrentUser() {
     return remote.getCurrentUser();
   }
-  
+
   @override
   Future<AppUser> login({required String email, required String password}) {
     return remote.login(email: email, password: password);
   }
-  
+
   @override
   Future<void> logout() {
     return remote.logout();
@@ -51,7 +50,7 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<void> forgotPassword({required String email}) {
     return remote.forgotPassword(email: email);
   }
-  
+
   @override
   Future<void> updatePassword(String password) {
     return remote.updatePassword(password);

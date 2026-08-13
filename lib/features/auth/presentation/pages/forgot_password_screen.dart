@@ -12,14 +12,11 @@ class ForgotPasswordScreen extends ConsumerStatefulWidget {
   final VoidCallback onLogin;
   final VoidCallback? onBack;
 
-  const ForgotPasswordScreen({
-    super.key,
-    required this.onLogin,
-    this.onBack,
-  });
+  const ForgotPasswordScreen({super.key, required this.onLogin, this.onBack});
 
   @override
-  ConsumerState<ForgotPasswordScreen> createState() => _ForgotPasswordScreenState();
+  ConsumerState<ForgotPasswordScreen> createState() =>
+      _ForgotPasswordScreenState();
 }
 
 class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
@@ -32,30 +29,25 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
     super.dispose();
   }
 
-@override
-void initState() {
-  super.initState();
+  @override
+  void initState() {
+    super.initState();
 
-  ref.listenManual(
-    authControllerProvider,
-    (previous, next) {
+    ref.listenManual(authControllerProvider, (previous, next) {
       if (!mounted) return;
 
       if (next.error != null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(next.error!),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text(next.error!), backgroundColor: Colors.red),
         );
       } else if (!next.isLoading) {
         setState(() {
           isSent = true;
         });
       }
-    },
-  );
-}
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(authControllerProvider);
@@ -88,7 +80,7 @@ void initState() {
   }
 
   /// Mobile Layout
-  Widget _buildMobileLayout(BuildContext context,AuthState state) {
+  Widget _buildMobileLayout(BuildContext context, AuthState state) {
     return Center(
       child: SingleChildScrollView(
         padding: EdgeInsets.symmetric(
@@ -101,15 +93,13 @@ void initState() {
   }
 
   /// Tablet & Desktop Layout
-  Widget _buildDesktopTabletLayout(BuildContext context,AuthState state) {
+  Widget _buildDesktopTabletLayout(BuildContext context, AuthState state) {
     return Row(
       children: [
         // Side Branding Banner
         Expanded(
           flex: context.isDesktop ? 5 : 4,
-          child: const SizedBox.expand(
-            child: HeaderAuth(),
-          ),
+          child: const SizedBox.expand(child: HeaderAuth()),
         ),
 
         // Content Area Card
@@ -140,8 +130,7 @@ void initState() {
                                 color: AppColors.textForeground,
                                 size: 20,
                               ),
-                              onPressed: widget.onBack ??
-                                  () =>context.pop(),
+                              onPressed: widget.onBack ?? () => context.pop(),
                             ),
                           ),
                         _buildAnimatedContent(context, state),
@@ -158,7 +147,7 @@ void initState() {
   }
 
   /// Smooth State Switcher
-  Widget _buildAnimatedContent(BuildContext context,AuthState state) {
+  Widget _buildAnimatedContent(BuildContext context, AuthState state) {
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 300),
       switchInCurve: Curves.easeOut,
@@ -222,67 +211,60 @@ void initState() {
         ),
         const SizedBox(height: 24),
 
-       SizedBox(
-        width: double.infinity,
-        height: 52,
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [
-                AppColors.primary,
-                AppColors.primaryDark,
-              ],
-            ),
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: ElevatedButton(
-            onPressed: state.isLoading
-                ? null
-                : () {
-                    if (emailController.text.trim().isEmpty) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                            "Please enter your email.",
-                          ),
-                        ),
-                      );
-                      return;
-                    }
-
-                    ref
-                        .read(authControllerProvider.notifier)
-                        .forgotPassword(
-                          email: emailController.text.trim(),
-                        );
-                  },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.transparent,
-              shadowColor: Colors.transparent,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+        SizedBox(
+          width: double.infinity,
+          height: 52,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [AppColors.primary, AppColors.primaryDark],
               ),
+              borderRadius: BorderRadius.circular(16),
             ),
-            child: state.isLoading
-                ? const SizedBox(
-                    width: 22,
-                    height: 22,
-                    child: CircularProgressIndicator(
-                      color: Colors.white,
-                      strokeWidth: 2,
+            child: ElevatedButton(
+              onPressed: state.isLoading
+                  ? null
+                  : () {
+                      if (emailController.text.trim().isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text("Please enter your email."),
+                          ),
+                        );
+                        return;
+                      }
+
+                      ref
+                          .read(authControllerProvider.notifier)
+                          .forgotPassword(email: emailController.text.trim());
+                    },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.transparent,
+                shadowColor: Colors.transparent,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+              child: state.isLoading
+                  ? const SizedBox(
+                      width: 22,
+                      height: 22,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    )
+                  : const Text(
+                      "إرسال رابط الاستعادة 🚀",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
                     ),
-                  )
-                : const Text(
-                    "إرسال رابط الاستعادة 🚀",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
+            ),
           ),
         ),
-      )                        
       ],
     );
   }

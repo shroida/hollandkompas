@@ -7,32 +7,27 @@ import 'package:hollandkompas/features/auth/presentation/providers/auth_controll
 import 'package:hollandkompas/features/auth/presentation/providers/auth_state.dart';
 import 'package:hollandkompas/features/auth/presentation/widgets/auth_text_field.dart';
 import 'package:hollandkompas/features/auth/presentation/widgets/header_auth.dart';
+
 class RegisterScreen extends ConsumerStatefulWidget {
   final VoidCallback onLogin;
   final VoidCallback? onBack;
 
-  const RegisterScreen({
-    super.key,
-    required this.onLogin,
-    this.onBack,
-  });
+  const RegisterScreen({super.key, required this.onLogin, this.onBack});
 
   @override
-  ConsumerState<RegisterScreen> createState() =>
-      _RegisterScreenState();
+  ConsumerState<RegisterScreen> createState() => _RegisterScreenState();
 }
 
-class _RegisterScreenState    extends ConsumerState<RegisterScreen> {  
-      
-    final firstNameController = TextEditingController();
+class _RegisterScreenState extends ConsumerState<RegisterScreen> {
+  final firstNameController = TextEditingController();
 
-    final lastNameController = TextEditingController();
+  final lastNameController = TextEditingController();
 
-    final phoneController = TextEditingController();
+  final phoneController = TextEditingController();
 
-    final emailController = TextEditingController();
+  final emailController = TextEditingController();
 
-    final passwordController = TextEditingController();
+  final passwordController = TextEditingController();
 
   bool showPassword = false;
   String selectedLevel = 'A1';
@@ -49,59 +44,43 @@ class _RegisterScreenState    extends ConsumerState<RegisterScreen> {
     passwordController.dispose();
     super.dispose();
   }
-@override
-void initState() {
-  super.initState();
 
-  ref.listenManual(
-    authControllerProvider,
-    (previous, next){
+  @override
+  void initState() {
+    super.initState();
 
-      if(next.error != null){
-
-        ScaffoldMessenger.of(context)
-        .showSnackBar(
-          SnackBar(
-            content: Text(next.error!),
-          ),
-        );
-
+    ref.listenManual(authControllerProvider, (previous, next) {
+      if (next.error != null) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(next.error!)));
       }
 
-
-      if(next.user != null){
-
-        ScaffoldMessenger.of(context)
-        .showSnackBar(
-          const SnackBar(
-            content:
-            Text("Account created successfully"),
-          ),
+      if (next.user != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Account created successfully")),
         );
-
 
         widget.onLogin();
-
       }
+    });
+  }
 
-    },
-  );
-}
-@override
-Widget build(BuildContext context) {
-  final state = ref.watch(authControllerProvider);
+  @override
+  Widget build(BuildContext context) {
+    final state = ref.watch(authControllerProvider);
 
-  return Scaffold(
-    backgroundColor: AppColors.background,
-    appBar: context.isMobile ? _buildMobileAppBar(context) : null,
-    body: SafeArea(
-  top: context.isMobile,
-  child: context.isMobile
-      ? _buildMobileLayout(context, state)
-      : _buildDesktopTabletLayout(context, state),
-),
-  );
-}
+    return Scaffold(
+      backgroundColor: AppColors.background,
+      appBar: context.isMobile ? _buildMobileAppBar(context) : null,
+      body: SafeArea(
+        top: context.isMobile,
+        child: context.isMobile
+            ? _buildMobileLayout(context, state)
+            : _buildDesktopTabletLayout(context, state),
+      ),
+    );
+  }
 
   PreferredSizeWidget _buildMobileAppBar(BuildContext context) {
     return AppBar(
@@ -128,10 +107,7 @@ Widget build(BuildContext context) {
           ),
           Text(
             "ابدأ رحلتك التعليمية اليوم",
-            style: TextStyle(
-              fontSize: 12,
-              color: AppColors.mutedForeground,
-            ),
+            style: TextStyle(fontSize: 12, color: AppColors.mutedForeground),
           ),
         ],
       ),
@@ -154,9 +130,7 @@ Widget build(BuildContext context) {
         // Side Branding Banner
         Expanded(
           flex: context.isDesktop ? 5 : 4,
-          child: const SizedBox.expand(
-            child: HeaderAuth(),
-          ),
+          child: const SizedBox.expand(child: HeaderAuth()),
         ),
         // Auth Form Side Card
         Expanded(
@@ -186,7 +160,8 @@ Widget build(BuildContext context) {
                                 color: AppColors.textForeground,
                                 size: 20,
                               ),
-                              onPressed: widget.onBack ??
+                              onPressed:
+                                  widget.onBack ??
                                   () => Navigator.maybePop(context),
                             ),
                           ),
@@ -225,8 +200,6 @@ Widget build(BuildContext context) {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-       
-      
         Row(
           children: [
             Expanded(
@@ -248,7 +221,7 @@ Widget build(BuildContext context) {
             ),
           ],
         ),
-       
+
         const SizedBox(height: 16),
 
         AuthTextField(
@@ -314,7 +287,9 @@ Widget build(BuildContext context) {
                           : Colors.white,
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: isSelected ? AppColors.primary : AppColors.border,
+                        color: isSelected
+                            ? AppColors.primary
+                            : AppColors.border,
                         width: isSelected ? 2 : 1,
                       ),
                     ),
@@ -418,48 +393,47 @@ Widget build(BuildContext context) {
                       ]
                     : [],
               ),
-               child: ElevatedButton(
-            onPressed: !agreed || state.isLoading
-                ? null
-                : () async {
-                    await ref
-                        .read(authControllerProvider.notifier)
-                        .register(
-                          firstName: firstNameController.text.trim(),
-                          lastName: lastNameController.text.trim(),
-                          email: emailController.text.trim(),
-                          password: passwordController.text.trim(),
-                          level: DutchLevel.values.byName(
-                            selectedLevel.toLowerCase(),
-                          ),
-                          phoneNumber: phoneController.text.trim(),
-                        );
-                      
-
-                  },                style: ElevatedButton.styleFrom(
+              child: ElevatedButton(
+                onPressed: !agreed || state.isLoading
+                    ? null
+                    : () async {
+                        await ref
+                            .read(authControllerProvider.notifier)
+                            .register(
+                              firstName: firstNameController.text.trim(),
+                              lastName: lastNameController.text.trim(),
+                              email: emailController.text.trim(),
+                              password: passwordController.text.trim(),
+                              level: DutchLevel.values.byName(
+                                selectedLevel.toLowerCase(),
+                              ),
+                              phoneNumber: phoneController.text.trim(),
+                            );
+                      },
+                style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.transparent,
                   shadowColor: Colors.transparent,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),
                 ),
-              child: state.isLoading
-    ? const SizedBox(
-        width: 22,
-        height: 22,
-        child: CircularProgressIndicator(
-          strokeWidth: 2,
-          color: Colors.white,
-        ),
-      )
-    : const Text(
-        "إنشاء الحساب 🚀",
-        style: TextStyle(
-          color: Colors.white,
-          fontWeight: FontWeight.bold,
-          fontSize: 16,
-        ),
-      ),
+                child: state.isLoading
+                    ? const SizedBox(
+                        width: 22,
+                        height: 22,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      )
+                    : const Text(
+                        "إنشاء الحساب 🚀",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
               ),
             ),
           ),

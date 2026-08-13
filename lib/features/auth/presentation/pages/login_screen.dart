@@ -7,7 +7,7 @@ import 'package:hollandkompas/features/auth/presentation/providers/auth_state.da
 import 'package:hollandkompas/features/auth/presentation/widgets/auth_text_field.dart';
 import 'package:hollandkompas/features/auth/presentation/widgets/header_auth.dart';
 
-class LoginScreen extends ConsumerStatefulWidget  {
+class LoginScreen extends ConsumerStatefulWidget {
   final VoidCallback onLogin;
   final VoidCallback? onRegister;
   final VoidCallback? onForgot;
@@ -34,32 +34,26 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     passwordController.dispose();
     super.dispose();
   }
-@override
-void initState() {
-  super.initState();
 
-  ref.listenManual<AuthState>(
-    authControllerProvider,
-    (previous, next) {
+  @override
+  void initState() {
+    super.initState();
+
+    ref.listenManual<AuthState>(authControllerProvider, (previous, next) {
       if (!mounted) return;
 
       if (next.error != null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(next.error!),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text(next.error!), backgroundColor: Colors.red),
         );
       }
 
-    if (!next.isLoading &&
-    next.error == null &&
-    next.user != null) {
-    widget.onLogin();
-       }
-    },
-  );
-}
+      if (!next.isLoading && next.error == null && next.user != null) {
+        widget.onLogin();
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(authControllerProvider);
@@ -97,9 +91,7 @@ void initState() {
         // Branding Banner Side Panel
         Expanded(
           flex: context.isDesktop ? 5 : 4,
-          child: const SizedBox.expand(
-            child: HeaderAuth(),
-          ),
+          child: const SizedBox.expand(child: HeaderAuth()),
         ),
         Expanded(
           flex: 6,
@@ -127,8 +119,7 @@ void initState() {
     );
   }
 
-    Widget _buildFormContent(BuildContext context, AuthState state,
-    ) {    
+  Widget _buildFormContent(BuildContext context, AuthState state) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
@@ -144,10 +135,7 @@ void initState() {
         const SizedBox(height: 6),
         const Text(
           "سجّل الدخول لمتابعة تعلمك",
-          style: TextStyle(
-            fontSize: 14,
-            color: AppColors.mutedForeground,
-          ),
+          style: TextStyle(fontSize: 14, color: AppColors.mutedForeground),
         ),
         const SizedBox(height: 28),
 
@@ -218,49 +206,46 @@ void initState() {
               ],
             ),
             child: ElevatedButton(
-            onPressed: state.isLoading
-                ? null
-                : () {
-                    ref.read(authControllerProvider.notifier).login(
-                          email: emailController.text.trim(),
-                          password: passwordController.text.trim(),
-                        );
-                  },
-               style: ElevatedButton.styleFrom(
+              onPressed: state.isLoading
+                  ? null
+                  : () {
+                      ref
+                          .read(authControllerProvider.notifier)
+                          .login(
+                            email: emailController.text.trim(),
+                            password: passwordController.text.trim(),
+                          );
+                    },
+              style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.transparent,
                 shadowColor: Colors.transparent,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
                 ),
               ),
-             child: state.isLoading
-              ? const SizedBox(
-                  width: 22,
-                  height: 22,
-                  child: CircularProgressIndicator(
-                    color: Colors.white,
-                    strokeWidth: 2,
-                  ),
-                )
-              : const Text(
-                  "تسجيل الدخول",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
+              child: state.isLoading
+                  ? const SizedBox(
+                      width: 22,
+                      height: 22,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2,
+                      ),
+                    )
+                  : const Text(
+                      "تسجيل الدخول",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
             ),
           ),
         ),
         if (state.error != null) ...[
           const SizedBox(height: 12),
-          Text(
-            state.error!,
-            style: const TextStyle(
-              color: Colors.red,
-            ),
-          ),
+          Text(state.error!, style: const TextStyle(color: Colors.red)),
         ],
         const SizedBox(height: 24),
 

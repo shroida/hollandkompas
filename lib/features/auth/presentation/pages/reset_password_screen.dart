@@ -17,8 +17,7 @@ class ResetPasswordScreen extends ConsumerStatefulWidget {
       _ResetPasswordScreenState();
 }
 
-class _ResetPasswordScreenState
-    extends ConsumerState<ResetPasswordScreen> {
+class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
   final passwordController = TextEditingController();
   final confirmController = TextEditingController();
 
@@ -36,34 +35,28 @@ class _ResetPasswordScreenState
   void initState() {
     super.initState();
 
-    ref.listenManual(
-      authControllerProvider,
-      (previous, next) {
-        if (!mounted) return;
+    ref.listenManual(authControllerProvider, (previous, next) {
+      if (!mounted) return;
 
-        if (next.error != null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(next.error!),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
+      if (next.error != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(next.error!), backgroundColor: Colors.red),
+        );
+      }
 
-        if (!next.isLoading &&
-            next.error == null &&
-            previous?.isLoading == true) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text("Password updated successfully."),
-              backgroundColor: Colors.green,
-            ),
-          );
+      if (!next.isLoading &&
+          next.error == null &&
+          previous?.isLoading == true) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Password updated successfully."),
+            backgroundColor: Colors.green,
+          ),
+        );
 
-          context.go("/login");
-        }
-      },
-    );
+        context.go("/login");
+      }
+    });
   }
 
   @override
@@ -92,10 +85,7 @@ class _ResetPasswordScreenState
   Widget _desktop(BuildContext context, AuthState state) {
     return Row(
       children: [
-        const Expanded(
-          flex: 5,
-          child: HeaderAuth(),
-        ),
+        const Expanded(flex: 5, child: HeaderAuth()),
         Expanded(
           flex: 6,
           child: Center(
@@ -118,19 +108,12 @@ class _ResetPasswordScreenState
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        const Icon(
-          Icons.lock_reset,
-          color: AppColors.primary,
-          size: 70,
-        ),
+        const Icon(Icons.lock_reset, color: AppColors.primary, size: 70),
         const SizedBox(height: 20),
 
         const Text(
           "Reset Password",
-          style: TextStyle(
-            fontSize: 26,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
         ),
 
         const SizedBox(height: 8),
@@ -154,11 +137,7 @@ class _ResetPasswordScreenState
                 showPassword = !showPassword;
               });
             },
-            icon: Icon(
-              showPassword
-                  ? Icons.visibility_off
-                  : Icons.visibility,
-            ),
+            icon: Icon(showPassword ? Icons.visibility_off : Icons.visibility),
           ),
         ),
 
@@ -173,14 +152,11 @@ class _ResetPasswordScreenState
           suffix: IconButton(
             onPressed: () {
               setState(() {
-                showConfirmPassword =
-                    !showConfirmPassword;
+                showConfirmPassword = !showConfirmPassword;
               });
             },
             icon: Icon(
-              showConfirmPassword
-                  ? Icons.visibility_off
-                  : Icons.visibility,
+              showConfirmPassword ? Icons.visibility_off : Icons.visibility,
             ),
           ),
         ),
@@ -196,42 +172,30 @@ class _ResetPasswordScreenState
                 : () async {
                     if (passwordController.text.isEmpty ||
                         confirmController.text.isEmpty) {
-                      ScaffoldMessenger.of(context)
-                          .showSnackBar(
+                      ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content: Text(
-                              "Please fill all fields."),
+                          content: Text("Please fill all fields."),
                         ),
                       );
                       return;
                     }
 
-                    if (passwordController.text !=
-                        confirmController.text) {
-                      ScaffoldMessenger.of(context)
-                          .showSnackBar(
+                    if (passwordController.text != confirmController.text) {
+                      ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
-                          content:
-                              Text("Passwords do not match."),
+                          content: Text("Passwords do not match."),
                         ),
                       );
                       return;
                     }
 
                     await ref
-                        .read(
-                            authControllerProvider.notifier)
-                        .updatePassword(
-                          passwordController.text.trim(),
-                        );
+                        .read(authControllerProvider.notifier)
+                        .updatePassword(passwordController.text.trim());
                   },
             child: state.isLoading
-                ? const CircularProgressIndicator(
-                    color: Colors.white,
-                  )
-                : const Text(
-                    "Update Password",
-                  ),
+                ? const CircularProgressIndicator(color: Colors.white)
+                : const Text("Update Password"),
           ),
         ),
       ],

@@ -13,18 +13,13 @@ abstract class AuthRepository {
     required String phoneNumber,
     required UserRole role,
   });
-   Future<AppUser> login({
-    required String email,
-    required String password,
-  });
+  Future<AppUser> login({required String email, required String password});
 
   Future<void> logout();
 
   Future<AppUser?> getCurrentUser();
 
-  Future<void> forgotPassword({
-    required String email,
-  });
+  Future<void> forgotPassword({required String email});
 
   Future<void> updatePassword(String password);
 }

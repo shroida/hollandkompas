@@ -19,10 +19,7 @@ class SupabaseAuthRemoteDataSource {
     required String phoneNumber,
     required UserRole role,
   }) async {
-    final response = await client.auth.signUp(
-      email: email,
-      password: password,
-    );
+    final response = await client.auth.signUp(email: email, password: password);
 
     final user = response.user;
 
@@ -101,9 +98,7 @@ class SupabaseAuthRemoteDataSource {
           throw Exception('No account exists with this email.');
 
         case 'too many requests':
-          throw Exception(
-            'Too many login attempts. Please try again later.',
-          );
+          throw Exception('Too many login attempts. Please try again later.');
 
         default:
           throw Exception(e.message);
@@ -142,18 +137,13 @@ class SupabaseAuthRemoteDataSource {
     );
   }
 
-  Future<void> forgotPassword({
-    required String email,
-  }) async {
+  Future<void> forgotPassword({required String email}) async {
     try {
       final redirectUrl = kIsWeb
           ? '${Uri.base.origin}/reset-password'
           : 'hollandkompas://reset-password';
 
-      await client.auth.resetPasswordForEmail(
-        email,
-        redirectTo: redirectUrl,
-      );
+      await client.auth.resetPasswordForEmail(email, redirectTo: redirectUrl);
     } on AuthException catch (e) {
       throw Exception(e.message);
     }
@@ -161,9 +151,7 @@ class SupabaseAuthRemoteDataSource {
 
   Future<void> updatePassword(String password) async {
     try {
-      await client.auth.updateUser(
-        UserAttributes(password: password),
-      );
+      await client.auth.updateUser(UserAttributes(password: password));
     } catch (e, stackTrace) {
       debugPrint('UPDATE PASSWORD ERROR');
       debugPrint(e.toString());

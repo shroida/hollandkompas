@@ -24,7 +24,7 @@ class RegisterUseCase {
       password: password,
       level: level,
       phoneNumber: phoneNumber,
-      role: UserRole.student
+      role: UserRole.student,
     );
   }
 }
