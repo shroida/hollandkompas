@@ -1,3 +1,5 @@
+import 'package:hollandkompas/features/auth/domain/enums/user_role.dart';
+
 import '../entities/app_user.dart';
 import '../enums/dutch_level.dart';
 import '../repositories/auth_repository.dart';
@@ -22,6 +24,7 @@ class RegisterUseCase {
       password: password,
       level: level,
       phoneNumber: phoneNumber,
+      role: UserRole.student
     );
   }
 }

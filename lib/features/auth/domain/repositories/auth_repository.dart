@@ -1,3 +1,5 @@
+import 'package:hollandkompas/features/auth/domain/enums/user_role.dart';
+
 import '../entities/app_user.dart';
 import '../enums/dutch_level.dart';
 
@@ -9,6 +11,7 @@ abstract class AuthRepository {
     required String password,
     required DutchLevel level,
     required String phoneNumber,
+    required UserRole role,
   });
    Future<AppUser> login({
     required String email,

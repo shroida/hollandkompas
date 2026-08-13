@@ -1,5 +1,6 @@
 import 'package:hollandkompas/features/auth/domain/entities/app_user.dart';
 import 'package:hollandkompas/features/auth/domain/enums/dutch_level.dart';
+import 'package:hollandkompas/features/auth/domain/enums/user_role.dart';
 import 'package:hollandkompas/features/auth/domain/repositories/auth_repository.dart';
 
 import '../datasource/auth_remote_data_source.dart';
@@ -17,6 +18,8 @@ class AuthRepositoryImpl implements AuthRepository {
     required String password,
     required DutchLevel level,
     required String phoneNumber,
+    required UserRole role,
+    
   }) {
     return remote.register(
       firstName: firstName,
@@ -25,6 +28,7 @@ class AuthRepositoryImpl implements AuthRepository {
       password: password,
       level: level,
       phoneNumber: phoneNumber,
+      role: role,
     );
   }
   

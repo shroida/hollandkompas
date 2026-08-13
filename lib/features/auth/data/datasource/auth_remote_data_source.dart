@@ -17,6 +17,7 @@ class SupabaseAuthRemoteDataSource {
     required String password,
     required DutchLevel level,
     required String phoneNumber,
+    required UserRole role,
   }) async {
     final response = await client.auth.signUp(
       email: email,
