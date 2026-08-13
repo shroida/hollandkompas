@@ -48,7 +48,7 @@ final class SettingsBoxProvider
   }
 }
 
-String _$settingsBoxHash() => r'1f8e8cd8a1cd87a0a498ccea753ffccfc96e24f2';
+String _$settingsBoxHash() => r'a2e18a90ab001a399330d9954503e2858656959a';
 
 @ProviderFor(userBox)
 final userBoxProvider = UserBoxProvider._();
@@ -89,7 +89,7 @@ final class UserBoxProvider
   }
 }
 
-String _$userBoxHash() => r'5c9afd8ff755c3bd78851516bc71742dc58130cb';
+String _$userBoxHash() => r'11818bd094fc35912b03cbabea4c783615a4a7d2';
 
 @ProviderFor(cacheBox)
 final cacheBoxProvider = CacheBoxProvider._();
@@ -130,4 +130,4 @@ final class CacheBoxProvider
   }
 }
 
-String _$cacheBoxHash() => r'9e0b20e1fccaebffcf32f3281137274b986efc4a';
+String _$cacheBoxHash() => r'1640128ebe441b699ff2c59f42406708984967b0';
