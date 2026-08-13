@@ -3,9 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hollandkompas/core/theme/app_colors.dart';
 import 'package:hollandkompas/core/responsive/responsive_builder.dart';
 import 'package:hollandkompas/features/home/presentation/providers/current_user_provider.dart';
-import 'package:hollandkompas/features/home/presentation/views/mobile_home_view.dart';
-import 'package:hollandkompas/features/home/presentation/views/tablet_home_view.dart';
-import 'package:hollandkompas/features/home/presentation/views/desktop_home_view.dart';
+import 'package:hollandkompas/features/home/presentation/views/student/mobile_home_view.dart';
+import 'package:hollandkompas/features/home/presentation/views/student/tablet_home_view.dart';
+import 'package:hollandkompas/features/home/presentation/views/student/desktop_home_view.dart';
 import 'package:hollandkompas/features/home/presentation/widgets/app_bar_home_screen.dart';
 
 class HomeScreen extends ConsumerWidget {
