@@ -5,7 +5,7 @@ import 'package:hollandkompas/core/responsive/responsive_builder.dart';
 import 'package:hollandkompas/features/home/presentation/views/mobile_home_view.dart';
 import 'package:hollandkompas/features/home/presentation/views/tablet_home_view.dart';
 import 'package:hollandkompas/features/home/presentation/views/desktop_home_view.dart';
-import 'package:hollandkompas/shared/widgets/language_selector.dart';
+import 'package:hollandkompas/features/home/presentation/widgets/app_bar_home_screen.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
