@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hollandkompas/core/theme/app_colors.dart';
 import 'package:hollandkompas/core/responsive/responsive_builder.dart';
-import 'package:hollandkompas/features/auth/domain/enums/user_role.dart';
 import 'package:hollandkompas/features/home/presentation/providers/current_user_provider.dart';
 import 'package:hollandkompas/features/home/presentation/views/mobile_home_view.dart';
 import 'package:hollandkompas/features/home/presentation/views/tablet_home_view.dart';
@@ -34,7 +33,7 @@ class HomeScreen extends ConsumerWidget {
           backgroundColor: AppColors.background,
 
           appBar: AppBarHomeScreen(
-            firstName: user?.role == UserRole.student ? 'Student' ?? "-" : 'Manager' ?? "-",
+            firstName: user?.firstName ?? "Guest",
             level: user?.level.name.toUpperCase() ?? "-",
           ),
 
@@ -47,7 +46,4 @@ class HomeScreen extends ConsumerWidget {
       },
     );
   }
-}
-
-class Role {
 }
