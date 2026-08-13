@@ -13,15 +13,15 @@ class DashboardHeader extends StatelessWidget {
           "Admin Dashboard",
           style: Theme.of(context).textTheme.headlineMedium?.copyWith(
             fontWeight: FontWeight.bold,
-            color: AppColors.textForeground,
+            color: Theme.of(context).textTheme.titleMedium?.color,
           ),
         ),
         const SizedBox(height: 8),
         Text(
           "Manage students, courses and platform statistics.",
-          style: Theme.of(
-            context,
-          ).textTheme.bodyMedium?.copyWith(color: AppColors.mutedForeground),
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            color: Theme.of(context).textTheme.bodyMedium?.color,
+          ),
         ),
       ],
     );

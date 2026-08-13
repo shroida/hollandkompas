@@ -64,7 +64,7 @@ class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
     final state = ref.watch(authControllerProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: context.isMobile
             ? _mobile(context, state)

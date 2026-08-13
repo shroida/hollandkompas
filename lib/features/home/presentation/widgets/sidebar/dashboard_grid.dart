@@ -37,7 +37,7 @@ class _PlaceholderCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      color: AppColors.cardBg,
+      color: Theme.of(context).cardColor,
       child: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(

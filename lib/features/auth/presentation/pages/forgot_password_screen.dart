@@ -52,7 +52,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
   Widget build(BuildContext context) {
     final state = ref.watch(authControllerProvider);
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: context.isMobile ? _buildMobileAppBar(context) : null,
       body: SafeArea(
         top: context.isMobile,

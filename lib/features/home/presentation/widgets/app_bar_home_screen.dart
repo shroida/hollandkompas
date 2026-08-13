@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hollandkompas/core/theme/app_colors.dart';
 import 'package:hollandkompas/shared/widgets/language_selector.dart';
 
-class AppBarHomeScreen extends StatelessWidget
-    implements PreferredSizeWidget {
-
+class AppBarHomeScreen extends StatelessWidget implements PreferredSizeWidget {
   const AppBarHomeScreen({
     super.key,
     required this.firstName,
@@ -22,9 +20,7 @@ class AppBarHomeScreen extends StatelessWidget
     return Container(
       decoration: const BoxDecoration(
         color: AppColors.headerBlue,
-        borderRadius: BorderRadius.vertical(
-          bottom: Radius.circular(30),
-        ),
+        borderRadius: BorderRadius.vertical(bottom: Radius.circular(30)),
       ),
       child: SafeArea(
         child: Padding(
@@ -69,22 +65,18 @@ class AppBarHomeScreen extends StatelessWidget
                     children: [
                       Text(
                         "Welcome Back 👋",
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodySmall
-                            ?.copyWith(
-                              color: AppColors.mutedForeground,
-                            ),
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppColors.mutedForeground,
+                        ),
                       ),
                       const SizedBox(height: 3),
                       Text(
                         firstName,
-                        style: Theme.of(context)
-                            .textTheme
-                            .headlineMedium
+                        style: Theme.of(context).textTheme.headlineMedium
                             ?.copyWith(
                               fontWeight: FontWeight.bold,
                               fontSize: 22,
+                              color: Theme.of(context).scaffoldBackgroundColor,
                             ),
                       ),
                     ],

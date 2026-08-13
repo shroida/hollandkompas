@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:hollandkompas/core/theme/app_colors.dart';
 
 class HeaderAuth extends StatelessWidget {
-  const HeaderAuth({
-    super.key,
-  });
+  const HeaderAuth({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -59,17 +57,14 @@ class HeaderAuth extends StatelessWidget {
             alignment: Alignment.bottomCenter,
             child: Container(
               height: 28,
-              decoration: const BoxDecoration(
-                color: AppColors.background,
-                borderRadius: BorderRadius.vertical(
-                  top: Radius.circular(32),
-                ),
+              decoration: BoxDecoration(
+                color: Theme.of(context).scaffoldBackgroundColor,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
               ),
             ),
-          )
+          ),
         ],
       ),
     );
   }
 }
-

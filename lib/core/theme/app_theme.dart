@@ -7,15 +7,13 @@ class AppTheme {
     useMaterial3: true,
     fontFamily: 'Cairo',
 
-    colorScheme: const ColorScheme.light(
+    colorScheme: ColorScheme.fromSeed(
+      seedColor: AppColors.primary,
+      brightness: Brightness.light,
       primary: AppColors.primary,
       secondary: AppColors.secondary,
       surface: AppColors.card,
       error: AppColors.destructive,
-      onPrimary: Colors.white,
-      onSecondary: Colors.white,
-      onSurface: AppColors.foreground,
-      onError: Colors.white,
     ),
 
     scaffoldBackgroundColor: AppColors.background,
@@ -25,6 +23,7 @@ class AppTheme {
       foregroundColor: AppColors.foreground,
       elevation: 0,
       centerTitle: true,
+      surfaceTintColor: Colors.transparent,
     ),
 
     cardTheme: CardThemeData(
@@ -33,22 +32,23 @@ class AppTheme {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
     ),
 
-    textTheme: AppTextTheme.textTheme,
+    textTheme: AppTextTheme.textTheme.apply(
+      bodyColor: AppColors.foreground,
+      displayColor: AppColors.foreground,
+    ),
   );
 
   static final darkTheme = ThemeData(
     useMaterial3: true,
     fontFamily: 'Cairo',
 
-    colorScheme: const ColorScheme.dark(
+    colorScheme: ColorScheme.fromSeed(
+      seedColor: AppColors.primary,
+      brightness: Brightness.dark,
       primary: AppColors.primary,
       secondary: AppColors.darkSecondary,
       surface: AppColors.darkCard,
       error: AppColors.destructive,
-      onPrimary: Colors.white,
-      onSecondary: Colors.white,
-      onSurface: AppColors.darkForeground,
-      onError: Colors.white,
     ),
 
     scaffoldBackgroundColor: AppColors.darkBackground,
@@ -57,6 +57,7 @@ class AppTheme {
       backgroundColor: AppColors.darkBackground,
       foregroundColor: AppColors.darkForeground,
       elevation: 0,
+      surfaceTintColor: Colors.transparent,
     ),
 
     cardTheme: CardThemeData(

@@ -30,7 +30,7 @@ class HomeScreen extends ConsumerWidget {
         }
 
         return Scaffold(
-          backgroundColor: AppColors.background,
+          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
 
           appBar: AppBarHomeScreen(
             firstName: user.firstName,
