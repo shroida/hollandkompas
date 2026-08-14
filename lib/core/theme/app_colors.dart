@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 
 class AppColors {
-  // Light Theme
+  // ========= Light =========
   static const background = Color(0xFFF8FAFF);
   static const foreground = Color(0xFF0D1117);
-
   static const card = Color(0xFFFFFFFF);
 
   static const primary = Color(0xFFFF6B00);
@@ -16,30 +15,45 @@ class AppColors {
   static const accent = Color(0xFFFFF4ED);
 
   static const destructive = Color(0xFFEF4444);
-
   static const success = Color(0xFF22C55E);
   static const warning = Color(0xFFF59E0B);
 
   static const border = Color(0x1A0D1117);
   static const ring = Color(0xFFFF6B00);
 
-  // Dark Theme
+  // ========= Dark =========
   static const darkBackground = Color(0xFF0B0F1A);
   static const darkForeground = Color(0xFFE6EAF4);
 
   static const darkCard = Color(0xFF141B2D);
-
   static const darkSecondary = Color(0xFF2D4EB8);
 
   static const darkMuted = Color(0xFF1C2333);
   static const darkMutedForeground = Color(0xFF8B949E);
 
   static const darkAccent = Color(0xFF1A1208);
-
   static const darkBorder = Color(0x1AE6EAF4);
 
-  static const Color primaryDark = Color(0xFFE55A00);
-  static const Color headerBlue = Color(0xFF1E3A8A);
-  static const Color cardBg = Colors.white;
-  static const Color textForeground = Color(0xFF111827);
+  static const primaryDark = Color(0xFFE55A00);
+
+  static const headerBlue = Color(0xFF1E3A8A);
+
+  // ================= Helpers =================
+
+  static Color textColor(BuildContext context) =>
+      Theme.of(context).colorScheme.onSurface;
+
+  static Color backgroundColor(BuildContext context) =>
+      Theme.of(context).scaffoldBackgroundColor;
+
+  static Color cardColor(BuildContext context) =>
+      Theme.of(context).colorScheme.surface;
+
+  static Color subtitleColor(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark
+      ? darkMutedForeground
+      : mutedForeground;
+
+  static Color borderColor(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark ? darkBorder : border;
 }

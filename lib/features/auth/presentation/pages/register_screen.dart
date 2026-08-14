@@ -87,14 +87,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       backgroundColor: Colors.transparent,
       elevation: 0,
       leading: IconButton(
-        icon: const Icon(
+        icon: Icon(
           Icons.arrow_back_ios,
-          color: AppColors.textForeground,
+          color: AppColors.textColor(context),
           size: 20,
         ),
         onPressed: widget.onBack ?? () => Navigator.maybePop(context),
       ),
-      title: const Column(
+      title: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
@@ -102,12 +102,15 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: AppColors.textForeground,
+              color: AppColors.textColor(context),
             ),
           ),
           Text(
             "ابدأ رحلتك التعليمية اليوم",
-            style: TextStyle(fontSize: 12, color: AppColors.mutedForeground),
+            style: TextStyle(
+              fontSize: 12,
+              color: AppColors.subtitleColor(context),
+            ),
           ),
         ],
       ),
@@ -155,9 +158,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                           Padding(
                             padding: const EdgeInsets.only(bottom: 16),
                             child: IconButton(
-                              icon: const Icon(
+                              icon: Icon(
                                 Icons.arrow_back_ios,
-                                color: AppColors.textForeground,
+                                color: AppColors.textColor(context),
                                 size: 20,
                               ),
                               onPressed:
@@ -165,20 +168,20 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                                   () => Navigator.maybePop(context),
                             ),
                           ),
-                        const Text(
+                        Text(
                           "إنشاء حساب جديد 🚀",
                           style: TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.bold,
-                            color: AppColors.textForeground,
+                            color: AppColors.textColor(context),
                           ),
                         ),
                         const SizedBox(height: 6),
-                        const Text(
+                        Text(
                           "ابدأ رحلتك التعليمية اليوم معنا",
                           style: TextStyle(
                             fontSize: 14,
-                            color: AppColors.mutedForeground,
+                            color: AppColors.subtitleColor(context),
                           ),
                         ),
                         const SizedBox(height: 24),
@@ -261,12 +264,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         ),
         const SizedBox(height: 20),
 
-        const Text(
+        Text(
           "مستواك في الهولندية",
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w600,
-            color: AppColors.textForeground,
+            color: AppColors.textColor(context),
           ),
         ),
         const SizedBox(height: 8),

@@ -124,18 +124,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        const Text(
+        Text(
           "مرحباً بعودتك 👋",
           style: TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.bold,
-            color: AppColors.textForeground,
+            color: AppColors.textColor(context),
           ),
         ),
         const SizedBox(height: 6),
-        const Text(
+        Text(
           "سجّل الدخول لمتابعة تعلمك",
-          style: TextStyle(fontSize: 14, color: AppColors.mutedForeground),
+          style: TextStyle(
+            fontSize: 14,
+            color: AppColors.subtitleColor(context),
+          ),
         ),
         const SizedBox(height: 28),
 
@@ -284,9 +287,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   backgroundColor: Colors.white,
                 ),
                 icon: const Text("🔵", style: TextStyle(fontSize: 16)),
-                label: const Text(
+                label: Text(
                   "Google",
-                  style: TextStyle(color: AppColors.textForeground),
+                  style: TextStyle(color: AppColors.textColor(context)),
                 ),
               ),
             ),
@@ -303,9 +306,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   backgroundColor: Colors.white,
                 ),
                 icon: const Text("🍎", style: TextStyle(fontSize: 16)),
-                label: const Text(
+                label: Text(
                   "Apple",
-                  style: TextStyle(color: AppColors.textForeground),
+                  style: TextStyle(color: AppColors.textColor(context)),
                 ),
               ),
             ),
