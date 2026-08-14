@@ -24,126 +24,84 @@ class AuthController extends _$AuthController {
     required DutchLevel level,
     required String phoneNumber,
   }) async {
-    state = state.copyWith(
-      isLoading: true,
-      error: null,
-    );
+    state = state.copyWith(isLoading: true, error: null);
 
     try {
-      final user =
-          await ref.read(registerUseCaseProvider).call(
-                firstName: firstName,
-                lastName: lastName,
-                email: email,
-                password: password,
-                level: level,
-                phoneNumber: phoneNumber,
-              );
-if (!ref.mounted) return;
-      state = state.copyWith(
-        isLoading: false,
-        user: user,
-      );
+      final user = await ref
+          .read(registerUseCaseProvider)
+          .call(
+            firstName: firstName,
+            lastName: lastName,
+            email: email,
+            password: password,
+            level: level,
+            phoneNumber: phoneNumber,
+          );
+      if (!ref.mounted) return;
+      state = state.copyWith(isLoading: false, user: user);
     } catch (e) {
+      state = state.copyWith(isLoading: false, error: e.toString());
+    }
+  }
+
+  Future<void> login({required String email, required String password}) async {
+    state = state.copyWith(isLoading: true, user: null, error: null);
+
+    try {
+      final user = await ref
+          .read(loginUseCaseProvider)
+          .call(email: email, password: password);
+
+      if (!ref.mounted) return;
+
+      state = state.copyWith(isLoading: false, user: user, error: null);
+    } catch (e) {
+      if (!ref.mounted) return;
+
       state = state.copyWith(
         isLoading: false,
-        error: e.toString(),
+        user: null,
+        error: e.toString().replaceFirst('Exception: ', ''),
       );
     }
   }
-Future<void> login({
-  required String email,
-  required String password,
-}) async {
-  state = state.copyWith(
-    isLoading: true,
-    user: null,
-    error: null,
-  );
 
-  try {
-    final user = await ref.read(loginUseCaseProvider).call(
-      email: email,
-      password: password,
-    );
+  Future<void> forgotPassword({required String email}) async {
+    state = state.copyWith(isLoading: true, error: null);
 
-    if (!ref.mounted) return;
-
-    state = state.copyWith(
-      isLoading: false,
-      user: user,
-      error: null,
-    );
-  } catch (e) {
-    if (!ref.mounted) return;
-
-    state = state.copyWith(
-      isLoading: false,
-      user: null,
-      error: e.toString().replaceFirst('Exception: ', ''),
-    );
-  }
-}
-Future<void> forgotPassword({
-  required String email,
-}) async {
-  state = state.copyWith(
-    isLoading: true,
-    error: null,
-  );
-
-  try {
-    await ref.read(forgotPasswordUseCaseProvider).call(
-      email: email,
-    );
-if (!ref.mounted) return;
-    state = state.copyWith(
-      isLoading: false,
-      error: null,
-    );
-  } catch (e) {
+    try {
+      await ref.read(forgotPasswordUseCaseProvider).call(email: email);
+      if (!ref.mounted) return;
+      state = state.copyWith(isLoading: false, error: null);
+    } catch (e) {
       if (!ref.mounted) return;
 
-    state = state.copyWith(
-      isLoading: false,
-      error: e.toString().replaceFirst("Exception: ", ""),
-    );
+      state = state.copyWith(
+        isLoading: false,
+        error: e.toString().replaceFirst("Exception: ", ""),
+      );
+    }
   }
-}
 
   Future<void> updatePassword(String password) async {
-  state = state.copyWith(
-    isLoading: true,
-    error: null,
-  );
+    state = state.copyWith(isLoading: true, error: null);
 
-  try {
-    await ref.read(authRepositoryProvider).updatePassword(password);
-if (!ref.mounted) return;
-    state = state.copyWith(
-      isLoading: false,
-    );
-  } catch (e, stackTrace) {
+    try {
+      await ref.read(authRepositoryProvider).updatePassword(password);
+      if (!ref.mounted) return;
+      state = state.copyWith(isLoading: false);
+    } catch (e) {
       if (!ref.mounted) return;
 
-    print("UPDATE PASSWORD ERROR:");
-    print(e);
-    print(stackTrace);
-
-    state = state.copyWith(
-      isLoading: false,
-      error: e.toString(),
-    );
+      state = state.copyWith(isLoading: false, error: e.toString());
+    }
   }
-}
-Future<void> loadCurrentUser() async {
-  state = state.copyWith(isLoading: true);
 
-  final user = await ref.read(authRepositoryProvider).getCurrentUser();
+  Future<void> loadCurrentUser() async {
+    state = state.copyWith(isLoading: true);
 
-  state = state.copyWith(
-    isLoading: false,
-    user: user,
-  );
-}
+    final user = await ref.read(authRepositoryProvider).getCurrentUser();
+
+    state = state.copyWith(isLoading: false, user: user);
+  }
 }

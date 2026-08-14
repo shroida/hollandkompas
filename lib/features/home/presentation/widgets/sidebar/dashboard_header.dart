@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:hollandkompas/core/theme/app_colors.dart';
 
 class DashboardHeader extends StatelessWidget {
   const DashboardHeader({super.key});

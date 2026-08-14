@@ -73,7 +73,7 @@ class AdminSidebar extends StatelessWidget {
                     duration: const Duration(milliseconds: 250),
                     decoration: BoxDecoration(
                       color: selected
-                          ? AppColors.primary.withOpacity(.12)
+                          ? AppColors.primary.withAlpha(30)
                           : Colors.transparent,
                       borderRadius: BorderRadius.circular(14),
                     ),
@@ -109,7 +109,7 @@ class AdminSidebar extends StatelessWidget {
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(14),
               ),
-              tileColor: Colors.red.withOpacity(.06),
+              tileColor: Colors.red.withAlpha(15),
               leading: const Icon(Icons.logout_rounded, color: Colors.red),
               title: const Text(
                 'Logout',

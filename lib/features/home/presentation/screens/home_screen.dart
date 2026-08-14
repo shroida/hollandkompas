@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hollandkompas/core/theme/app_colors.dart';
 import 'package:hollandkompas/core/responsive/responsive_builder.dart';
 import 'package:hollandkompas/features/auth/domain/extensions/user_role_extension.dart';
 import 'package:hollandkompas/features/home/presentation/providers/current_user_provider.dart';
