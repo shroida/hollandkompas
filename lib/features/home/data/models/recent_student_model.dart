@@ -1,17 +1,34 @@
-class RecentStudentModel {
-  final String id;
-  final String firstName;
-  final String lastName;
-  final String email;
-  final String level;
-  final DateTime createdAt;
+import 'package:hollandkompas/features/home/domain/entities/recent_student.dart';
 
-  RecentStudentModel({
-    required this.id,
-    required this.firstName,
-    required this.lastName,
-    required this.email,
-    required this.level,
-    required this.createdAt,
+class RecentStudentModel extends RecentStudent {
+  const RecentStudentModel({
+    required super.id,
+    required super.firstName,
+    required super.lastName,
+    required super.email,
+    required super.level,
+    required super.createdAt,
   });
+
+  factory RecentStudentModel.fromMap(Map<String, dynamic> map) {
+    return RecentStudentModel(
+      id: map['id'],
+      firstName: map['first_name'],
+      lastName: map['last_name'],
+      email: map['email'],
+      level: map['level'],
+      createdAt: DateTime.parse(map['created_at']),
+    );
+  }
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'first_name': firstName,
+      'last_name': lastName,
+      'email': email,
+      'level': level,
+      'created_at': createdAt.toIso8601String(),
+    };
+  }
 }

@@ -1,22 +1,19 @@
-class DashboardStatisticsModel {
-  final int totalStudents;
-  final int totalCourses;
-  final int totalLessons;
-  final int totalEnrollments;
+import 'package:hollandkompas/features/home/domain/entities/dashboard_statistics.dart';
 
+class DashboardStatisticsModel extends DashboardStatistics {
   const DashboardStatisticsModel({
-    required this.totalStudents,
-    required this.totalCourses,
-    required this.totalLessons,
-    required this.totalEnrollments,
+    required super.totalStudents,
+    required super.totalCourses,
+    required super.totalLessons,
+    required super.totalEnrollments,
   });
 
   factory DashboardStatisticsModel.fromMap(Map<String, dynamic> map) {
     return DashboardStatisticsModel(
-      totalStudents: (map['total_students'] ?? 0) as int,
-      totalCourses: (map['total_courses'] ?? 0) as int,
-      totalLessons: (map['total_lessons'] ?? 0) as int,
-      totalEnrollments: (map['total_enrollments'] ?? 0) as int,
+      totalStudents: map['total_students'] ?? 0,
+      totalCourses: map['total_courses'] ?? 0,
+      totalLessons: map['total_lessons'] ?? 0,
+      totalEnrollments: map['total_enrollments'] ?? 0,
     );
   }
 

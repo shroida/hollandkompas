@@ -7,4 +7,6 @@ class SupabaseManager {
       publishableKey: 'sb_publishable_AM0TsYrIr5uYjH4isEukDA_GPJ3ILP_',
     );
   }
+
+  static SupabaseClient get client => Supabase.instance.client;
 }

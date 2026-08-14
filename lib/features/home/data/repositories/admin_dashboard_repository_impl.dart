@@ -1,4 +1,8 @@
 import 'package:hollandkompas/features/home/data/datasource/admin_remote_data_source.dart';
+import 'package:hollandkompas/features/home/domain/entities/dashboard_statistics.dart';
+import 'package:hollandkompas/features/home/domain/entities/recent_student.dart';
+import 'package:hollandkompas/features/home/domain/entities/recent_course.dart';
+import 'package:hollandkompas/features/home/domain/repositories/admin_dashboard_repository.dart';
 
 class AdminDashboardRepositoryImpl implements AdminDashboardRepository {
   final AdminRemoteDataSource remote;
@@ -6,7 +10,7 @@ class AdminDashboardRepositoryImpl implements AdminDashboardRepository {
   AdminDashboardRepositoryImpl(this.remote);
 
   @override
-  Future<DashboardStatistics> getStatistics() async {
+  Future<DashboardStatistics> getDashboardStatistics() async {
     final students = await remote.getStudentsCount();
 
     final courses = await remote.getCoursesCount();
