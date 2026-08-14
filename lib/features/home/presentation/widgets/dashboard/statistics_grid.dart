@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../providers/admin_dashboard_providers.dart';
+import 'package:hollandkompas/features/home/presentation/providers/dashboard_statistics_provider.dart';
 import 'statistic_card.dart';
 
 class StatisticsGrid extends ConsumerWidget {

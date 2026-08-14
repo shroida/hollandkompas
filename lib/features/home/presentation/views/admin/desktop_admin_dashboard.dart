@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hollandkompas/features/home/presentation/widgets/sidebar/dashboard_grid.dart';
 
 import '../../providers/dashboard_statistics_provider.dart';
 import '../../providers/recent_courses_provider.dart';
