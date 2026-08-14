@@ -28,7 +28,7 @@ class AppBarHomeScreen extends StatelessWidget implements PreferredSizeWidget {
           child: Container(
             padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: Theme.of(context).colorScheme.surface,
               borderRadius: BorderRadius.circular(24),
               boxShadow: [
                 BoxShadow(
@@ -76,7 +76,7 @@ class AppBarHomeScreen extends StatelessWidget implements PreferredSizeWidget {
                             ?.copyWith(
                               fontWeight: FontWeight.bold,
                               fontSize: 22,
-                              color: Theme.of(context).scaffoldBackgroundColor,
+                              color: Theme.of(context).colorScheme.onSurface,
                             ),
                       ),
                     ],
