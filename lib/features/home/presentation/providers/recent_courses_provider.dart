@@ -1,9 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hollandkompas/features/home/data/providers/admin_dashboard_repository_provider.dart';
-import 'package:hollandkompas/features/home/domain/entities/recent_course.dart';
 
-final recentCoursesProvider = FutureProvider<List<RecentCourse>>((ref) async {
-  final repository = ref.read(adminDashboardRepositoryProvider);
+import 'admin_dashboard_repository_provider.dart';
 
-  return repository.getRecentCourses();
+import 'package:hollandkompas/features/home/domain/entities/recent_student.dart';
+import 'package:hollandkompas/features/home/domain/usecases/get_recent_students.dart';
+
+final recentStudentsProvider = FutureProvider<List<RecentStudent>>((ref) async {
+  final useCase = GetRecentStudents(ref.read(adminDashboardRepositoryProvider));
+
+  return useCase();
 });
