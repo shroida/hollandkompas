@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:hollandkompas/core/theme/app_colors.dart';
 import 'package:hollandkompas/features/home/presentation/providers/dashboard_statistics_provider.dart';
-import 'package:hollandkompas/features/home/presentation/screens/total_students_screen.dart';
+import 'package:hollandkompas/features/home/presentation/screens/pages/total_students_screen.dart';
 
 class DashboardGrid extends ConsumerWidget {
   const DashboardGrid({super.key, required this.crossAxisCount});

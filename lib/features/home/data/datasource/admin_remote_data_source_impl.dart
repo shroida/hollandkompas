@@ -2,6 +2,7 @@ import 'package:hollandkompas/core/network/supabase_client.dart';
 import 'package:hollandkompas/features/home/data/datasource/admin_remote_data_source.dart';
 import 'package:hollandkompas/features/home/data/models/recent_course_model.dart';
 import 'package:hollandkompas/features/home/data/models/recent_student_model.dart';
+import 'package:hollandkompas/features/home/data/models/student_model.dart';
 
 class AdminRemoteDataSourceImpl implements AdminRemoteDataSource {
   final supabase = SupabaseManager.client;
@@ -58,5 +59,16 @@ class AdminRemoteDataSourceImpl implements AdminRemoteDataSource {
         .limit(5);
 
     return response.map((e) => RecentCourseModel.fromMap(e)).toList();
+  }
+
+  @override
+  Future<List<StudentModel>> getAllStudents() async {
+    final response = await supabase
+        .from('profiles')
+        .select()
+        .eq('role', 'student')
+        .order('created_at', ascending: false);
+
+    return response.map<StudentModel>((e) => StudentModel.fromMap(e)).toList();
   }
 }
