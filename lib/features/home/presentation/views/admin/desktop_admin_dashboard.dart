@@ -1,16 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hollandkompas/features/home/presentation/widgets/dashboard/dashboard_loading.dart';
+import 'package:hollandkompas/features/home/presentation/widgets/dashboard/recent_courses_card.dart';
+import 'package:hollandkompas/features/home/presentation/widgets/dashboard/recent_students_card.dart';
 import 'package:hollandkompas/features/home/presentation/widgets/sidebar/dashboard_grid.dart';
+import 'package:hollandkompas/features/home/presentation/widgets/sidebar/dashboard_header.dart';
 
 import '../../providers/dashboard_statistics_provider.dart';
 import '../../providers/recent_courses_provider.dart';
 import '../../providers/recent_students_provider.dart';
-
-import '../../widgets/dashboard_grid.dart';
-import '../../widgets/dashboard_header.dart';
-import '../../widgets/dashboard_loading.dart';
-import '../../widgets/recent_courses_card.dart';
-import '../../widgets/recent_students_card.dart';
 
 class DesktopAdminDashboard extends ConsumerWidget {
   const DesktopAdminDashboard({super.key});
@@ -40,7 +38,7 @@ class DesktopAdminDashboard extends ConsumerWidget {
 
               const SizedBox(height: 30),
 
-              DashboardGrid(statistics: stats),
+              DashboardGrid(crossAxisCount: 2),
 
               const SizedBox(height: 30),
 
@@ -52,10 +50,9 @@ class DesktopAdminDashboard extends ConsumerWidget {
                     child: students.when(
                       loading: () => const DashboardLoading(),
 
-                      error: (_, __) => const SizedBox(),
+                      error: (_, _) => const SizedBox(),
 
-                      data: (students) =>
-                          RecentStudentsCard(students: students),
+                      data: (students) => RecentStudentsCard(),
                     ),
                   ),
 
@@ -65,9 +62,9 @@ class DesktopAdminDashboard extends ConsumerWidget {
                     child: courses.when(
                       loading: () => const DashboardLoading(),
 
-                      error: (_, __) => const SizedBox(),
+                      error: (_, _) => const SizedBox(),
 
-                      data: (courses) => RecentCoursesCard(courses: courses),
+                      data: (courses) => RecentCoursesCard(),
                     ),
                   ),
                 ],
