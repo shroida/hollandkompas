@@ -28,7 +28,7 @@ class DesktopAdminDashboard extends ConsumerWidget {
 
       data: (stats) {
         return SingleChildScrollView(
-          padding: const EdgeInsets.all(32),
+          padding: const EdgeInsets.all(10),
 
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -38,7 +38,7 @@ class DesktopAdminDashboard extends ConsumerWidget {
 
               const SizedBox(height: 30),
 
-              DashboardGrid(crossAxisCount: 2),
+              DashboardGrid(crossAxisCount: 4),
 
               const SizedBox(height: 30),
 
