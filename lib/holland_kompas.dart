@@ -12,11 +12,11 @@ class HollandKompas extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final locale = ref.watch(appLocaleProvider);
-
     final themeMode = ref.watch(themeModeProvider);
 
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
+
       title: 'HollandKompas',
 
       theme: AppTheme.lightTheme,
@@ -25,6 +25,7 @@ class HollandKompas extends ConsumerWidget {
       themeMode: themeMode,
 
       routerConfig: appRouter,
+
       locale: locale,
     );
   }
