@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hollandkompas/core/responsive/responsive_extension.dart';
 import 'package:hollandkompas/core/shared/widget/theme_toggle_button.dart';
 import 'package:hollandkompas/core/theme/app_colors.dart';
-import 'package:hollandkompas/core/theme/theme_provider.dart';
 import 'package:hollandkompas/features/auth/presentation/providers/auth_controller.dart';
 import 'package:hollandkompas/features/auth/presentation/providers/auth_state.dart';
 import 'package:hollandkompas/features/auth/presentation/widgets/auth_text_field.dart';

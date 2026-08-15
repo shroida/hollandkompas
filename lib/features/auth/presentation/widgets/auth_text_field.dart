@@ -25,55 +25,102 @@ class AuthTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    final textColor = AppColors.textColor(context);
+    final subtitleColor = AppColors.subtitleColor(context);
+    final borderColor = AppColors.borderColor(context);
+    final cardColor = AppColors.cardColor(context);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // =========================
+        // Label
+        // =========================
         Text(
           label,
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w600,
-            color: AppColors.textColor(context),
+            color: textColor,
           ),
         ),
+
         const SizedBox(height: 6),
+
+        // =========================
+        // Text Field
+        // =========================
         TextField(
           controller: controller,
           obscureText: obscureText,
           keyboardType: keyboardType,
           onChanged: onChanged,
+
           style: TextStyle(
-            color: AppColors.textColor(context),
+            color: textColor,
             fontSize: 15,
             fontWeight: FontWeight.w500,
           ),
+
+          cursorColor: colorScheme.primary,
+
           textDirection:
               (keyboardType == TextInputType.emailAddress || obscureText)
               ? TextDirection.ltr
               : TextDirection.rtl,
+
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: const TextStyle(
-              color: AppColors.mutedForeground,
-              fontSize: 14,
-            ),
+
+            hintStyle: TextStyle(color: subtitleColor, fontSize: 14),
+
             prefixIcon: icon != null
-                ? Icon(icon, color: AppColors.mutedForeground, size: 20)
+                ? Icon(icon, color: subtitleColor, size: 20)
                 : null,
+
             suffixIcon: suffix,
+
+            // =========================
+            // Background
+            // =========================
             filled: true,
-            fillColor: Colors.white,
+            fillColor: cardColor,
+
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 16,
               vertical: 14,
             ),
+
+            // =========================
+            // Normal Border
+            // =========================
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
-              borderSide: const BorderSide(color: AppColors.border),
+              borderSide: BorderSide(color: borderColor, width: 1),
             ),
+
+            // =========================
+            // Focused Border
+            // =========================
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
-              borderSide: const BorderSide(color: AppColors.primary, width: 2),
+              borderSide: BorderSide(color: colorScheme.primary, width: 2),
+            ),
+
+            // =========================
+            // Error Border
+            // =========================
+            errorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(color: colorScheme.error, width: 1),
+            ),
+
+            focusedErrorBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(color: colorScheme.error, width: 2),
             ),
           ),
         ),
