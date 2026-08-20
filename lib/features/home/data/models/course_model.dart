@@ -1,3 +1,5 @@
+import 'package:hollandkompas/features/home/domain/entities/course.dart';
+
 class CourseModel extends Course {
   const CourseModel({
     required super.id,
