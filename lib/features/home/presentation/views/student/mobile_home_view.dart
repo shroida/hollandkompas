@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hollandkompas/features/home/presentation/providers/published_course_provider.dart';
+import 'package:hollandkompas/features/home/presentation/widgets/course_card.dart';
+import 'package:hollandkompas/features/home/presentation/widgets/courses_empty.dart';
+import 'package:hollandkompas/features/home/presentation/widgets/courses_error.dart';
+import 'package:hollandkompas/features/home/presentation/widgets/courses_loading.dart';
+import 'package:hollandkompas/features/home/presentation/widgets/section_header.dart';
 import 'package:hollandkompas/features/home/presentation/widgets/welcome_section.dart';
 
 class MobileHomeView extends ConsumerWidget {
@@ -11,10 +16,10 @@ class MobileHomeView extends ConsumerWidget {
     final coursesAsync = ref.watch(publishedCoursesProvider);
 
     return coursesAsync.when(
-      loading: () => const _CoursesLoading(),
+      loading: () => const CoursesLoading(),
 
       error: (error, stackTrace) {
-        return _CoursesError(
+        return CoursesError(
           message: error.toString(),
           onRetry: () {
             ref.invalidate(publishedCoursesProvider);
@@ -24,7 +29,7 @@ class MobileHomeView extends ConsumerWidget {
 
       data: (courses) {
         if (courses.isEmpty) {
-          return const _EmptyCourses();
+          return const EmptyCourses();
         }
 
         return CustomScrollView(
@@ -37,7 +42,7 @@ class MobileHomeView extends ConsumerWidget {
             SliverPadding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               sliver: SliverToBoxAdapter(
-                child: _SectionHeader(
+                child: SectionHeader(
                   title: 'Start learning',
                   subtitle: 'Choose a course and improve your Dutch.',
                 ),
