@@ -4,10 +4,11 @@ import 'package:hollandkompas/core/responsive/responsive_builder.dart';
 import 'package:hollandkompas/features/auth/domain/extensions/user_role_extension.dart';
 import 'package:hollandkompas/features/home/presentation/providers/current_user_provider.dart';
 import 'package:hollandkompas/features/home/presentation/screens/admin_dashboard.dart';
+import 'package:hollandkompas/features/home/presentation/views/student/desktop_home_view.dart';
 import 'package:hollandkompas/features/home/presentation/views/student/mobile_home_view.dart';
 import 'package:hollandkompas/features/home/presentation/views/student/tablet_home_view.dart';
-import 'package:hollandkompas/features/home/presentation/views/student/desktop_home_view.dart';
 import 'package:hollandkompas/features/home/presentation/widgets/app_bar_home_screen.dart';
+import 'package:hollandkompas/features/home/presentation/widgets/sidebar/admin_shell.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -37,7 +38,7 @@ class HomeScreen extends ConsumerWidget {
           ),
 
           body: user.isAdmin
-              ? const AdminDashboard()
+              ? AdminShell(child: const AdminDashboard())
               : const ResponsiveBuilder(
                   mobile: MobileHomeView(),
                   tablet: TabletHomeView(),
