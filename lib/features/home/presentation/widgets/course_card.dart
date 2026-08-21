@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hollandkompas/core/theme/app_colors.dart';
 import 'package:hollandkompas/features/home/domain/entities/course.dart';
+import 'package:hollandkompas/features/home/presentation/screens/pages/course_lessons_screen.dart';
 import 'package:hollandkompas/features/home/presentation/widgets/course_image.dart';
 
 class CourseCard extends StatelessWidget {
@@ -74,17 +75,27 @@ class CourseCard extends StatelessWidget {
 
                       const Spacer(),
 
-                      Container(
-                        width: 38,
-                        height: 38,
-                        decoration: BoxDecoration(
-                          color: AppColors.primary,
-                          borderRadius: BorderRadius.circular(11),
-                        ),
-                        child: const Icon(
-                          Icons.arrow_forward_rounded,
-                          color: Colors.white,
-                          size: 20,
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  CourseLessonsScreen(course: course),
+                            ),
+                          );
+                        },
+                        child: Container(
+                          width: 38,
+                          height: 38,
+                          decoration: BoxDecoration(
+                            color: AppColors.primary,
+                            borderRadius: BorderRadius.circular(11),
+                          ),
+                          child: const Icon(
+                            Icons.arrow_forward_rounded,
+                            color: Colors.white,
+                            size: 20,
+                          ),
                         ),
                       ),
                     ],
