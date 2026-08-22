@@ -8,8 +8,13 @@ import 'package:hollandkompas/features/home/presentation/providers/course_lesson
 
 class CourseLessonsScreen extends ConsumerWidget {
   final Course course;
+  final bool isEnrolled;
 
-  const CourseLessonsScreen({super.key, required this.course});
+  const CourseLessonsScreen({
+    super.key,
+    required this.course,
+    required this.isEnrolled,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -17,21 +22,56 @@ class CourseLessonsScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: AppBar(title: const Text('Course')),
+      appBar: AppBar(
+        title: const Text('Course'),
+        actions: [
+          if (!isEnrolled)
+            Padding(
+              padding: const EdgeInsets.only(right: 12),
+              child: TextButton.icon(
+                onPressed: () {
+                  _showEnrollmentDialog(context);
+                },
+                icon: const Icon(Icons.school_rounded, size: 18),
+                label: const Text('Enroll'),
+              ),
+            ),
+        ],
+      ),
       body: lessonsAsync.when(
-        loading: () => const _LoadingState(),
-
+        loading: () => const LoadingState(),
         error: (error, stackTrace) {
-          return _ErrorState(
+          return ErrorState(
             error: error,
             onRetry: () {
               ref.invalidate(courseLessonsProvider(course.id));
             },
           );
         },
-
         data: (lessons) {
-          return _CourseLessonsContent(course: course, lessons: lessons);
+          return _CourseLessonsContent(
+            course: course,
+            lessons: lessons,
+            isEnrolled: isEnrolled,
+          );
+        },
+      ),
+    );
+  }
+
+  void _showEnrollmentDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (_) => _EnrollmentDialog(
+        course: course,
+        onEnroll: () {
+          Navigator.of(context).pop();
+
+          // TODO:
+          // Call your enrollment provider/usecase here.
+          //
+          // Example:
+          // ref.read(enrollCourseProvider.notifier).enroll(course.id);
         },
       ),
     );
@@ -41,8 +81,13 @@ class CourseLessonsScreen extends ConsumerWidget {
 class _CourseLessonsContent extends StatelessWidget {
   final Course course;
   final List<Lesson> lessons;
+  final bool isEnrolled;
 
-  const _CourseLessonsContent({required this.course, required this.lessons});
+  const _CourseLessonsContent({
+    required this.course,
+    required this.lessons,
+    required this.isEnrolled,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -56,6 +101,11 @@ class _CourseLessonsContent extends StatelessWidget {
             : isTablet
             ? 32.0
             : 20.0;
+
+        final totalMinutes = lessons.fold<int>(
+          0,
+          (sum, lesson) => sum + lesson.durationMinutes,
+        );
 
         return Center(
           child: ConstrainedBox(
@@ -74,13 +124,29 @@ class _CourseLessonsContent extends StatelessWidget {
                     child: _CourseHeader(
                       course: course,
                       lessonCount: lessons.length,
-                      totalMinutes: lessons.fold(
-                        0,
-                        (sum, lesson) => sum + lesson.durationMinutes,
-                      ),
+                      totalMinutes: totalMinutes,
+                      isEnrolled: isEnrolled,
                     ),
                   ),
                 ),
+
+                if (!isEnrolled)
+                  SliverPadding(
+                    padding: EdgeInsets.fromLTRB(
+                      horizontalPadding,
+                      18,
+                      horizontalPadding,
+                      0,
+                    ),
+                    sliver: SliverToBoxAdapter(
+                      child: _EnrollmentBanner(
+                        course: course,
+                        onEnroll: () {
+                          _showEnrollmentDialog(context);
+                        },
+                      ),
+                    ),
+                  ),
 
                 SliverPadding(
                   padding: EdgeInsets.fromLTRB(
@@ -90,7 +156,10 @@ class _CourseLessonsContent extends StatelessWidget {
                     0,
                   ),
                   sliver: SliverToBoxAdapter(
-                    child: _SectionHeader(lessonCount: lessons.length),
+                    child: _SectionHeader(
+                      lessonCount: lessons.length,
+                      isEnrolled: isEnrolled,
+                    ),
                   ),
                 ),
 
@@ -104,17 +173,29 @@ class _CourseLessonsContent extends StatelessWidget {
                   sliver: SliverList.builder(
                     itemCount: lessons.length,
                     itemBuilder: (context, index) {
+                      final lesson = lessons[index];
+
+                      final isFree = index == 0;
+                      final isLocked = !isEnrolled && !isFree;
+
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 12),
                         child: LessonCard(
-                          lesson: lessons[index],
-                          isFirst: index == 0,
+                          lesson: lesson,
+                          isFirst: isFree,
+                          isLocked: isLocked,
+                          isEnrolled: isEnrolled,
                           onTap: () {
+                            if (isLocked) {
+                              _showEnrollmentDialog(context);
+                              return;
+                            }
+
                             context.push(
                               '/lesson-viewer',
                               extra: {
-                                'lesson': lessons[index],
-                                'isEnrolled': false,
+                                'lesson': lesson,
+                                'isEnrolled': isEnrolled,
                                 'totalLessons': lessons.length,
                               },
                             );
@@ -131,17 +212,34 @@ class _CourseLessonsContent extends StatelessWidget {
       },
     );
   }
+
+  void _showEnrollmentDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (_) => _EnrollmentDialog(
+        course: course,
+        onEnroll: () {
+          Navigator.of(context).pop();
+
+          // TODO:
+          // Enroll user in this course.
+        },
+      ),
+    );
+  }
 }
 
 class _CourseHeader extends StatelessWidget {
   final Course course;
   final int lessonCount;
   final int totalMinutes;
+  final bool isEnrolled;
 
   const _CourseHeader({
     required this.course,
     required this.lessonCount,
     required this.totalMinutes,
+    required this.isEnrolled,
   });
 
   @override
@@ -150,14 +248,21 @@ class _CourseHeader extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(26),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [AppColors.secondary, Color(0xFF294CA8)],
         ),
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(28),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.secondary.withValues(alpha: 0.18),
+            blurRadius: 30,
+            offset: const Offset(0, 12),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -165,16 +270,16 @@ class _CourseHeader extends StatelessWidget {
           Row(
             children: [
               Container(
-                width: 52,
-                height: 52,
+                width: 58,
+                height: 58,
                 decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(14),
+                  color: Colors.white.withValues(alpha: 0.13),
+                  borderRadius: BorderRadius.circular(17),
                 ),
                 child: const Icon(
                   Icons.translate_rounded,
                   color: Colors.white,
-                  size: 28,
+                  size: 29,
                 ),
               ),
 
@@ -183,48 +288,82 @@ class _CourseHeader extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 12,
-                  vertical: 6,
+                  vertical: 7,
                 ),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(30),
                 ),
                 child: Text(
                   course.level.toUpperCase(),
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: 0.5,
                   ),
                 ),
               ),
+
+              const Spacer(),
+
+              if (isEnrolled)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 7,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.14),
+                    borderRadius: BorderRadius.circular(30),
+                  ),
+                  child: const Row(
+                    children: [
+                      Icon(
+                        Icons.check_circle_rounded,
+                        color: Colors.white,
+                        size: 16,
+                      ),
+                      SizedBox(width: 5),
+                      Text(
+                        'Enrolled',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
             ],
           ),
 
-          const SizedBox(height: 22),
+          const SizedBox(height: 24),
 
           Text(
             course.title,
             style: theme.textTheme.headlineMedium?.copyWith(
               color: Colors.white,
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w800,
+              height: 1.15,
             ),
           ),
 
-          const SizedBox(height: 8),
+          const SizedBox(height: 9),
 
           Text(
             course.description,
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: Colors.white.withValues(alpha: 0.78),
-              height: 1.5,
+              color: Colors.white.withValues(alpha: 0.76),
+              height: 1.55,
             ),
           ),
 
-          const SizedBox(height: 24),
+          const SizedBox(height: 25),
 
           Wrap(
-            spacing: 24,
+            spacing: 26,
             runSpacing: 14,
             children: [
               _HeaderStat(
@@ -232,17 +371,15 @@ class _CourseHeader extends StatelessWidget {
                 value: '$lessonCount',
                 label: 'Lessons',
               ),
-
               _HeaderStat(
                 icon: Icons.schedule_rounded,
                 value: '$totalMinutes',
                 label: 'Minutes',
               ),
-
-              const _HeaderStat(
-                icon: Icons.trending_up_rounded,
-                value: '0%',
-                label: 'Progress',
+              _HeaderStat(
+                icon: Icons.lock_open_rounded,
+                value: isEnrolled ? '100%' : '1',
+                label: isEnrolled ? 'Unlocked' : 'Free lesson',
               ),
             ],
           ),
@@ -252,90 +389,83 @@ class _CourseHeader extends StatelessWidget {
   }
 }
 
-class _HeaderStat extends StatelessWidget {
-  final IconData icon;
-  final String value;
-  final String label;
+class _EnrollmentBanner extends StatelessWidget {
+  final Course course;
+  final VoidCallback onEnroll;
 
-  const _HeaderStat({
-    required this.icon,
-    required this.value,
-    required this.label,
-  });
+  const _EnrollmentBanner({required this.course, required this.onEnroll});
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Icon(icon, color: Colors.white.withValues(alpha: 0.75), size: 18),
-
-        const SizedBox(width: 7),
-
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              value,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w700,
-              ),
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.accent,
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.10)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(15),
             ),
-            Text(
-              label,
-              style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.65),
-                fontSize: 11,
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-class _SectionHeader extends StatelessWidget {
-  final int lessonCount;
-
-  const _SectionHeader({required this.lessonCount});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Text(
-          'Course lessons',
-          style: Theme.of(
-            context,
-          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
-        ),
-
-        const Spacer(),
-
-        Text(
-          '$lessonCount lessons',
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: AppColors.subtitleColor(context),
+            child: const Icon(Icons.school_rounded, color: AppColors.primary),
           ),
-        ),
-      ],
+
+          const SizedBox(width: 14),
+
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Start learning for free',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+                ),
+
+                const SizedBox(height: 4),
+
+                Text(
+                  'Lesson 1 is free. Enroll to unlock the entire course.',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: AppColors.subtitleColor(context),
+                    height: 1.4,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(width: 12),
+
+          FilledButton(onPressed: onEnroll, child: const Text('Enroll')),
+        ],
+      ),
     );
   }
 }
 
 class LessonCard extends StatelessWidget {
   final Lesson lesson;
+  final bool isFirst;
+  final bool isLocked;
+  final bool isEnrolled;
+  final VoidCallback? onTap;
 
   const LessonCard({
     super.key,
     required this.lesson,
     required this.isFirst,
+    required this.isLocked,
+    required this.isEnrolled,
     this.onTap,
   });
-
-  final bool isFirst;
-  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -343,14 +473,20 @@ class LessonCard extends StatelessWidget {
 
     return Card(
       margin: EdgeInsets.zero,
+      elevation: 0,
+      clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(18),
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(17),
           child: Row(
             children: [
-              _LessonNumber(number: lesson.lessonOrder, isFirst: isFirst),
+              _LessonNumber(
+                number: lesson.lessonOrder,
+                isFirst: isFirst,
+                isLocked: isLocked,
+              ),
 
               const SizedBox(width: 16),
 
@@ -358,16 +494,37 @@ class LessonCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      lesson.title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            lesson.title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                        ),
+
+                        const SizedBox(width: 8),
+
+                        if (isFirst && !isEnrolled)
+                          const _LessonBadge(
+                            text: 'FREE',
+                            icon: Icons.play_circle_rounded,
+                          ),
+
+                        if (isLocked)
+                          const _LessonBadge(
+                            text: 'LOCKED',
+                            icon: Icons.lock_rounded,
+                            isLocked: true,
+                          ),
+                      ],
                     ),
 
-                    const SizedBox(height: 5),
+                    const SizedBox(height: 6),
 
                     Text(
                       lesson.description,
@@ -400,15 +557,12 @@ class LessonCard extends StatelessWidget {
 
                         if (lesson.videoUrl != null) ...[
                           const SizedBox(width: 14),
-
                           const Icon(
                             Icons.play_circle_outline_rounded,
                             size: 16,
                             color: AppColors.primary,
                           ),
-
                           const SizedBox(width: 4),
-
                           Text(
                             'Video',
                             style: theme.textTheme.bodySmall?.copyWith(
@@ -419,7 +573,6 @@ class LessonCard extends StatelessWidget {
 
                         if (lesson.audioUrl != null) ...[
                           const SizedBox(width: 14),
-
                           const Icon(
                             Icons.headphones_rounded,
                             size: 16,
@@ -434,16 +587,19 @@ class LessonCard extends StatelessWidget {
 
               const SizedBox(width: 12),
 
-              Container(
-                width: 42,
-                height: 42,
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                width: 44,
+                height: 44,
                 decoration: BoxDecoration(
-                  color: AppColors.accent,
-                  borderRadius: BorderRadius.circular(12),
+                  color: isLocked ? AppColors.muted : AppColors.accent,
+                  borderRadius: BorderRadius.circular(14),
                 ),
-                child: const Icon(
-                  Icons.arrow_forward_rounded,
-                  color: AppColors.primary,
+                child: Icon(
+                  isLocked ? Icons.lock_rounded : Icons.arrow_forward_rounded,
+                  color: isLocked
+                      ? AppColors.subtitleColor(context)
+                      : AppColors.primary,
                   size: 20,
                 ),
               ),
@@ -458,34 +614,360 @@ class LessonCard extends StatelessWidget {
 class _LessonNumber extends StatelessWidget {
   final int number;
   final bool isFirst;
+  final bool isLocked;
 
-  const _LessonNumber({required this.number, required this.isFirst});
+  const _LessonNumber({
+    required this.number,
+    required this.isFirst,
+    required this.isLocked,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final backgroundColor = isLocked
+        ? AppColors.muted
+        : isFirst
+        ? AppColors.primary
+        : AppColors.accent;
+
+    final textColor = isLocked
+        ? AppColors.subtitleColor(context)
+        : isFirst
+        ? Colors.white
+        : AppColors.primary;
+
+    return Container(
+      width: 50,
+      height: 50,
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: Center(
+        child: isLocked
+            ? Icon(Icons.lock_rounded, color: textColor, size: 20)
+            : Text(
+                number.toString().padLeft(2, '0'),
+                style: TextStyle(
+                  color: textColor,
+                  fontWeight: FontWeight.w800,
+                  fontSize: 14,
+                ),
+              ),
+      ),
+    );
+  }
+}
+
+class _LessonBadge extends StatelessWidget {
+  final String text;
+  final IconData icon;
+  final bool isLocked;
+
+  const _LessonBadge({
+    required this.text,
+    required this.icon,
+    this.isLocked = false,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 48,
-      height: 48,
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
       decoration: BoxDecoration(
-        color: isFirst ? AppColors.primary : AppColors.muted,
-        borderRadius: BorderRadius.circular(14),
+        color: isLocked ? AppColors.muted : AppColors.accent,
+        borderRadius: BorderRadius.circular(8),
       ),
-      child: Center(
-        child: Text(
-          number.toString().padLeft(2, '0'),
-          style: TextStyle(
-            color: isFirst ? Colors.white : AppColors.secondary,
-            fontWeight: FontWeight.w700,
-            fontSize: 14,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            icon,
+            size: 11,
+            color: isLocked
+                ? AppColors.subtitleColor(context)
+                : AppColors.primary,
           ),
+
+          const SizedBox(width: 4),
+
+          Text(
+            text,
+            style: TextStyle(
+              color: isLocked
+                  ? AppColors.subtitleColor(context)
+                  : AppColors.primary,
+              fontSize: 8,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 0.3,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _EnrollmentDialog extends StatelessWidget {
+  final Course course;
+  final VoidCallback onEnroll;
+
+  const _EnrollmentDialog({required this.course, required this.onEnroll});
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+      child: Padding(
+        padding: const EdgeInsets.all(26),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 76,
+              height: 76,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [AppColors.secondary, AppColors.primary],
+                ),
+                borderRadius: BorderRadius.circular(24),
+              ),
+              child: const Icon(
+                Icons.school_rounded,
+                color: Colors.white,
+                size: 36,
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            Text(
+              'Unlock ${course.title}',
+              textAlign: TextAlign.center,
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+            ),
+
+            const SizedBox(height: 10),
+
+            Text(
+              'You can preview the first lesson for free. '
+              'Enroll in this course to unlock all lessons '
+              'and track your learning progress.',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: AppColors.subtitleColor(context),
+                height: 1.5,
+              ),
+            ),
+
+            const SizedBox(height: 22),
+
+            _DialogFeature(
+              icon: Icons.lock_open_rounded,
+              text: 'Unlock all course lessons',
+            ),
+
+            _DialogFeature(
+              icon: Icons.trending_up_rounded,
+              text: 'Track your learning progress',
+            ),
+
+            _DialogFeature(
+              icon: Icons.school_rounded,
+              text: 'Continue your Dutch learning journey',
+            ),
+
+            const SizedBox(height: 22),
+
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: onEnroll,
+                icon: const Icon(Icons.school_rounded),
+                label: const Text('Enroll now'),
+                style: FilledButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 15),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 5),
+
+            SizedBox(
+              width: double.infinity,
+              child: TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: const Text('Maybe later'),
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 }
 
-class _LoadingState extends StatelessWidget {
-  const _LoadingState();
+class _DialogFeature extends StatelessWidget {
+  final IconData icon;
+  final String text;
+
+  const _DialogFeature({required this.icon, required this.text});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 11),
+      child: Row(
+        children: [
+          Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              color: AppColors.accent,
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(icon, size: 17, color: AppColors.primary),
+          ),
+
+          const SizedBox(width: 10),
+
+          Expanded(
+            child: Text(
+              text,
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
+            ),
+          ),
+
+          const Icon(Icons.check_rounded, size: 18, color: AppColors.primary),
+        ],
+      ),
+    );
+  }
+}
+
+class _SectionHeader extends StatelessWidget {
+  final int lessonCount;
+  final bool isEnrolled;
+
+  const _SectionHeader({required this.lessonCount, required this.isEnrolled});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Course lessons',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+              ),
+
+              const SizedBox(height: 4),
+
+              Text(
+                isEnrolled
+                    ? 'All lessons are unlocked.'
+                    : 'Preview lesson 1 for free.',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: AppColors.subtitleColor(context),
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
+          decoration: BoxDecoration(
+            color: AppColors.muted,
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Text(
+            '$lessonCount lessons',
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w700),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _HeaderStat extends StatelessWidget {
+  final IconData icon;
+  final String value;
+  final String label;
+
+  const _HeaderStat({
+    required this.icon,
+    required this.value,
+    required this.label,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 38,
+          height: 38,
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(11),
+          ),
+          child: Icon(
+            icon,
+            color: Colors.white.withValues(alpha: 0.9),
+            size: 19,
+          ),
+        ),
+
+        const SizedBox(width: 9),
+
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              value,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 15,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+
+            const SizedBox(height: 2),
+
+            Text(
+              label,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.65),
+                fontSize: 11,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class LoadingState extends StatelessWidget {
+  const LoadingState({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -495,55 +977,91 @@ class _LoadingState extends StatelessWidget {
   }
 }
 
-class _ErrorState extends StatelessWidget {
+class ErrorState extends StatelessWidget {
   final Object error;
   final VoidCallback onRetry;
 
-  const _ErrorState({required this.error, required this.onRetry});
+  const ErrorState({super.key, required this.error, required this.onRetry});
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(
-              Icons.cloud_off_rounded,
-              size: 52,
-              color: AppColors.destructive,
-            ),
-
-            const SizedBox(height: 16),
-
-            Text(
-              'Unable to load lessons',
-              style: Theme.of(
-                context,
-              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
-            ),
-
-            const SizedBox(height: 8),
-
-            Text(
-              error.toString(),
-              textAlign: TextAlign.center,
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: AppColors.subtitleColor(context),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 420),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(
+                  color: AppColors.destructive.withValues(alpha: 0.10),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.cloud_off_rounded,
+                  size: 34,
+                  color: AppColors.destructive,
+                ),
               ),
-            ),
 
-            const SizedBox(height: 18),
+              const SizedBox(height: 20),
 
-            FilledButton.icon(
-              onPressed: onRetry,
-              icon: const Icon(Icons.refresh_rounded),
-              label: const Text('Try again'),
-            ),
-          ],
+              Text(
+                'Unable to load lessons',
+                textAlign: TextAlign.center,
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+
+              const SizedBox(height: 8),
+
+              Text(
+                'Something went wrong while loading this course. '
+                'Please try again.',
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: AppColors.subtitleColor(context),
+                  height: 1.5,
+                ),
+              ),
+
+              const SizedBox(height: 12),
+
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.muted,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  error.toString(),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: AppColors.subtitleColor(context),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              FilledButton.icon(
+                onPressed: onRetry,
+                icon: const Icon(Icons.refresh_rounded, size: 19),
+                label: const Text('Try again'),
+              ),
+            ],
+          ),
         ),
       ),
     );

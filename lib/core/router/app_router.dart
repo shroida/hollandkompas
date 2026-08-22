@@ -79,9 +79,12 @@ final appRouter = GoRouter(
       path: '/course-lessons',
       name: 'courseLessons',
       builder: (context, state) {
-        final course = state.extra as Course;
+        final extra = state.extra as Map<String, dynamic>;
 
-        return CourseLessonsScreen(course: course);
+        final course = extra['course'] as Course;
+        final isEnrolled = extra['isEnrolled'] as bool;
+
+        return CourseLessonsScreen(isEnrolled: isEnrolled, course: course);
       },
     ),
     GoRoute(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hollandkompas/features/home/presentation/providers/published_course_provider.dart';
 import 'package:hollandkompas/features/home/presentation/widgets/course_card.dart';
 import 'package:hollandkompas/features/home/presentation/widgets/courses_empty.dart';
@@ -53,12 +54,17 @@ class MobileHomeView extends ConsumerWidget {
               sliver: SliverList.builder(
                 itemCount: courses.length,
                 itemBuilder: (context, index) {
+                  final course = courses[index];
+
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 16),
                     child: CourseCard(
-                      course: courses[index],
+                      course: course,
                       onTap: () {
-                        // TODO: Navigate to course details
+                        context.push(
+                          '/course-lessons',
+                          extra: {'course': course, 'isEnrolled': false},
+                        );
                       },
                     ),
                   );
