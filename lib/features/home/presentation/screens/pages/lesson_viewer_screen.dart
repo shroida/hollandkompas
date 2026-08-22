@@ -125,7 +125,7 @@ class _LessonViewerScreenState extends State<LessonViewerScreen> {
                       if (isLocked)
                         _LockedVideo(onUnlock: _showEnrollmentDialog)
                       else
-                        _VideoPlayer(controller: _controller),
+                        VideoPlayer(controller: _controller),
 
                       const SizedBox(height: 28),
 
@@ -158,32 +158,6 @@ class _LessonViewerScreenState extends State<LessonViewerScreen> {
             );
           },
         ),
-      ),
-    );
-  }
-}
-
-class _VideoPlayer extends StatelessWidget {
-  final YoutubePlayerController controller;
-
-  const _VideoPlayer({required this.controller});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.12),
-            blurRadius: 30,
-            offset: const Offset(0, 14),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
-        child: YoutubePlayer(controller: controller, aspectRatio: 16 / 9),
       ),
     );
   }
