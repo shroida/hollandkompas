@@ -9,7 +9,7 @@ import 'package:hollandkompas/features/home/presentation/screens/admin_dashboard
 import 'package:hollandkompas/features/home/presentation/views/student/desktop_home_view.dart';
 import 'package:hollandkompas/features/home/presentation/views/student/mobile_home_view.dart';
 import 'package:hollandkompas/features/home/presentation/views/student/tablet_home_view.dart';
-import 'package:hollandkompas/features/home/presentation/widgets/app_bar_home_screen.dart';
+import 'package:hollandkompas/features/home/presentation/widgets/appbar/app_bar_home_screen.dart';
 import 'package:hollandkompas/features/home/presentation/widgets/sidebar/admin_shell.dart';
 
 class HomeScreen extends ConsumerWidget {
