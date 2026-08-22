@@ -14,8 +14,8 @@ class EnrolledCourse {
   });
 
   double get progress {
-    if (totalLessons == 0) return 0.0;
+    if (totalLessons == 0) return 0;
 
-    return completedLessons / totalLessons;
+    return (completedLessons / totalLessons).clamp(0.0, 1.0);
   }
 }

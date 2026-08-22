@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hollandkompas/core/theme/app_colors.dart';
-import 'package:hollandkompas/features/home/domain/entities/course.dart';
+import 'package:hollandkompas/features/home/domain/entities/enrolled_course.dart';
 import 'package:hollandkompas/features/home/presentation/providers/current_user_provider.dart';
+import 'package:hollandkompas/features/home/presentation/providers/enrolled_courses_provider.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -13,17 +14,28 @@ class ProfileScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+
       appBar: AppBar(title: const Text('My Profile')),
+
       body: userAsync.when(
-        loading: () => const Center(
-          child: CircularProgressIndicator(color: AppColors.primary),
-        ),
-        error: (error, stack) => _ProfileError(
-          error: error,
-          onRetry: () {
-            ref.invalidate(currentUserProvider);
-          },
-        ),
+        loading: () {
+          return const Center(
+            child: CircularProgressIndicator(color: AppColors.primary),
+          );
+        },
+
+        error: (error, stack) {
+          debugPrint('CURRENT USER ERROR: $error');
+          debugPrintStack(stackTrace: stack);
+
+          return _ProfileError(
+            error: error,
+            onRetry: () {
+              ref.invalidate(currentUserProvider);
+            },
+          );
+        },
+
         data: (user) {
           if (user == null) {
             return const Center(child: Text('User not found'));
@@ -34,16 +46,34 @@ class ProfileScreen extends ConsumerWidget {
           );
 
           return enrolledCoursesAsync.when(
-            loading: () => const Center(
-              child: CircularProgressIndicator(color: AppColors.primary),
-            ),
-            error: (error, stack) => _ProfileError(
-              error: error,
-              onRetry: () {
-                ref.invalidate(enrolledCoursesProvider(user.id));
-              },
-            ),
+            loading: () {
+              return const Center(
+                child: CircularProgressIndicator(color: AppColors.primary),
+              );
+            },
+
+            error: (error, stack) {
+              debugPrint('ENROLLMENT ERROR: $error');
+              debugPrintStack(stackTrace: stack);
+
+              return _ProfileError(
+                error: error,
+                onRetry: () {
+                  ref.invalidate(enrolledCoursesProvider(user.id));
+                },
+              );
+            },
+
             data: (courses) {
+              debugPrint('==============================');
+              debugPrint('ENROLLED COURSES: ${courses.length}');
+
+              for (final course in courses) {
+                debugPrint('COURSE: ${course.course.title}');
+              }
+
+              debugPrint('==============================');
+
               return _ProfileContent(user: user, courses: courses);
             },
           );
@@ -55,7 +85,7 @@ class ProfileScreen extends ConsumerWidget {
 
 class _ProfileContent extends StatelessWidget {
   final dynamic user;
-  final List<dynamic> courses;
+  final List<EnrolledCourse> courses;
 
   const _ProfileContent({required this.user, required this.courses});
 
@@ -348,7 +378,7 @@ class _ProfileBadge extends StatelessWidget {
 }
 
 class _LearningStats extends StatelessWidget {
-  final List<dynamic> courses;
+  final List<EnrolledCourse> courses;
 
   const _LearningStats({required this.courses});
 
@@ -356,7 +386,7 @@ class _LearningStats extends StatelessWidget {
   Widget build(BuildContext context) {
     final totalLessons = courses.fold<int>(
       0,
-      (sum, course) => sum + course.totalLessons as int,
+      (sum, course) => sum + course.totalLessons,
     );
 
     final averageProgress = courses.isEmpty
@@ -449,7 +479,7 @@ class _LearningHeader extends StatelessWidget {
 }
 
 class _EnrolledCourseCard extends StatelessWidget {
-  final dynamic enrollment;
+  final EnrolledCourse enrollment;
 
   const _EnrolledCourseCard({required this.enrollment});
 
@@ -730,25 +760,5 @@ class _ProfileError extends StatelessWidget {
         ),
       ),
     );
-  }
-}
-
-class EnrolledCourse {
-  final Course course;
-  final DateTime enrolledAt;
-  final int totalLessons;
-  final int completedLessons;
-
-  const EnrolledCourse({
-    required this.course,
-    required this.enrolledAt,
-    required this.totalLessons,
-    required this.completedLessons,
-  });
-
-  double get progress {
-    if (totalLessons == 0) return 0;
-
-    return completedLessons / totalLessons;
   }
 }
