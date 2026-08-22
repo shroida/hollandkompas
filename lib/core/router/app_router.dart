@@ -62,9 +62,17 @@ final appRouter = GoRouter(
       path: '/lesson-viewer',
       name: 'lessonViewer',
       builder: (context, state) {
-        final lesson = state.extra as Lesson;
+        final extra = state.extra as Map<String, dynamic>;
 
-        return LessonViewerScreen(lesson: lesson);
+        final lesson = extra['lesson'] as Lesson;
+        final isEnrolled = extra['isEnrolled'] as bool;
+        final totalLessons = extra['totalLessons'] as int;
+
+        return LessonViewerScreen(
+          lesson: lesson,
+          isEnrolled: isEnrolled,
+          totalLessons: totalLessons,
+        );
       },
     ),
     GoRoute(

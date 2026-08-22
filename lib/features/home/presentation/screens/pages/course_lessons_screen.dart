@@ -112,7 +112,11 @@ class _CourseLessonsContent extends StatelessWidget {
                           onTap: () {
                             context.push(
                               '/lesson-viewer',
-                              extra: lessons[index],
+                              extra: {
+                                'lesson': lessons[index],
+                                'isEnrolled': false,
+                                'totalLessons': lessons.length,
+                              },
                             );
                           },
                         ),
