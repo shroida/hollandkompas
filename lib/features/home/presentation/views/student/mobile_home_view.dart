@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hollandkompas/features/home/presentation/providers/current_user_provider.dart';
 import 'package:hollandkompas/features/home/presentation/providers/published_course_provider.dart';
+import 'package:hollandkompas/features/home/presentation/widgets/appbar/welcome_section.dart';
 import 'package:hollandkompas/features/home/presentation/widgets/course_card.dart';
 import 'package:hollandkompas/features/home/presentation/widgets/courses_empty.dart';
 import 'package:hollandkompas/features/home/presentation/widgets/courses_error.dart';
 import 'package:hollandkompas/features/home/presentation/widgets/courses_loading.dart';
 import 'package:hollandkompas/features/home/presentation/widgets/section_header.dart';
-import 'package:hollandkompas/features/home/presentation/widgets/welcome_section.dart';
 
 class MobileHomeView extends ConsumerWidget {
   const MobileHomeView({super.key});
@@ -35,7 +36,12 @@ class MobileHomeView extends ConsumerWidget {
         return CustomScrollView(
           physics: const BouncingScrollPhysics(),
           slivers: [
-            const SliverToBoxAdapter(child: WelcomeSection()),
+            SliverToBoxAdapter(
+              child: WelcomeSection(
+                firstName:
+                    ref.watch(currentUserProvider).value?.firstName ?? '',
+              ),
+            ),
 
             const SliverToBoxAdapter(child: SizedBox(height: 24)),
 
