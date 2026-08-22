@@ -66,6 +66,25 @@ class AuthController extends _$AuthController {
     }
   }
 
+  Future<void> logout() async {
+    state = state.copyWith(isLoading: true, error: null);
+
+    try {
+      await ref.read(authRepositoryProvider).logout();
+
+      if (!ref.mounted) return;
+
+      state = const AuthState();
+    } catch (e) {
+      if (!ref.mounted) return;
+
+      state = state.copyWith(
+        isLoading: false,
+        error: e.toString().replaceFirst('Exception: ', ''),
+      );
+    }
+  }
+
   Future<void> forgotPassword({required String email}) async {
     state = state.copyWith(isLoading: true, error: null);
 
@@ -101,7 +120,7 @@ class AuthController extends _$AuthController {
     state = state.copyWith(isLoading: true);
 
     final user = await ref.read(authRepositoryProvider).getCurrentUser();
-
+    if (!ref.mounted) return;
     state = state.copyWith(isLoading: false, user: user);
   }
 }
