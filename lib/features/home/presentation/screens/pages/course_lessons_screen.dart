@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hollandkompas/core/theme/app_colors.dart';
 import 'package:hollandkompas/features/home/domain/entities/course.dart';
 import 'package:hollandkompas/features/home/domain/entities/lesson.dart';
 import 'package:hollandkompas/features/home/presentation/providers/course_lessons_provider.dart';
-import 'package:hollandkompas/features/home/presentation/screens/pages/lesson_viewer_screen.dart';
 
 class CourseLessonsScreen extends ConsumerWidget {
   final Course course;
@@ -110,11 +110,9 @@ class _CourseLessonsContent extends StatelessWidget {
                           lesson: lessons[index],
                           isFirst: index == 0,
                           onTap: () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) =>
-                                    LessonViewerScreen(lesson: lessons[index]),
-                              ),
+                            context.push(
+                              '/lesson-viewer',
+                              extra: lessons[index],
                             );
                           },
                         ),

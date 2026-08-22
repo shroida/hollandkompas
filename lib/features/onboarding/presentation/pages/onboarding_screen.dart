@@ -13,36 +13,30 @@ class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
 
   @override
-  ConsumerState<OnboardingScreen> createState() =>
-      _OnboardingScreenState();
+  ConsumerState<OnboardingScreen> createState() => _OnboardingScreenState();
 }
 
-class _OnboardingScreenState
-    extends ConsumerState<OnboardingScreen> {
+class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   final controller = PageController();
 
   int currentPage = 0;
 
- Future<void> _finishOnboarding() async {
-  await HiveService.settingsBox.put(
-    'onboarding_completed',
-    true,
-  );
+  Future<void> _finishOnboarding() async {
+    await HiveService.settingsBox.put('onboarding_completed', true);
 
-  if (!mounted) return;
+    if (!mounted) return;
 
-  final user = Supabase.instance.client.auth.currentUser;
+    final user = Supabase.instance.client.auth.currentUser;
 
-  if (user != null) {
-context.go('/home');  } else {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const LevelSelectionScreen(),
-      ),
-    );
+    if (user != null) {
+      context.go('/home');
+    } else {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const LevelSelectionScreen()),
+      );
+    }
   }
-}
 
   @override
   Widget build(BuildContext context) {
@@ -58,8 +52,8 @@ context.go('/home');  } else {
               maxWidth: isDesktop
                   ? 1400
                   : isTablet
-                      ? 900
-                      : double.infinity,
+                  ? 900
+                  : double.infinity,
             ),
             child: Column(
               children: [
@@ -88,8 +82,8 @@ context.go('/home');  } else {
                     horizontal: isDesktop
                         ? 80
                         : isTablet
-                            ? 40
-                            : 24,
+                        ? 40
+                        : 24,
                   ),
                   child: DotsIndicator(
                     count: onboardingSlides.length,
@@ -102,24 +96,21 @@ context.go('/home');  } else {
                     isDesktop
                         ? 40
                         : isTablet
-                            ? 32
-                            : 24,
+                        ? 32
+                        : 24,
                   ),
                   child: SizedBox(
                     width: isDesktop ? 500 : double.infinity,
                     height: isDesktop
                         ? 68
                         : isTablet
-                            ? 64
-                            : 56,
+                        ? 64
+                        : 56,
                     child: ElevatedButton(
                       onPressed: () async {
-                        if (currentPage <
-                            onboardingSlides.length - 1) {
+                        if (currentPage < onboardingSlides.length - 1) {
                           controller.nextPage(
-                            duration: const Duration(
-                              milliseconds: 350,
-                            ),
+                            duration: const Duration(milliseconds: 350),
                             curve: Curves.easeOut,
                           );
                         } else {
@@ -132,8 +123,8 @@ context.go('/home');  } else {
                           fontSize: isDesktop
                               ? 20
                               : isTablet
-                                  ? 18
-                                  : 16,
+                              ? 18
+                              : 16,
                         ),
                       ),
                     ),

@@ -3,8 +3,12 @@ import 'package:hollandkompas/features/auth/presentation/pages/forgot_password_s
 import 'package:hollandkompas/features/auth/presentation/pages/login_screen.dart';
 import 'package:hollandkompas/features/auth/presentation/pages/register_screen.dart';
 import 'package:hollandkompas/features/auth/presentation/pages/reset_password_screen.dart';
+import 'package:hollandkompas/features/home/domain/entities/course.dart';
+import 'package:hollandkompas/features/home/domain/entities/lesson.dart';
 import 'package:hollandkompas/features/home/presentation/screens/admin_dashboard.dart';
 import 'package:hollandkompas/features/home/presentation/screens/home_screen.dart';
+import 'package:hollandkompas/features/home/presentation/screens/pages/course_lessons_screen.dart';
+import 'package:hollandkompas/features/home/presentation/screens/pages/lesson_viewer_screen.dart';
 import 'package:hollandkompas/features/home/presentation/screens/pages/total_students_screen.dart';
 import 'package:hollandkompas/features/home/presentation/widgets/sidebar/admin_shell.dart';
 import 'package:hollandkompas/features/onboarding/presentation/pages/onboarding_screen.dart';
@@ -53,6 +57,25 @@ final appRouter = GoRouter(
       path: '/reset-password',
       builder: (context, state) => const ResetPasswordScreen(),
     ),
+    GoRoute(
+      path: '/lesson-viewer',
+      name: 'lessonViewer',
+      builder: (context, state) {
+        final lesson = state.extra as Lesson;
+
+        return LessonViewerScreen(lesson: lesson);
+      },
+    ),
+    GoRoute(
+      path: '/course-lessons',
+      name: 'courseLessons',
+      builder: (context, state) {
+        final course = state.extra as Course;
+
+        return CourseLessonsScreen(course: course);
+      },
+    ),
+
     GoRoute(
       path: '/admin',
       builder: (context, state) {
