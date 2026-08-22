@@ -10,9 +10,9 @@ import 'package:hollandkompas/features/home/presentation/screens/home_screen.dar
 import 'package:hollandkompas/features/home/presentation/screens/pages/course_lessons_screen.dart';
 import 'package:hollandkompas/features/home/presentation/screens/pages/lesson_viewer_screen.dart';
 import 'package:hollandkompas/features/home/presentation/screens/pages/total_students_screen.dart';
+import 'package:hollandkompas/features/home/presentation/views/student/profile_screen.dart';
 import 'package:hollandkompas/features/home/presentation/widgets/sidebar/admin_shell.dart';
 import 'package:hollandkompas/features/onboarding/presentation/pages/onboarding_screen.dart';
-import 'package:hollandkompas/features/onboarding/presentation/pages/profile_screen.dart';
 import 'package:hollandkompas/features/splash/presentation/pages/splash_page.dart';
 
 final appRouter = GoRouter(
