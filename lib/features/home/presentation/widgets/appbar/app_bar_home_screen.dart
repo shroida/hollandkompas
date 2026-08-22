@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hollandkompas/core/theme/app_colors.dart';
 import 'package:hollandkompas/core/theme/theme_provider.dart';
+import 'package:hollandkompas/features/home/presentation/widgets/appbar/welcome_section.dart';
 import 'package:hollandkompas/shared/widgets/language_selector.dart';
 
 class AppBarHomeScreen extends ConsumerWidget implements PreferredSizeWidget {
@@ -78,10 +79,7 @@ class AppBarHomeScreen extends ConsumerWidget implements PreferredSizeWidget {
 
                 const SizedBox(width: 14),
 
-                // =========================
-                // WELCOME
-                // =========================
-                Expanded(child: _WelcomeSection(firstName: firstName)),
+                Expanded(child: WelcomeSection(firstName: firstName)),
 
                 const SizedBox(width: 10),
 
@@ -113,51 +111,6 @@ class AppBarHomeScreen extends ConsumerWidget implements PreferredSizeWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-// ============================================================
-// WELCOME SECTION
-// ============================================================
-
-class _WelcomeSection extends StatelessWidget {
-  final String firstName;
-
-  const _WelcomeSection({required this.firstName});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Welcome back 👋',
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: AppColors.subtitleColor(context),
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-
-        const SizedBox(height: 2),
-
-        Text(
-          firstName,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: theme.textTheme.titleLarge?.copyWith(
-            fontSize: 21,
-            fontWeight: FontWeight.w700,
-            letterSpacing: -0.3,
-          ),
-        ),
-      ],
     );
   }
 }
