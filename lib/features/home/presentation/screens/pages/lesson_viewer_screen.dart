@@ -1,6 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:hollandkompas/core/theme/app_colors.dart';
 import 'package:hollandkompas/features/home/domain/entities/lesson.dart';
+import 'package:hollandkompas/features/home/presentation/widgets/lessons%20viewers/continue_learning_card.dart';
+import 'package:hollandkompas/features/home/presentation/widgets/lessons%20viewers/enrollment_dialog.dart';
+import 'package:hollandkompas/features/home/presentation/widgets/lessons%20viewers/free_lesson_card.dart';
+import 'package:hollandkompas/features/home/presentation/widgets/lessons%20viewers/lesson_description.dart';
+import 'package:hollandkompas/features/home/presentation/widgets/lessons%20viewers/lesson_header.dart';
+import 'package:hollandkompas/features/home/presentation/widgets/lessons%20viewers/lesson_information.dart';
+import 'package:hollandkompas/features/home/presentation/widgets/lessons%20viewers/lessons_status_banner.dart';
+import 'package:hollandkompas/features/home/presentation/widgets/lessons%20viewers/locked_video.dart';
+import 'package:hollandkompas/features/home/presentation/widgets/lessons%20viewers/video_player.dart';
 import 'package:youtube_player_iframe/youtube_player_iframe.dart';
 
 class LessonViewerScreen extends StatefulWidget {
@@ -58,7 +66,7 @@ class _LessonViewerScreenState extends State<LessonViewerScreen> {
     showDialog<void>(
       context: context,
       builder: (context) {
-        return _EnrollmentDialog(
+        return EnrollmentDialog(
           onEnroll: () {
             Navigator.of(context).pop();
 
@@ -129,7 +137,7 @@ class _LessonViewerScreenState extends State<LessonViewerScreen> {
 
                       const SizedBox(height: 28),
 
-                      _LessonHeader(
+                      LessonHeader(
                         lesson: widget.lesson,
                         isEnrolled: widget.isEnrolled,
                         isLocked: isLocked,
@@ -141,14 +149,14 @@ class _LessonViewerScreenState extends State<LessonViewerScreen> {
 
                       const SizedBox(height: 28),
 
-                      _LessonInformation(lesson: widget.lesson),
+                      LessonInformation(lesson: widget.lesson),
 
                       const SizedBox(height: 28),
 
                       if (!widget.isEnrolled)
-                        _FreeLessonCard(onEnroll: _showEnrollmentDialog)
+                        FreeLessonCard(onEnroll: _showEnrollmentDialog)
                       else
-                        const _ContinueLearningCard(),
+                        const ContinueLearningCard(),
                     ],
                   ),
                 ),
