@@ -12,6 +12,7 @@ import 'package:hollandkompas/features/home/presentation/screens/pages/lesson_vi
 import 'package:hollandkompas/features/home/presentation/screens/pages/total_students_screen.dart';
 import 'package:hollandkompas/features/home/presentation/widgets/sidebar/admin_shell.dart';
 import 'package:hollandkompas/features/onboarding/presentation/pages/onboarding_screen.dart';
+import 'package:hollandkompas/features/onboarding/presentation/pages/profile_screen.dart';
 import 'package:hollandkompas/features/splash/presentation/pages/splash_page.dart';
 
 final appRouter = GoRouter(
@@ -73,6 +74,13 @@ final appRouter = GoRouter(
         final course = state.extra as Course;
 
         return CourseLessonsScreen(course: course);
+      },
+    ),
+    GoRoute(
+      path: '/profile',
+      name: 'profile',
+      builder: (context, state) {
+        return ProfileScreen();
       },
     ),
 

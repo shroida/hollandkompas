@@ -42,7 +42,7 @@ class HomeScreen extends ConsumerWidget {
             },
 
             onProfile: () {
-              // TODO: navigate to Profile
+              context.push('/profile');
             },
 
             onSettings: () {
