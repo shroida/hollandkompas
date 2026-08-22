@@ -4,6 +4,7 @@ import 'package:hollandkompas/core/theme/app_colors.dart';
 import 'package:hollandkompas/features/home/domain/entities/course.dart';
 import 'package:hollandkompas/features/home/domain/entities/lesson.dart';
 import 'package:hollandkompas/features/home/presentation/providers/course_lessons_provider.dart';
+import 'package:hollandkompas/features/home/presentation/screens/pages/lesson_viewer_screen.dart';
 
 class CourseLessonsScreen extends ConsumerWidget {
   final Course course;
@@ -73,6 +74,10 @@ class _CourseLessonsContent extends StatelessWidget {
                     child: _CourseHeader(
                       course: course,
                       lessonCount: lessons.length,
+                      totalMinutes: lessons.fold(
+                        0,
+                        (sum, lesson) => sum + lesson.durationMinutes,
+                      ),
                     ),
                   ),
                 ),
@@ -105,8 +110,12 @@ class _CourseLessonsContent extends StatelessWidget {
                           lesson: lessons[index],
                           isFirst: index == 0,
                           onTap: () {
-                            // TODO:
-                            // Navigate to LessonScreen
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    LessonViewerScreen(lesson: lessons[index]),
+                              ),
+                            );
                           },
                         ),
                       );
@@ -125,8 +134,13 @@ class _CourseLessonsContent extends StatelessWidget {
 class _CourseHeader extends StatelessWidget {
   final Course course;
   final int lessonCount;
+  final int totalMinutes;
 
-  const _CourseHeader({required this.course, required this.lessonCount});
+  const _CourseHeader({
+    required this.course,
+    required this.lessonCount,
+    required this.totalMinutes,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -207,7 +221,9 @@ class _CourseHeader extends StatelessWidget {
 
           const SizedBox(height: 24),
 
-          Row(
+          Wrap(
+            spacing: 24,
+            runSpacing: 14,
             children: [
               _HeaderStat(
                 icon: Icons.menu_book_rounded,
@@ -215,15 +231,11 @@ class _CourseHeader extends StatelessWidget {
                 label: 'Lessons',
               ),
 
-              const SizedBox(width: 24),
-
-              const _HeaderStat(
+              _HeaderStat(
                 icon: Icons.schedule_rounded,
-                value: '—',
+                value: '$totalMinutes',
                 label: 'Minutes',
               ),
-
-              const SizedBox(width: 24),
 
               const _HeaderStat(
                 icon: Icons.trending_up_rounded,
@@ -312,8 +324,6 @@ class _SectionHeader extends StatelessWidget {
 
 class LessonCard extends StatelessWidget {
   final Lesson lesson;
-  final bool isFirst;
-  final VoidCallback? onTap;
 
   const LessonCard({
     super.key,
@@ -321,6 +331,9 @@ class LessonCard extends StatelessWidget {
     required this.isFirst,
     this.onTap,
   });
+
+  final bool isFirst;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
