@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hollandkompas/features/home/presentation/providers/current_user_provider.dart';
 import 'package:hollandkompas/features/home/presentation/providers/published_course_provider.dart';
-import 'package:hollandkompas/features/home/presentation/widgets/appbar/welcome_section.dart';
 import 'package:hollandkompas/features/home/presentation/widgets/course_card.dart';
 import 'package:hollandkompas/features/home/presentation/widgets/courses_error.dart';
 import 'package:hollandkompas/features/home/presentation/widgets/courses_loading.dart';
@@ -28,13 +26,6 @@ class TabletHomeView extends ConsumerWidget {
       data: (courses) {
         return CustomScrollView(
           slivers: [
-            SliverToBoxAdapter(
-              child: WelcomeSection(
-                firstName:
-                    ref.watch(currentUserProvider).value?.firstName ?? '',
-              ),
-            ),
-
             const SliverToBoxAdapter(child: SizedBox(height: 24)),
 
             const SliverToBoxAdapter(
