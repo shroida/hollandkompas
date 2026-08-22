@@ -137,9 +137,7 @@ class _LessonViewerScreenState extends State<LessonViewerScreen> {
 
                       const SizedBox(height: 24),
 
-                      _LessonDescription(
-                        description: widget.lesson.description,
-                      ),
+                      LessonDescription(description: widget.lesson.description),
 
                       const SizedBox(height: 28),
 
@@ -157,42 +155,6 @@ class _LessonViewerScreenState extends State<LessonViewerScreen> {
               ),
             );
           },
-        ),
-      ),
-    );
-  }
-}
-
-class _LessonDescription extends StatelessWidget {
-  final String description;
-
-  const _LessonDescription({required this.description});
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'About this lesson',
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
-            ),
-
-            const SizedBox(height: 10),
-
-            Text(
-              description,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppColors.subtitleColor(context),
-                height: 1.6,
-              ),
-            ),
-          ],
         ),
       ),
     );
