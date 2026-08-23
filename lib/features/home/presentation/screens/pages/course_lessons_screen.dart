@@ -4,89 +4,196 @@ import 'package:go_router/go_router.dart';
 import 'package:hollandkompas/core/theme/app_colors.dart';
 import 'package:hollandkompas/features/home/domain/entities/course.dart';
 import 'package:hollandkompas/features/home/domain/entities/lesson.dart';
+import 'package:hollandkompas/features/home/presentation/providers/course_enrollment_provider.dart';
 import 'package:hollandkompas/features/home/presentation/providers/course_lessons_provider.dart';
+import 'package:hollandkompas/features/home/presentation/providers/enrollment_controller_provider.dart';
 
 class CourseLessonsScreen extends ConsumerWidget {
   final Course course;
-  final bool isEnrolled;
 
-  const CourseLessonsScreen({
-    super.key,
-    required this.course,
-    required this.isEnrolled,
-  });
+  const CourseLessonsScreen({super.key, required this.course});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final lessonsAsync = ref.watch(courseLessonsProvider(course.id));
 
+    final enrollmentAsync = ref.watch(courseEnrollmentProvider(course.id));
+
+    print('');
+    print('========== COURSE SCREEN ==========');
+    print('Course ID: ${course.id}');
+    print('Course title: ${course.title}');
+    print('Lessons state: $lessonsAsync');
+    print('Enrollment state: $enrollmentAsync');
+    print('===================================');
+
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+
       appBar: AppBar(
         title: const Text('Course'),
+
         actions: [
-          if (!isEnrolled)
-            Padding(
-              padding: const EdgeInsets.only(right: 12),
-              child: TextButton.icon(
-                onPressed: () {
-                  _showEnrollmentDialog(context);
-                },
-                icon: const Icon(Icons.school_rounded, size: 18),
-                label: const Text('Enroll'),
-              ),
-            ),
+          enrollmentAsync.when(
+            loading: () {
+              return const Padding(
+                padding: EdgeInsets.only(right: 16),
+                child: SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              );
+            },
+
+            error: (error, stackTrace) {
+              return const SizedBox.shrink();
+            },
+
+            data: (isEnrolled) {
+              print('APP BAR -> isEnrolled: $isEnrolled');
+
+              if (isEnrolled) {
+                return const Padding(
+                  padding: EdgeInsets.only(right: 16),
+                  child: Icon(
+                    Icons.check_circle_rounded,
+                    color: AppColors.primary,
+                  ),
+                );
+              }
+
+              return Padding(
+                padding: const EdgeInsets.only(right: 12),
+                child: TextButton.icon(
+                  onPressed: () {
+                    _showEnrollmentDialog(context, ref);
+                  },
+                  icon: const Icon(Icons.school_rounded, size: 18),
+                  label: const Text('Enroll'),
+                ),
+              );
+            },
+          ),
         ],
       ),
+
       body: lessonsAsync.when(
-        loading: () => const LoadingState(),
+        loading: () {
+          return const LoadingState();
+        },
+
         error: (error, stackTrace) {
           return ErrorState(
+            title: 'Unable to load lessons',
             error: error,
             onRetry: () {
               ref.invalidate(courseLessonsProvider(course.id));
             },
           );
         },
+
         data: (lessons) {
-          return _CourseLessonsContent(
-            course: course,
-            lessons: lessons,
-            isEnrolled: isEnrolled,
+          print('LESSONS LOADED: ${lessons.length}');
+
+          return enrollmentAsync.when(
+            loading: () {
+              return const LoadingState();
+            },
+
+            error: (error, stackTrace) {
+              return ErrorState(
+                title: 'Unable to check enrollment',
+                error: error,
+                onRetry: () {
+                  ref.invalidate(courseEnrollmentProvider(course.id));
+                },
+              );
+            },
+
+            data: (isEnrolled) {
+              print('');
+              print('========== FINAL COURSE STATE ==========');
+              print('Course: ${course.title}');
+              print('Lessons: ${lessons.length}');
+              print('Enrolled: $isEnrolled');
+              print('========================================');
+
+              return _CourseLessonsContent(
+                course: course,
+                lessons: lessons,
+                isEnrolled: isEnrolled,
+
+                onEnroll: () {
+                  _showEnrollmentDialog(context, ref);
+                },
+              );
+            },
           );
         },
       ),
     );
   }
 
-  void _showEnrollmentDialog(BuildContext context) {
-    showDialog(
+  void _showEnrollmentDialog(BuildContext context, WidgetRef ref) {
+    showDialog<void>(
       context: context,
-      builder: (_) => _EnrollmentDialog(
-        course: course,
-        onEnroll: () {
-          Navigator.of(context).pop();
+      builder: (_) {
+        return _EnrollmentDialog(
+          course: course,
+          onEnroll: () async {
+            try {
+              await ref.read(enrollmentControllerProvider).enroll(course.id);
 
-          // TODO:
-          // Call your enrollment provider/usecase here.
-          //
-          // Example:
-          // ref.read(enrollCourseProvider.notifier).enroll(course.id);
-        },
-      ),
+              if (!context.mounted) {
+                return;
+              }
+
+              Navigator.of(context).pop();
+
+              // Re-check enrollment status.
+              ref.invalidate(courseEnrollmentProvider(course.id));
+
+              if (!context.mounted) {
+                return;
+              }
+
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('You are now enrolled in this course.'),
+                ),
+              );
+            } catch (e) {
+              if (!context.mounted) {
+                return;
+              }
+
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text('Enrollment failed: $e')));
+            }
+          },
+        );
+      },
     );
   }
 }
+
+// ═════════════════════════════════════════════════════════════
+// COURSE CONTENT
+// ═════════════════════════════════════════════════════════════
 
 class _CourseLessonsContent extends StatelessWidget {
   final Course course;
   final List<Lesson> lessons;
   final bool isEnrolled;
+  final VoidCallback onEnroll;
 
   const _CourseLessonsContent({
     required this.course,
     required this.lessons,
     required this.isEnrolled,
+    required this.onEnroll,
   });
 
   @override
@@ -113,6 +220,7 @@ class _CourseLessonsContent extends StatelessWidget {
             child: CustomScrollView(
               physics: const BouncingScrollPhysics(),
               slivers: [
+                // COURSE HEADER
                 SliverPadding(
                   padding: EdgeInsets.fromLTRB(
                     horizontalPadding,
@@ -130,6 +238,7 @@ class _CourseLessonsContent extends StatelessWidget {
                   ),
                 ),
 
+                // ENROLLMENT BANNER
                 if (!isEnrolled)
                   SliverPadding(
                     padding: EdgeInsets.fromLTRB(
@@ -141,13 +250,12 @@ class _CourseLessonsContent extends StatelessWidget {
                     sliver: SliverToBoxAdapter(
                       child: _EnrollmentBanner(
                         course: course,
-                        onEnroll: () {
-                          _showEnrollmentDialog(context);
-                        },
+                        onEnroll: onEnroll,
                       ),
                     ),
                   ),
 
+                // SECTION HEADER
                 SliverPadding(
                   padding: EdgeInsets.fromLTRB(
                     horizontalPadding,
@@ -163,6 +271,7 @@ class _CourseLessonsContent extends StatelessWidget {
                   ),
                 ),
 
+                // LESSONS
                 SliverPadding(
                   padding: EdgeInsets.fromLTRB(
                     horizontalPadding,
@@ -172,10 +281,15 @@ class _CourseLessonsContent extends StatelessWidget {
                   ),
                   sliver: SliverList.builder(
                     itemCount: lessons.length,
+
                     itemBuilder: (context, index) {
                       final lesson = lessons[index];
 
+                      // Lesson 1 is free.
                       final isFree = index == 0;
+
+                      // If enrolled -> NOTHING is locked.
+                      // If not enrolled -> only lesson 1 is open.
                       final isLocked = !isEnrolled && !isFree;
 
                       return Padding(
@@ -185,9 +299,10 @@ class _CourseLessonsContent extends StatelessWidget {
                           isFirst: isFree,
                           isLocked: isLocked,
                           isEnrolled: isEnrolled,
+
                           onTap: () {
                             if (isLocked) {
-                              _showEnrollmentDialog(context);
+                              onEnroll();
                               return;
                             }
 
@@ -212,22 +327,11 @@ class _CourseLessonsContent extends StatelessWidget {
       },
     );
   }
-
-  void _showEnrollmentDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (_) => _EnrollmentDialog(
-        course: course,
-        onEnroll: () {
-          Navigator.of(context).pop();
-
-          // TODO:
-          // Enroll user in this course.
-        },
-      ),
-    );
-  }
 }
+
+// ═════════════════════════════════════════════════════════════
+// COURSE HEADER
+// ═════════════════════════════════════════════════════════════
 
 class _CourseHeader extends StatelessWidget {
   final Course course;
@@ -249,6 +353,7 @@ class _CourseHeader extends StatelessWidget {
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(26),
+
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           begin: Alignment.topLeft,
@@ -264,6 +369,7 @@ class _CourseHeader extends StatelessWidget {
           ),
         ],
       ),
+
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -272,10 +378,12 @@ class _CourseHeader extends StatelessWidget {
               Container(
                 width: 58,
                 height: 58,
+
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.13),
                   borderRadius: BorderRadius.circular(17),
                 ),
+
                 child: const Icon(
                   Icons.translate_rounded,
                   color: Colors.white,
@@ -290,10 +398,12 @@ class _CourseHeader extends StatelessWidget {
                   horizontal: 12,
                   vertical: 7,
                 ),
+
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(30),
                 ),
+
                 child: Text(
                   course.level.toUpperCase(),
                   style: const TextStyle(
@@ -313,10 +423,12 @@ class _CourseHeader extends StatelessWidget {
                     horizontal: 12,
                     vertical: 7,
                   ),
+
                   decoration: BoxDecoration(
                     color: Colors.white.withValues(alpha: 0.14),
                     borderRadius: BorderRadius.circular(30),
                   ),
+
                   child: const Row(
                     children: [
                       Icon(
@@ -371,11 +483,13 @@ class _CourseHeader extends StatelessWidget {
                 value: '$lessonCount',
                 label: 'Lessons',
               ),
+
               _HeaderStat(
                 icon: Icons.schedule_rounded,
                 value: '$totalMinutes',
                 label: 'Minutes',
               ),
+
               _HeaderStat(
                 icon: Icons.lock_open_rounded,
                 value: isEnrolled ? '100%' : '1',
@@ -389,6 +503,10 @@ class _CourseHeader extends StatelessWidget {
   }
 }
 
+// ═════════════════════════════════════════════════════════════
+// ENROLLMENT BANNER
+// ═════════════════════════════════════════════════════════════
+
 class _EnrollmentBanner extends StatelessWidget {
   final Course course;
   final VoidCallback onEnroll;
@@ -399,20 +517,24 @@ class _EnrollmentBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(20),
+
       decoration: BoxDecoration(
         color: AppColors.accent,
         borderRadius: BorderRadius.circular(22),
         border: Border.all(color: AppColors.primary.withValues(alpha: 0.10)),
       ),
+
       child: Row(
         children: [
           Container(
             width: 48,
             height: 48,
+
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(15),
             ),
+
             child: const Icon(Icons.school_rounded, color: AppColors.primary),
           ),
 
@@ -451,6 +573,10 @@ class _EnrollmentBanner extends StatelessWidget {
   }
 }
 
+// ═════════════════════════════════════════════════════════════
+// LESSON CARD
+// ═════════════════════════════════════════════════════════════
+
 class LessonCard extends StatelessWidget {
   final Lesson lesson;
   final bool isFirst;
@@ -475,11 +601,14 @@ class LessonCard extends StatelessWidget {
       margin: EdgeInsets.zero,
       elevation: 0,
       clipBehavior: Clip.antiAlias,
+
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(18),
+
         child: Padding(
           padding: const EdgeInsets.all(17),
+
           child: Row(
             children: [
               _LessonNumber(
@@ -493,6 +622,7 @@ class LessonCard extends StatelessWidget {
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+
                   children: [
                     Row(
                       children: [
@@ -557,12 +687,15 @@ class LessonCard extends StatelessWidget {
 
                         if (lesson.videoUrl != null) ...[
                           const SizedBox(width: 14),
+
                           const Icon(
                             Icons.play_circle_outline_rounded,
                             size: 16,
                             color: AppColors.primary,
                           ),
+
                           const SizedBox(width: 4),
+
                           Text(
                             'Video',
                             style: theme.textTheme.bodySmall?.copyWith(
@@ -573,6 +706,7 @@ class LessonCard extends StatelessWidget {
 
                         if (lesson.audioUrl != null) ...[
                           const SizedBox(width: 14),
+
                           const Icon(
                             Icons.headphones_rounded,
                             size: 16,
@@ -589,12 +723,15 @@ class LessonCard extends StatelessWidget {
 
               AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
+
                 width: 44,
                 height: 44,
+
                 decoration: BoxDecoration(
                   color: isLocked ? AppColors.muted : AppColors.accent,
                   borderRadius: BorderRadius.circular(14),
                 ),
+
                 child: Icon(
                   isLocked ? Icons.lock_rounded : Icons.arrow_forward_rounded,
                   color: isLocked
@@ -610,6 +747,10 @@ class LessonCard extends StatelessWidget {
     );
   }
 }
+
+// ═════════════════════════════════════════════════════════════
+// LESSON NUMBER
+// ═════════════════════════════════════════════════════════════
 
 class _LessonNumber extends StatelessWidget {
   final int number;
@@ -639,10 +780,12 @@ class _LessonNumber extends StatelessWidget {
     return Container(
       width: 50,
       height: 50,
+
       decoration: BoxDecoration(
         color: backgroundColor,
         borderRadius: BorderRadius.circular(15),
       ),
+
       child: Center(
         child: isLocked
             ? Icon(Icons.lock_rounded, color: textColor, size: 20)
@@ -659,6 +802,10 @@ class _LessonNumber extends StatelessWidget {
   }
 }
 
+// ═════════════════════════════════════════════════════════════
+// LESSON BADGE
+// ═════════════════════════════════════════════════════════════
+
 class _LessonBadge extends StatelessWidget {
   final String text;
   final IconData icon;
@@ -672,31 +819,29 @@ class _LessonBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final color = isLocked
+        ? AppColors.subtitleColor(context)
+        : AppColors.primary;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
+
       decoration: BoxDecoration(
         color: isLocked ? AppColors.muted : AppColors.accent,
         borderRadius: BorderRadius.circular(8),
       ),
+
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            icon,
-            size: 11,
-            color: isLocked
-                ? AppColors.subtitleColor(context)
-                : AppColors.primary,
-          ),
+          Icon(icon, size: 11, color: color),
 
           const SizedBox(width: 4),
 
           Text(
             text,
             style: TextStyle(
-              color: isLocked
-                  ? AppColors.subtitleColor(context)
-                  : AppColors.primary,
+              color: color,
               fontSize: 8,
               fontWeight: FontWeight.w900,
               letterSpacing: 0.3,
@@ -708,9 +853,13 @@ class _LessonBadge extends StatelessWidget {
   }
 }
 
+// ═════════════════════════════════════════════════════════════
+// ENROLLMENT DIALOG
+// ═════════════════════════════════════════════════════════════
+
 class _EnrollmentDialog extends StatelessWidget {
   final Course course;
-  final VoidCallback onEnroll;
+  final Future<void> Function() onEnroll;
 
   const _EnrollmentDialog({required this.course, required this.onEnroll});
 
@@ -718,21 +867,27 @@ class _EnrollmentDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     return Dialog(
       insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+
       child: Padding(
         padding: const EdgeInsets.all(26),
+
         child: Column(
           mainAxisSize: MainAxisSize.min,
+
           children: [
             Container(
               width: 76,
               height: 76,
+
               decoration: BoxDecoration(
                 gradient: const LinearGradient(
                   colors: [AppColors.secondary, AppColors.primary],
                 ),
                 borderRadius: BorderRadius.circular(24),
               ),
+
               child: const Icon(
                 Icons.school_rounded,
                 color: Colors.white,
@@ -765,17 +920,17 @@ class _EnrollmentDialog extends StatelessWidget {
 
             const SizedBox(height: 22),
 
-            _DialogFeature(
+            const _DialogFeature(
               icon: Icons.lock_open_rounded,
               text: 'Unlock all course lessons',
             ),
 
-            _DialogFeature(
+            const _DialogFeature(
               icon: Icons.trending_up_rounded,
               text: 'Track your learning progress',
             ),
 
-            _DialogFeature(
+            const _DialogFeature(
               icon: Icons.school_rounded,
               text: 'Continue your Dutch learning journey',
             ),
@@ -784,10 +939,16 @@ class _EnrollmentDialog extends StatelessWidget {
 
             SizedBox(
               width: double.infinity,
+
               child: FilledButton.icon(
-                onPressed: onEnroll,
+                onPressed: () async {
+                  await onEnroll();
+                },
+
                 icon: const Icon(Icons.school_rounded),
+
                 label: const Text('Enroll now'),
+
                 style: FilledButton.styleFrom(
                   padding: const EdgeInsets.symmetric(vertical: 15),
                 ),
@@ -798,10 +959,12 @@ class _EnrollmentDialog extends StatelessWidget {
 
             SizedBox(
               width: double.infinity,
+
               child: TextButton(
                 onPressed: () {
                   Navigator.of(context).pop();
                 },
+
                 child: const Text('Maybe later'),
               ),
             ),
@@ -811,6 +974,10 @@ class _EnrollmentDialog extends StatelessWidget {
     );
   }
 }
+
+// ═════════════════════════════════════════════════════════════
+// DIALOG FEATURE
+// ═════════════════════════════════════════════════════════════
 
 class _DialogFeature extends StatelessWidget {
   final IconData icon;
@@ -822,15 +989,18 @@ class _DialogFeature extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 11),
+
       child: Row(
         children: [
           Container(
             width: 34,
             height: 34,
+
             decoration: BoxDecoration(
               color: AppColors.accent,
               borderRadius: BorderRadius.circular(10),
             ),
+
             child: Icon(icon, size: 17, color: AppColors.primary),
           ),
 
@@ -851,6 +1021,10 @@ class _DialogFeature extends StatelessWidget {
     );
   }
 }
+
+// ═════════════════════════════════════════════════════════════
+// SECTION HEADER
+// ═════════════════════════════════════════════════════════════
 
 class _SectionHeader extends StatelessWidget {
   final int lessonCount;
@@ -889,10 +1063,12 @@ class _SectionHeader extends StatelessWidget {
 
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
+
           decoration: BoxDecoration(
             color: AppColors.muted,
             borderRadius: BorderRadius.circular(20),
           ),
+
           child: Text(
             '$lessonCount lessons',
             style: Theme.of(
@@ -904,6 +1080,10 @@ class _SectionHeader extends StatelessWidget {
     );
   }
 }
+
+// ═════════════════════════════════════════════════════════════
+// HEADER STAT
+// ═════════════════════════════════════════════════════════════
 
 class _HeaderStat extends StatelessWidget {
   final IconData icon;
@@ -920,14 +1100,17 @@ class _HeaderStat extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       mainAxisSize: MainAxisSize.min,
+
       children: [
         Container(
           width: 38,
           height: 38,
+
           decoration: BoxDecoration(
             color: Colors.white.withValues(alpha: 0.12),
             borderRadius: BorderRadius.circular(11),
           ),
+
           child: Icon(
             icon,
             color: Colors.white.withValues(alpha: 0.9),
@@ -939,6 +1122,7 @@ class _HeaderStat extends StatelessWidget {
 
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+
           children: [
             Text(
               value,
@@ -966,6 +1150,10 @@ class _HeaderStat extends StatelessWidget {
   }
 }
 
+// ═════════════════════════════════════════════════════════════
+// LOADING
+// ═════════════════════════════════════════════════════════════
+
 class LoadingState extends StatelessWidget {
   const LoadingState({super.key});
 
@@ -977,11 +1165,21 @@ class LoadingState extends StatelessWidget {
   }
 }
 
+// ═════════════════════════════════════════════════════════════
+// ERROR
+// ═════════════════════════════════════════════════════════════
+
 class ErrorState extends StatelessWidget {
+  final String title;
   final Object error;
   final VoidCallback onRetry;
 
-  const ErrorState({super.key, required this.error, required this.onRetry});
+  const ErrorState({
+    super.key,
+    required this.title,
+    required this.error,
+    required this.onRetry,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -990,18 +1188,23 @@ class ErrorState extends StatelessWidget {
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
+
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 420),
+
           child: Column(
             mainAxisSize: MainAxisSize.min,
+
             children: [
               Container(
                 width: 72,
                 height: 72,
+
                 decoration: BoxDecoration(
                   color: AppColors.destructive.withValues(alpha: 0.10),
                   shape: BoxShape.circle,
                 ),
+
                 child: const Icon(
                   Icons.cloud_off_rounded,
                   size: 34,
@@ -1012,7 +1215,7 @@ class ErrorState extends StatelessWidget {
               const SizedBox(height: 20),
 
               Text(
-                'Unable to load lessons',
+                title,
                 textAlign: TextAlign.center,
                 style: theme.textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.w800,
@@ -1022,7 +1225,7 @@ class ErrorState extends StatelessWidget {
               const SizedBox(height: 8),
 
               Text(
-                'Something went wrong while loading this course. '
+                'Something went wrong. '
                 'Please try again.',
                 textAlign: TextAlign.center,
                 style: theme.textTheme.bodyMedium?.copyWith(
@@ -1038,13 +1241,15 @@ class ErrorState extends StatelessWidget {
                   horizontal: 14,
                   vertical: 10,
                 ),
+
                 decoration: BoxDecoration(
                   color: AppColors.muted,
                   borderRadius: BorderRadius.circular(12),
                 ),
+
                 child: Text(
                   error.toString(),
-                  maxLines: 2,
+                  maxLines: 3,
                   overflow: TextOverflow.ellipsis,
                   textAlign: TextAlign.center,
                   style: theme.textTheme.bodySmall?.copyWith(
