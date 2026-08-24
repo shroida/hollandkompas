@@ -65,7 +65,7 @@ class DesktopHomeView extends ConsumerWidget {
                           crossAxisCount: 3,
                           crossAxisSpacing: 20,
                           mainAxisSpacing: 20,
-                          childAspectRatio: 0.95,
+                          mainAxisExtent: 460,
                         ),
                     itemBuilder: (context, index) {
                       return CourseCard(course: courses[index], onTap: () {});

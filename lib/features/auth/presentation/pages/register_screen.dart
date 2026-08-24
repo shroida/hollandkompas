@@ -71,7 +71,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     final state = ref.watch(authControllerProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.backgroundColor(context),
       appBar: context.isMobile ? _buildMobileAppBar(context) : null,
       body: SafeArea(
         top: context.isMobile,
@@ -145,7 +145,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 constraints: const BoxConstraints(maxWidth: 520),
                 child: Card(
                   elevation: context.isDesktop ? 2 : 0,
-                  color: context.isDesktop ? Colors.white : Colors.transparent,
+                  color: context.isDesktop
+                      ? AppColors.cardColor(context)
+                      : Colors.transparent,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(24),
                   ),
@@ -287,12 +289,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     decoration: BoxDecoration(
                       color: isSelected
                           ? AppColors.primary.withValues(alpha: 0.1)
-                          : Colors.white,
+                          : AppColors.cardColor(context),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
                         color: isSelected
                             ? AppColors.primary
-                            : AppColors.border,
+                            : AppColors.subtitleColor(context),
                         width: isSelected ? 2 : 1,
                       ),
                     ),
@@ -327,10 +329,14 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 height: 20,
                 margin: const EdgeInsets.only(top: 2),
                 decoration: BoxDecoration(
-                  color: agreed ? AppColors.primary : Colors.white,
+                  color: agreed
+                      ? AppColors.primary
+                      : AppColors.cardColor(context),
                   borderRadius: BorderRadius.circular(6),
                   border: Border.all(
-                    color: agreed ? AppColors.primary : AppColors.border,
+                    color: agreed
+                        ? AppColors.primary
+                        : AppColors.borderColor(context),
                     width: 2,
                   ),
                 ),
@@ -339,31 +345,33 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     : null,
               ),
               const SizedBox(width: 10),
-              const Expanded(
-                child: Text.rich(
-                  TextSpan(
-                    text: "أوافق على ",
-                    style: TextStyle(
-                      color: AppColors.mutedForeground,
-                      fontSize: 13,
+              Expanded(
+                child: Expanded(
+                  child: Text.rich(
+                    TextSpan(
+                      text: "أوافق على ",
+                      style: TextStyle(
+                        color: AppColors.subtitleColor(context),
+                        fontSize: 13,
+                      ),
+                      children: [
+                        TextSpan(
+                          text: "شروط الاستخدام",
+                          style: TextStyle(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        TextSpan(text: " و "),
+                        TextSpan(
+                          text: "سياسة الخصوصية",
+                          style: TextStyle(
+                            color: AppColors.primary,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
                     ),
-                    children: [
-                      TextSpan(
-                        text: "شروط الاستخدام",
-                        style: TextStyle(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      TextSpan(text: " و "),
-                      TextSpan(
-                        text: "سياسة الخصوصية",
-                        style: TextStyle(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
                   ),
                 ),
               ),
@@ -449,10 +457,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Text(
+              Text(
                 "لديك حساب بالفعل؟ ",
                 style: TextStyle(
-                  color: AppColors.mutedForeground,
+                  color: AppColors.subtitleColor(context),
                   fontSize: 13,
                 ),
               ),

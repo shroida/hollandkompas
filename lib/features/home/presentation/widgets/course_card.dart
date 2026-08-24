@@ -22,17 +22,19 @@ class CourseCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
             CourseImage(course: course),
 
             Padding(
-              padding: const EdgeInsets.all(18),
+              padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   LevelBadge(level: course.level),
 
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 10),
 
                   Text(
                     course.title,
@@ -54,7 +56,7 @@ class CourseCard extends StatelessWidget {
                     ),
                   ),
 
-                  const SizedBox(height: 18),
+                  const SizedBox(height: 14),
 
                   Row(
                     children: [
@@ -66,14 +68,18 @@ class CourseCard extends StatelessWidget {
 
                       const SizedBox(width: 7),
 
-                      Text(
-                        'Dutch course',
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: AppColors.subtitleColor(context),
+                      Expanded(
+                        child: Text(
+                          'Dutch course',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: AppColors.subtitleColor(context),
+                          ),
                         ),
                       ),
 
-                      const Spacer(),
+                      const SizedBox(width: 8),
 
                       Container(
                         width: 38,
