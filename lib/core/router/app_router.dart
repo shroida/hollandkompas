@@ -83,8 +83,9 @@ final appRouter = GoRouter(
         final extra = state.extra as Map<String, dynamic>;
 
         final course = extra['course'] as Course;
+        final isEnrolled = extra['isEnrolled'] as bool? ?? false;
 
-        return CourseLessonsScreen(course: course);
+        return CourseLessonsScreen(course: course, isEnrolled: isEnrolled);
       },
     ),
 

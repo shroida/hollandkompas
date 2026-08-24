@@ -10,8 +10,13 @@ import 'package:hollandkompas/features/home/presentation/providers/enrollment_co
 
 class CourseLessonsScreen extends ConsumerWidget {
   final Course course;
+  final bool isEnrolled;
 
-  const CourseLessonsScreen({super.key, required this.course});
+  const CourseLessonsScreen({
+    super.key,
+    required this.course,
+    required this.isEnrolled,
+  });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

@@ -60,6 +60,7 @@ class MobileHomeView extends ConsumerWidget {
                     padding: const EdgeInsets.only(bottom: 16),
                     child: CourseCard(
                       course: course,
+                      isEnrolled: false,
                       onTap: () {
                         context.push(
                           '/course-lessons',

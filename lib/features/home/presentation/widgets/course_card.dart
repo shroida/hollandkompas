@@ -5,9 +5,15 @@ import 'package:hollandkompas/features/home/presentation/widgets/course_image.da
 
 class CourseCard extends StatelessWidget {
   final Course course;
+  final bool isEnrolled;
   final VoidCallback? onTap;
 
-  const CourseCard({super.key, required this.course, this.onTap});
+  const CourseCard({
+    super.key,
+    required this.course,
+    this.isEnrolled = false,
+    this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -70,7 +76,7 @@ class CourseCard extends StatelessWidget {
 
                       Expanded(
                         child: Text(
-                          'Dutch course',
+                          isEnrolled ? 'Continue learning' : 'Dutch course',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: theme.textTheme.bodySmall?.copyWith(
@@ -82,7 +88,7 @@ class CourseCard extends StatelessWidget {
                       const SizedBox(width: 8),
 
                       GestureDetector(
-                        onTap: () {},
+                        onTap: onTap,
                         child: Container(
                           width: 38,
                           height: 38,

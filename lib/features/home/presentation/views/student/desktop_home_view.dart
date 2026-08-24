@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hollandkompas/features/home/presentation/providers/published_course_provider.dart';
 import 'package:hollandkompas/features/home/presentation/widgets/course_card.dart';
 import 'package:hollandkompas/features/home/presentation/widgets/courses_error.dart';
@@ -19,15 +20,22 @@ class DesktopHomeView extends ConsumerWidget {
         child: coursesAsync.when(
           loading: () => const CoursesLoading(),
 
-          error: (error, stack) => CoursesError(
-            message: error.toString(),
-            onRetry: () {
-              ref.invalidate(publishedCoursesProvider);
-            },
-          ),
+          error: (error, stack) {
+            return CoursesError(
+              message: error.toString(),
+              onRetry: () {
+                ref.invalidate(publishedCoursesProvider);
+              },
+            );
+          },
 
           data: (courses) {
+            if (courses.isEmpty) {
+              return const Center(child: Text('No courses available'));
+            }
+
             return CustomScrollView(
+              physics: const BouncingScrollPhysics(),
               slivers: [
                 const SliverToBoxAdapter(child: SizedBox(height: 32)),
 
@@ -60,6 +68,7 @@ class DesktopHomeView extends ConsumerWidget {
                   padding: const EdgeInsets.symmetric(horizontal: 32),
                   sliver: SliverGrid.builder(
                     itemCount: courses.length,
+
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 3,
@@ -67,8 +76,21 @@ class DesktopHomeView extends ConsumerWidget {
                           mainAxisSpacing: 20,
                           mainAxisExtent: 460,
                         ),
+
                     itemBuilder: (context, index) {
-                      return CourseCard(course: courses[index], onTap: () {});
+                      final course = courses[index];
+
+                      return CourseCard(
+                        course: course,
+                        isEnrolled: false,
+
+                        onTap: () {
+                          context.push(
+                            '/course-lessons',
+                            extra: {'course': course, 'isEnrolled': false},
+                          );
+                        },
+                      );
                     },
                   ),
                 ),
