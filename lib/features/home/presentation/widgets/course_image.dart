@@ -18,25 +18,26 @@ class CourseImage extends StatelessWidget {
               imageUrl,
               fit: BoxFit.cover,
               errorBuilder: (_, _, _) {
-                return const _CourseImagePlaceholder();
+                return _CourseImagePlaceholder(course: course);
               },
               loadingBuilder: (context, child, loadingProgress) {
                 if (loadingProgress == null) {
                   return child;
                 }
 
-                return const _CourseImagePlaceholder(loading: true);
+                return _CourseImagePlaceholder(course: course, loading: true);
               },
             )
-          : const _CourseImagePlaceholder(),
+          : _CourseImagePlaceholder(course: course),
     );
   }
 }
 
 class _CourseImagePlaceholder extends StatelessWidget {
+  final Course course;
   final bool loading;
 
-  const _CourseImagePlaceholder({this.loading = false});
+  const _CourseImagePlaceholder({required this.course, this.loading = false});
 
   @override
   Widget build(BuildContext context) {
@@ -48,38 +49,92 @@ class _CourseImagePlaceholder extends StatelessWidget {
           colors: [AppColors.secondary, Color(0xFF294CA8)],
         ),
       ),
-      child: Center(
-        child: loading
-            ? const CircularProgressIndicator(color: Colors.white)
-            : Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    width: 58,
-                    height: 58,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.12),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.translate_rounded,
-                      size: 30,
-                      color: Colors.white,
-                    ),
-                  ),
-
-                  const SizedBox(height: 10),
-
-                  Text(
-                    'Nederlands',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ],
+      child: loading
+          ? const Center(
+              child: CircularProgressIndicator(
+                color: Colors.white,
+                strokeWidth: 3,
               ),
-      ),
+            )
+          : Stack(
+              children: [
+                // Decorative circles
+                Positioned(
+                  top: -45,
+                  right: -35,
+                  child: Container(
+                    width: 130,
+                    height: 130,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white.withValues(alpha: 0.06),
+                    ),
+                  ),
+                ),
+
+                Positioned(
+                  bottom: -60,
+                  left: -40,
+                  child: Container(
+                    width: 150,
+                    height: 150,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: AppColors.primary.withValues(alpha: 0.12),
+                    ),
+                  ),
+                ),
+
+                // Course content
+                Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // Level
+                      Text(
+                        course.level.toUpperCase(),
+                        style: const TextStyle(
+                          fontFamily: 'Cairo',
+                          fontSize: 48,
+                          fontWeight: FontWeight.w800,
+                          height: 1,
+                          letterSpacing: 1.5,
+                          color: Colors.white,
+                        ),
+                      ),
+
+                      const SizedBox(height: 8),
+
+                      // Course title
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.18),
+                          ),
+                        ),
+                        child: Text(
+                          course.title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontFamily: 'Cairo',
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
     );
   }
 }
