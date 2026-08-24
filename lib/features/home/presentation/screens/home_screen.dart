@@ -38,7 +38,7 @@ class HomeScreen extends ConsumerWidget {
             level: user.level.name.toUpperCase(),
 
             onMyCourses: () {
-              // TODO: navigate to My Courses
+              context.push('/my-courses');
             },
 
             onProfile: () {
