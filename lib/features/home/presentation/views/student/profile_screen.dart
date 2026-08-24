@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hollandkompas/core/theme/app_colors.dart';
 import 'package:hollandkompas/features/home/domain/entities/enrolled_course.dart';
 import 'package:hollandkompas/features/home/presentation/providers/current_user_provider.dart';
@@ -620,7 +621,10 @@ class _EnrolledCourseCard extends StatelessWidget {
 
                   TextButton.icon(
                     onPressed: () {
-                      // Continue course.
+                      context.push(
+                        '/course-lessons',
+                        extra: {'course': course, 'isEnrolled': true},
+                      );
                     },
                     icon: const Icon(Icons.arrow_forward_rounded, size: 17),
                     label: Text(progress == 0 ? 'Start learning' : 'Continue'),
