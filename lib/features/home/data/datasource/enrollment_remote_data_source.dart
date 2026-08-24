@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:hollandkompas/features/home/data/models/enrolled_course_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -36,9 +35,6 @@ class EnrollmentRemoteDataSourceImpl implements EnrollmentRemoteDataSource {
         ''')
         .eq('student_id', studentId)
         .order('enrolled_at', ascending: false);
-
-    debugPrint('STUDENT ID: $studentId');
-    debugPrint('ENROLLMENT RESPONSE: $response');
 
     return (response as List)
         .map(

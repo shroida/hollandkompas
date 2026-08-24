@@ -25,9 +25,6 @@ class ProfileScreen extends ConsumerWidget {
         },
 
         error: (error, stack) {
-          debugPrint('CURRENT USER ERROR: $error');
-          debugPrintStack(stackTrace: stack);
-
           return _ProfileError(
             error: error,
             onRetry: () {
@@ -53,9 +50,6 @@ class ProfileScreen extends ConsumerWidget {
             },
 
             error: (error, stack) {
-              debugPrint('ENROLLMENT ERROR: $error');
-              debugPrintStack(stackTrace: stack);
-
               return _ProfileError(
                 error: error,
                 onRetry: () {
@@ -65,15 +59,6 @@ class ProfileScreen extends ConsumerWidget {
             },
 
             data: (courses) {
-              debugPrint('==============================');
-              debugPrint('ENROLLED COURSES: ${courses.length}');
-
-              for (final course in courses) {
-                debugPrint('COURSE: ${course.course.title}');
-              }
-
-              debugPrint('==============================');
-
               return _ProfileContent(user: user, courses: courses);
             },
           );

@@ -1,9 +1,8 @@
 import 'package:flutter/foundation.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-
 import 'package:hollandkompas/features/auth/domain/entities/app_user.dart';
 import 'package:hollandkompas/features/auth/domain/enums/dutch_level.dart';
 import 'package:hollandkompas/features/auth/domain/enums/user_role.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SupabaseAuthRemoteDataSource {
   final SupabaseClient client;
@@ -37,10 +36,7 @@ class SupabaseAuthRemoteDataSource {
         'level': level.name,
         'role': UserRole.student.name,
       });
-    } catch (e, stackTrace) {
-      debugPrint('INSERT PROFILE ERROR');
-      debugPrint(e.toString());
-      debugPrintStack(stackTrace: stackTrace);
+    } catch (e) {
       rethrow;
     }
 
@@ -103,10 +99,7 @@ class SupabaseAuthRemoteDataSource {
         default:
           throw Exception(e.message);
       }
-    } catch (e, stackTrace) {
-      debugPrint('LOGIN ERROR');
-      debugPrint(e.toString());
-      debugPrintStack(stackTrace: stackTrace);
+    } catch (e) {
       rethrow;
     }
   }
@@ -152,10 +145,7 @@ class SupabaseAuthRemoteDataSource {
   Future<void> updatePassword(String password) async {
     try {
       await client.auth.updateUser(UserAttributes(password: password));
-    } catch (e, stackTrace) {
-      debugPrint('UPDATE PASSWORD ERROR');
-      debugPrint(e.toString());
-      debugPrintStack(stackTrace: stackTrace);
+    } catch (e) {
       rethrow;
     }
   }
