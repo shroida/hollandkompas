@@ -17,17 +17,9 @@ class EnrollmentController {
       throw Exception('User is not authenticated.');
     }
 
-    print('');
-    print('========== ENROLL ==========');
-    print('Student ID: ${user.id}');
-    print('Course ID: $courseId');
-
     await _supabase.from('enrollments').insert({
       'student_id': user.id,
       'course_id': courseId,
     });
-
-    print('Enrollment inserted successfully.');
-    print('============================');
   }
 }

@@ -19,14 +19,6 @@ class CourseLessonsScreen extends ConsumerWidget {
 
     final enrollmentAsync = ref.watch(courseEnrollmentProvider(course.id));
 
-    print('');
-    print('========== COURSE SCREEN ==========');
-    print('Course ID: ${course.id}');
-    print('Course title: ${course.title}');
-    print('Lessons state: $lessonsAsync');
-    print('Enrollment state: $enrollmentAsync');
-    print('===================================');
-
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
 
@@ -51,8 +43,6 @@ class CourseLessonsScreen extends ConsumerWidget {
             },
 
             data: (isEnrolled) {
-              print('APP BAR -> isEnrolled: $isEnrolled');
-
               if (isEnrolled) {
                 return const Padding(
                   padding: EdgeInsets.only(right: 16),
@@ -94,8 +84,6 @@ class CourseLessonsScreen extends ConsumerWidget {
         },
 
         data: (lessons) {
-          print('LESSONS LOADED: ${lessons.length}');
-
           return enrollmentAsync.when(
             loading: () {
               return const LoadingState();
@@ -112,13 +100,6 @@ class CourseLessonsScreen extends ConsumerWidget {
             },
 
             data: (isEnrolled) {
-              print('');
-              print('========== FINAL COURSE STATE ==========');
-              print('Course: ${course.title}');
-              print('Lessons: ${lessons.length}');
-              print('Enrolled: $isEnrolled');
-              print('========================================');
-
               return _CourseLessonsContent(
                 course: course,
                 lessons: lessons,

@@ -7,14 +7,7 @@ final courseEnrollmentProvider = FutureProvider.autoDispose
 
       final user = supabase.auth.currentUser;
 
-      print('');
-      print('========== ENROLLMENT CHECK ==========');
-      print('Student ID: ${user?.id}');
-      print('Course ID: $courseId');
-
       if (user == null) {
-        print('No authenticated user.');
-        print('======================================');
         return false;
       }
 
@@ -28,18 +21,8 @@ final courseEnrollmentProvider = FutureProvider.autoDispose
 
         final isEnrolled = enrollment != null;
 
-        print('Enrollment: $enrollment');
-        print('Is enrolled: $isEnrolled');
-        print('======================================');
-
         return isEnrolled;
-      } catch (e, stackTrace) {
-        print('');
-        print('========== ENROLLMENT ERROR ==========');
-        print('Error: $e');
-        print('StackTrace: $stackTrace');
-        print('======================================');
-
+      } catch (e) {
         rethrow;
       }
     });
