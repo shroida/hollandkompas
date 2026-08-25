@@ -105,7 +105,6 @@ final appRouter = GoRouter(
         final extra = state.extra as Map<String, dynamic>;
 
         final course = extra['course'] as Course;
-        final isEnrolled = extra['isEnrolled'] as bool? ?? false;
 
         return PaymentScreen(
           courseId: course.id,
