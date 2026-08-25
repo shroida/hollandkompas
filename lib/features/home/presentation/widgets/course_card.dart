@@ -84,6 +84,15 @@ class CourseCard extends StatelessWidget {
                           ),
                         ),
                       ),
+                      const SizedBox(width: 8),
+
+                      Text(
+                        '${course.price} EGP',
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.primary,
+                        ),
+                      ),
 
                       const SizedBox(width: 8),
 

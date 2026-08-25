@@ -17,6 +17,7 @@ final courseEnrollmentProvider = FutureProvider.autoDispose
             .select('id')
             .eq('student_id', user.id)
             .eq('course_id', courseId)
+            .eq('is_paid', true)
             .maybeSingle();
 
         final isEnrolled = enrollment != null;

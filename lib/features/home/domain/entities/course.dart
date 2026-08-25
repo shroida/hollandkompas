@@ -8,6 +8,7 @@ class Course {
   final String? createdBy;
   final DateTime createdAt;
   final DateTime updatedAt;
+  final int price;
 
   const Course({
     required this.id,
@@ -19,5 +20,6 @@ class Course {
     required this.createdBy,
     required this.createdAt,
     required this.updatedAt,
+    required this.price,
   });
 }

@@ -11,6 +11,7 @@ class CourseModel extends Course {
     required super.createdBy,
     required super.createdAt,
     required super.updatedAt,
+    required super.price,
   });
 
   factory CourseModel.fromJson(Map<String, dynamic> json) {
@@ -19,6 +20,7 @@ class CourseModel extends Course {
       title: json['title'] as String,
       description: json['description'] as String,
       level: json['level'] as String,
+      price: json['price'] as int,
       imageUrl: json['image_url'] as String?,
       isPublished: json['is_published'] as bool? ?? false,
       createdBy: json['created_by'] as String?,
