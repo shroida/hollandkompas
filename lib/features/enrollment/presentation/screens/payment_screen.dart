@@ -1,13 +1,12 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hollandkompas/features/enrollment/domain/entities/coupon.dart';
+import 'package:hollandkompas/features/enrollment/presentation/providers/enrollment_provider.dart';
 import 'package:hollandkompas/features/enrollment/presentation/widgets/course_summary.dart';
 import 'package:hollandkompas/features/enrollment/presentation/widgets/instapay_card.dart';
 import 'package:hollandkompas/features/enrollment/presentation/widgets/payment_instructions.dart';
 import 'package:hollandkompas/features/enrollment/presentation/widgets/receipt_picker.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 class PaymentScreen extends ConsumerStatefulWidget {
   final String courseId;
@@ -29,25 +28,37 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
   final referenceController = TextEditingController();
   final couponController = TextEditingController();
 
-  File? receipt;
+  XFile? receipt;
+
+  Coupon? appliedCoupon;
 
   bool isSubmitting = false;
   bool isApplyingCoupon = false;
-
-  double? discountPercentage;
-  double finalPrice = 0;
 
   String? couponMessage;
 
   static const instaPayAccount = '@hollandkompas';
 
-  final supabase = Supabase.instance.client;
+  bool get hasCoupon => appliedCoupon != null;
 
-  @override
-  void initState() {
-    super.initState();
+  double get discountPercentage {
+    return appliedCoupon?.percentage ?? 0;
+  }
 
-    finalPrice = widget.price;
+  double get discountAmount {
+    if (appliedCoupon == null) {
+      return 0;
+    }
+
+    return appliedCoupon!.calculateDiscount(widget.price);
+  }
+
+  double get finalPrice {
+    if (appliedCoupon == null) {
+      return widget.price;
+    }
+
+    return appliedCoupon!.calculateFinalPrice(widget.price);
   }
 
   @override
@@ -57,10 +68,6 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
     super.dispose();
   }
 
-  // ============================================================
-  // PICK RECEIPT
-  // ============================================================
-
   Future<void> pickReceipt() async {
     final picker = ImagePicker();
 
@@ -69,25 +76,22 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
       imageQuality: 85,
     );
 
-    if (image == null) return;
+    if (image == null) {
+      return;
+    }
 
     setState(() {
-      receipt = File(image.path);
+      receipt = image;
     });
   }
 
-  // ============================================================
-  // APPLY COUPON
-  // ============================================================
-
   Future<void> applyCoupon() async {
-    final code = couponController.text.trim().toUpperCase();
+    final code = couponController.text.trim();
 
     if (code.isEmpty) {
       setState(() {
         couponMessage = 'Please enter a coupon code.';
-        discountPercentage = null;
-        finalPrice = widget.price;
+        appliedCoupon = null;
       });
 
       return;
@@ -99,63 +103,24 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
     });
 
     try {
-      final response = await supabase
-          .from('coupons')
-          .select('code, percentage, is_active, expires_at')
-          .eq('code', code)
-          .eq('is_active', true)
-          .maybeSingle();
+      final coupon = await ref.read(applyCouponProvider).call(code);
 
-      if (response == null) {
-        setState(() {
-          discountPercentage = null;
-          finalPrice = widget.price;
-          couponMessage = 'Invalid or inactive coupon.';
-        });
-
+      if (!mounted) {
         return;
       }
 
-      final expiresAt = response['expires_at'];
-
-      if (expiresAt != null) {
-        final expirationDate = DateTime.tryParse(expiresAt.toString());
-
-        if (expirationDate != null && expirationDate.isBefore(DateTime.now())) {
-          setState(() {
-            discountPercentage = null;
-            finalPrice = widget.price;
-            couponMessage = 'This coupon has expired.';
-          });
-
-          return;
-        }
-      }
-
-      // ----------------------------------------------------------
-      // Get percentage
-      // ----------------------------------------------------------
-
-      final percentage = (response['percentage'] as num).toDouble();
-
-      // ----------------------------------------------------------
-      // Calculate discount
-      // ----------------------------------------------------------
-
-      final discountAmount = widget.price * (percentage / 100);
-
-      final calculatedFinalPrice = widget.price - discountAmount;
-
       setState(() {
-        discountPercentage = percentage;
-        finalPrice = calculatedFinalPrice;
+        appliedCoupon = coupon;
         couponMessage = 'Coupon applied successfully.';
       });
     } catch (e) {
+      if (!mounted) {
+        return;
+      }
+
       setState(() {
-        discountPercentage = null;
-        finalPrice = widget.price;
-        couponMessage = 'Failed to apply coupon. Please try again.';
+        appliedCoupon = null;
+        couponMessage = _cleanErrorMessage(e);
       });
     } finally {
       if (mounted) {
@@ -166,23 +131,14 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
     }
   }
 
-  // ============================================================
-  // REMOVE COUPON
-  // ============================================================
-
   void removeCoupon() {
     couponController.clear();
 
     setState(() {
-      discountPercentage = null;
-      finalPrice = widget.price;
+      appliedCoupon = null;
       couponMessage = null;
     });
   }
-
-  // ============================================================
-  // SUBMIT ENROLLMENT
-  // ============================================================
 
   Future<void> submitEnrollment() async {
     if (receipt == null) {
@@ -200,54 +156,35 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
     });
 
     try {
-      // ==========================================================
-      // TODO:
-      // 1. Upload receipt to Supabase Storage
-      //
-      // 2. Create enrollment
-      //
-      //    is_paid = false
-      //    status = pending
-      //
-      // 3. Save receipt URL
-      //
-      // 4. Save payment reference
-      //
-      // 5. Save coupon information
-      //
-      //    original_price
-      //    discount_percentage
-      //    discount_amount
-      //    final_price
-      //    coupon_code
-      //
-      // ==========================================================
-
       /*
       await ref
-          .read(enrollmentProvider.notifier)
-          .createEnrollment(
+          .read(createEnrollmentProvider)
+          .call(
             courseId: widget.courseId,
             originalPrice: widget.price,
-            discountPercentage: discountPercentage,
+            discountPercentage: appliedCoupon?.percentage,
+            discountAmount: discountAmount,
             finalPrice: finalPrice,
-            couponCode: discountPercentage != null
-                ? couponController.text.trim().toUpperCase()
-                : null,
+            couponCode: appliedCoupon?.code,
             receipt: receipt!,
             reference: referenceController.text.trim(),
           );
       */
 
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
 
       _showMessage(
-        'Enrollment request submitted. Your payment will be reviewed.',
+        'Enrollment request submitted. '
+        'Your payment will be reviewed.',
       );
 
       Navigator.pop(context);
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
 
       _showMessage('Something went wrong. Please try again.');
     } finally {
@@ -259,9 +196,15 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
     }
   }
 
-  // ============================================================
-  // SHOW MESSAGE
-  // ============================================================
+  String _cleanErrorMessage(Object error) {
+    final message = error.toString();
+
+    if (message.startsWith('Exception: ')) {
+      return message.substring('Exception: '.length);
+    }
+
+    return message;
+  }
 
   void _showMessage(String message) {
     ScaffoldMessenger.of(
@@ -269,17 +212,9 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
     ).showSnackBar(SnackBar(content: Text(message)));
   }
 
-  // ============================================================
-  // BUILD
-  // ============================================================
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-
-    final hasCoupon = discountPercentage != null;
-
-    final discountAmount = hasCoupon ? widget.price - finalPrice : 0.0;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Payment')),
@@ -289,9 +224,6 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // ==================================================
-              // HEADER
-              // ==================================================
               Text(
                 'Complete your enrollment',
                 style: theme.textTheme.headlineSmall?.copyWith(
@@ -301,16 +233,10 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
 
               const SizedBox(height: 20),
 
-              // ==================================================
-              // COURSE
-              // ==================================================
               CourseSummary(title: widget.courseTitle, price: widget.price),
 
               const SizedBox(height: 24),
 
-              // ==================================================
-              // COUPON
-              // ==================================================
               Text(
                 'Have a coupon?',
                 style: theme.textTheme.titleMedium?.copyWith(
@@ -362,9 +288,6 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                 ],
               ),
 
-              // ==================================================
-              // COUPON MESSAGE
-              // ==================================================
               if (couponMessage != null) ...[
                 const SizedBox(height: 8),
 
@@ -395,9 +318,6 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
 
               const SizedBox(height: 20),
 
-              // ==================================================
-              // PRICE SUMMARY
-              // ==================================================
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(18),
@@ -408,55 +328,26 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                 ),
                 child: Column(
                   children: [
-                    // Original price
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Original price',
-                          style: theme.textTheme.bodyLarge,
-                        ),
-                        Text(
-                          '${widget.price.toStringAsFixed(2)} EGP',
-                          style: theme.textTheme.bodyLarge?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
+                    _PriceRow(
+                      label: 'Original price',
+                      value: '${widget.price.toStringAsFixed(2)} EGP',
                     ),
 
-                    // Discount
                     if (hasCoupon) ...[
                       const SizedBox(height: 12),
 
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text('Discount', style: theme.textTheme.bodyLarge),
-                          Text(
-                            '-${discountAmount.toStringAsFixed(2)} EGP',
-                            style: const TextStyle(
-                              color: Colors.green,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
+                      _PriceRow(
+                        label: 'Discount',
+                        value: '-${discountAmount.toStringAsFixed(2)} EGP',
+                        valueColor: Colors.green,
                       ),
 
                       const SizedBox(height: 8),
 
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text('Coupon', style: theme.textTheme.bodyMedium),
-                          Text(
-                            '${discountPercentage!.toStringAsFixed(0)}%',
-                            style: const TextStyle(
-                              color: Colors.green,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
+                      _PriceRow(
+                        label: 'Coupon',
+                        value: '${discountPercentage.toStringAsFixed(0)}%',
+                        valueColor: Colors.green,
                       ),
                     ],
 
@@ -465,23 +356,15 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                       child: Divider(),
                     ),
 
-                    // Final price
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Total',
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        Text(
-                          '${finalPrice.toStringAsFixed(2)} EGP',
-                          style: theme.textTheme.titleLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
+                    _PriceRow(
+                      label: 'Total',
+                      value: '${finalPrice.toStringAsFixed(2)} EGP',
+                      labelStyle: theme.textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                      valueStyle: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ],
                 ),
@@ -489,9 +372,6 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
 
               const SizedBox(height: 28),
 
-              // ==================================================
-              // PAYMENT METHOD
-              // ==================================================
               Text(
                 'Pay with InstaPay',
                 style: theme.textTheme.titleLarge?.copyWith(
@@ -509,9 +389,6 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
 
               const SizedBox(height: 24),
 
-              // ==================================================
-              // RECEIPT
-              // ==================================================
               Text(
                 'Payment receipt',
                 style: theme.textTheme.titleMedium?.copyWith(
@@ -525,9 +402,6 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
 
               const SizedBox(height: 20),
 
-              // ==================================================
-              // TRANSACTION REFERENCE
-              // ==================================================
               TextField(
                 controller: referenceController,
                 decoration: const InputDecoration(
@@ -560,9 +434,6 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
 
               const SizedBox(height: 12),
 
-              // ==================================================
-              // FOOTER
-              // ==================================================
               Center(
                 child: Text(
                   'Your payment will be reviewed by an administrator.',
@@ -576,6 +447,41 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _PriceRow extends StatelessWidget {
+  final String label;
+  final String value;
+  final Color? valueColor;
+  final TextStyle? labelStyle;
+  final TextStyle? valueStyle;
+
+  const _PriceRow({
+    required this.label,
+    required this.value,
+    this.valueColor,
+    this.labelStyle,
+    this.valueStyle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(label, style: labelStyle ?? Theme.of(context).textTheme.bodyLarge),
+        Text(
+          value,
+          style:
+              valueStyle ??
+              Theme.of(context).textTheme.bodyLarge?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: valueColor,
+              ),
+        ),
+      ],
     );
   }
 }

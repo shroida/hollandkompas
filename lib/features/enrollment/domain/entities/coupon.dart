@@ -16,4 +16,12 @@ class Coupon {
 
     return expiresAt!.isBefore(DateTime.now());
   }
+
+  double calculateDiscount(double price) {
+    return price * (percentage / 100);
+  }
+
+  double calculateFinalPrice(double price) {
+    return price - calculateDiscount(price);
+  }
 }
