@@ -2,6 +2,10 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hollandkompas/features/enrollment/presentation/widgets/course_summary.dart';
+import 'package:hollandkompas/features/enrollment/presentation/widgets/instapay_card.dart';
+import 'package:hollandkompas/features/enrollment/presentation/widgets/payment_instructions.dart';
+import 'package:hollandkompas/features/enrollment/presentation/widgets/receipt_picker.dart';
 import 'package:image_picker/image_picker.dart';
 
 class PaymentScreen extends ConsumerStatefulWidget {
@@ -125,7 +129,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
 
               const SizedBox(height: 20),
 
-              _CourseSummary(title: widget.courseTitle, price: widget.price),
+              CourseSummary(title: widget.courseTitle, price: widget.price),
 
               const SizedBox(height: 24),
 
@@ -138,11 +142,11 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
 
               const SizedBox(height: 12),
 
-              _InstaPayCard(account: instaPayAccount),
+              InstaPayCard(account: instaPayAccount),
 
               const SizedBox(height: 24),
 
-              const _PaymentInstructions(),
+              const PaymentInstructions(),
 
               const SizedBox(height: 24),
 
@@ -155,8 +159,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
 
               const SizedBox(height: 10),
 
-              _ReceiptPicker(receipt: receipt, onTap: pickReceipt),
-
+              ReceiptPicker(receipt: receipt, onTap: pickReceipt),
               const SizedBox(height: 20),
 
               TextField(
