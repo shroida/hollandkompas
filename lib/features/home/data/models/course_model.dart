@@ -20,7 +20,7 @@ class CourseModel extends Course {
       title: json['title'] as String,
       description: json['description'] as String,
       level: json['level'] as String,
-      price: json['price'] as int,
+      price: json['price'] as double,
       imageUrl: json['image_url'] as String?,
       isPublished: json['is_published'] as bool? ?? false,
       createdBy: json['created_by'] as String?,

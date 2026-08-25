@@ -6,7 +6,6 @@ import 'package:hollandkompas/features/home/domain/entities/course.dart';
 import 'package:hollandkompas/features/home/domain/entities/lesson.dart';
 import 'package:hollandkompas/features/home/presentation/providers/course_enrollment_provider.dart';
 import 'package:hollandkompas/features/home/presentation/providers/course_lessons_provider.dart';
-import 'package:hollandkompas/features/home/presentation/providers/enrollment_controller_provider.dart';
 
 class CourseLessonsScreen extends ConsumerWidget {
   final Course course;
@@ -62,7 +61,7 @@ class CourseLessonsScreen extends ConsumerWidget {
                 padding: const EdgeInsets.only(right: 12),
                 child: TextButton.icon(
                   onPressed: () {
-                    _showEnrollmentDialog(context, ref);
+                    _showEnrollmentDialog(context);
                   },
                   icon: const Icon(Icons.school_rounded, size: 18),
                   label: const Text('Enroll'),
@@ -111,7 +110,7 @@ class CourseLessonsScreen extends ConsumerWidget {
                 isEnrolled: isEnrolled,
 
                 onEnroll: () {
-                  _showEnrollmentDialog(context, ref);
+                  _showEnrollmentDialog(context);
                 },
               );
             },
@@ -121,43 +120,16 @@ class CourseLessonsScreen extends ConsumerWidget {
     );
   }
 
-  void _showEnrollmentDialog(BuildContext context, WidgetRef ref) {
+  void _showEnrollmentDialog(BuildContext context) {
     showDialog<void>(
       context: context,
       builder: (_) {
         return _EnrollmentDialog(
           course: course,
           onEnroll: () async {
-            try {
-              await ref.read(enrollmentControllerProvider).enroll(course.id);
+            Navigator.of(context).pop();
 
-              if (!context.mounted) {
-                return;
-              }
-
-              Navigator.of(context).pop();
-
-              // Re-check enrollment status.
-              ref.invalidate(courseEnrollmentProvider(course.id));
-
-              if (!context.mounted) {
-                return;
-              }
-
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('You are now enrolled in this course.'),
-                ),
-              );
-            } catch (e) {
-              if (!context.mounted) {
-                return;
-              }
-
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(SnackBar(content: Text('Enrollment failed: $e')));
-            }
+            await context.push('/payment', extra: {'course': course});
           },
         );
       },

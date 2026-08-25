@@ -3,6 +3,7 @@ import 'package:hollandkompas/features/auth/presentation/pages/forgot_password_s
 import 'package:hollandkompas/features/auth/presentation/pages/login_screen.dart';
 import 'package:hollandkompas/features/auth/presentation/pages/register_screen.dart';
 import 'package:hollandkompas/features/auth/presentation/pages/reset_password_screen.dart';
+import 'package:hollandkompas/features/enrollment/presentation/screens/payment_screen.dart';
 import 'package:hollandkompas/features/home/domain/entities/course.dart';
 import 'package:hollandkompas/features/home/domain/entities/lesson.dart';
 import 'package:hollandkompas/features/home/presentation/screens/admin_dashboard.dart';
@@ -84,6 +85,7 @@ final appRouter = GoRouter(
         return const MyCoursesScreen();
       },
     ),
+
     GoRoute(
       path: '/course-lessons',
       name: 'courseLessons',
@@ -94,6 +96,22 @@ final appRouter = GoRouter(
         final isEnrolled = extra['isEnrolled'] as bool? ?? false;
 
         return CourseLessonsScreen(course: course, isEnrolled: isEnrolled);
+      },
+    ),
+    GoRoute(
+      path: '/payment',
+      name: 'payment',
+      builder: (context, state) {
+        final extra = state.extra as Map<String, dynamic>;
+
+        final course = extra['course'] as Course;
+        final isEnrolled = extra['isEnrolled'] as bool? ?? false;
+
+        return PaymentScreen(
+          courseId: course.id,
+          courseTitle: course.title,
+          price: course.price,
+        );
       },
     ),
 

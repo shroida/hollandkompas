@@ -8,7 +8,7 @@ class Course {
   final String? createdBy;
   final DateTime createdAt;
   final DateTime updatedAt;
-  final int price;
+  final double price;
 
   const Course({
     required this.id,
