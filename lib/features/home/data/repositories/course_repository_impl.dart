@@ -1,4 +1,4 @@
-import 'package:hollandkompas/features/home/data/datasource/course_remote_data_source.dart';
+import 'package:hollandkompas/features/courses/data/datasource/course_remote_data_source.dart';
 import 'package:hollandkompas/features/home/domain/entities/course.dart';
 import 'package:hollandkompas/features/home/domain/repositories/course_repository.dart';
 
