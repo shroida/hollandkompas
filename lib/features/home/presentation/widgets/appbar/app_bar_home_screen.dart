@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hollandkompas/core/localization/app_locale.dart';
+import 'package:hollandkompas/core/localization/app_strings.dart';
 import 'package:hollandkompas/core/theme/app_colors.dart';
 import 'package:hollandkompas/core/theme/theme_provider.dart';
 import 'package:hollandkompas/features/courses/presentation/widgets/course_image.dart';
@@ -34,10 +36,11 @@ class AppBarHomeScreen extends ConsumerWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final locale = ref.watch(appLocaleProvider);
     final theme = Theme.of(context);
     final themeMode = ref.watch(themeModeProvider);
     final isDark = themeMode == ThemeMode.dark;
-
+    final strings = AppStrings(locale);
     return Material(
       color: Colors.transparent,
       child: Container(

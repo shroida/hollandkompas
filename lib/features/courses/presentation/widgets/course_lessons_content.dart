@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hollandkompas/core/localization/app_locale.dart';
+import 'package:hollandkompas/core/localization/app_strings.dart';
 import 'package:hollandkompas/core/theme/app_colors.dart';
 import 'package:hollandkompas/features/courses/domain/entities/course.dart';
 import 'package:hollandkompas/features/courses/presentation/widgets/course_header.dart';
 import 'package:hollandkompas/features/courses/presentation/widgets/lesson_card.dart';
 import 'package:hollandkompas/features/home/domain/entities/lesson.dart';
 
-class CourseLessonsContent extends StatelessWidget {
+class CourseLessonsContent extends ConsumerWidget {
   final Course course;
   final List<Lesson> lessons;
   final bool isEnrolled;
@@ -21,7 +24,10 @@ class CourseLessonsContent extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final locale = ref.watch(appLocaleProvider);
+    final strings = AppStrings(locale);
+
     return LayoutBuilder(
       builder: (context, constraints) {
         final isDesktop = constraints.maxWidth >= 1000;
@@ -44,7 +50,9 @@ class CourseLessonsContent extends StatelessWidget {
             child: CustomScrollView(
               physics: const BouncingScrollPhysics(),
               slivers: [
+                // =========================
                 // COURSE HEADER
+                // =========================
                 SliverPadding(
                   padding: EdgeInsets.fromLTRB(
                     horizontalPadding,
@@ -62,7 +70,9 @@ class CourseLessonsContent extends StatelessWidget {
                   ),
                 ),
 
+                // =========================
                 // ENROLLMENT BANNER
+                // =========================
                 if (!isEnrolled)
                   SliverPadding(
                     padding: EdgeInsets.fromLTRB(
@@ -75,11 +85,14 @@ class CourseLessonsContent extends StatelessWidget {
                       child: _EnrollmentBanner(
                         course: course,
                         onEnroll: onEnroll,
+                        strings: strings,
                       ),
                     ),
                   ),
 
+                // =========================
                 // SECTION HEADER
+                // =========================
                 SliverPadding(
                   padding: EdgeInsets.fromLTRB(
                     horizontalPadding,
@@ -91,11 +104,14 @@ class CourseLessonsContent extends StatelessWidget {
                     child: _SectionHeader(
                       lessonCount: lessons.length,
                       isEnrolled: isEnrolled,
+                      strings: strings,
                     ),
                   ),
                 ),
 
+                // =========================
                 // LESSONS
+                // =========================
                 SliverPadding(
                   padding: EdgeInsets.fromLTRB(
                     horizontalPadding,
@@ -105,14 +121,13 @@ class CourseLessonsContent extends StatelessWidget {
                   ),
                   sliver: SliverList.builder(
                     itemCount: lessons.length,
-
                     itemBuilder: (context, index) {
                       final lesson = lessons[index];
 
                       // Lesson 1 is free.
                       final isFree = index == 0;
 
-                      // If enrolled -> NOTHING is locked.
+                      // If enrolled -> nothing is locked.
                       // If not enrolled -> only lesson 1 is open.
                       final isLocked = !isEnrolled && !isFree;
 
@@ -123,7 +138,6 @@ class CourseLessonsContent extends StatelessWidget {
                           isFirst: isFree,
                           isLocked: isLocked,
                           isEnrolled: isEnrolled,
-
                           onTap: () {
                             if (isLocked) {
                               onEnroll();
@@ -153,34 +167,41 @@ class CourseLessonsContent extends StatelessWidget {
   }
 }
 
+// ============================================================
+// ENROLLMENT BANNER
+// ============================================================
+
 class _EnrollmentBanner extends StatelessWidget {
   final Course course;
   final VoidCallback onEnroll;
+  final AppStrings strings;
 
-  const _EnrollmentBanner({required this.course, required this.onEnroll});
+  const _EnrollmentBanner({
+    required this.course,
+    required this.onEnroll,
+    required this.strings,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Container(
       padding: const EdgeInsets.all(20),
-
       decoration: BoxDecoration(
         color: AppColors.accent,
         borderRadius: BorderRadius.circular(22),
         border: Border.all(color: AppColors.primary.withValues(alpha: 0.10)),
       ),
-
       child: Row(
         children: [
           Container(
             width: 48,
             height: 48,
-
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(15),
             ),
-
             child: const Icon(Icons.school_rounded, color: AppColors.primary),
           ),
 
@@ -191,17 +212,17 @@ class _EnrollmentBanner extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Start learning for free',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+                  strings.tryLearningFree,
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
 
                 const SizedBox(height: 4),
 
                 Text(
-                  'Lesson 1 is free. Enroll to unlock the entire course.',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  strings.lessonFreeDescription,
+                  style: theme.textTheme.bodySmall?.copyWith(
                     color: AppColors.subtitleColor(context),
                     height: 1.4,
                   ),
@@ -212,21 +233,32 @@ class _EnrollmentBanner extends StatelessWidget {
 
           const SizedBox(width: 12),
 
-          FilledButton(onPressed: onEnroll, child: const Text('Enroll')),
+          FilledButton(onPressed: onEnroll, child: Text(strings.enroll)),
         ],
       ),
     );
   }
 }
 
+// ============================================================
+// SECTION HEADER
+// ============================================================
+
 class _SectionHeader extends StatelessWidget {
   final int lessonCount;
   final bool isEnrolled;
+  final AppStrings strings;
 
-  const _SectionHeader({required this.lessonCount, required this.isEnrolled});
+  const _SectionHeader({
+    required this.lessonCount,
+    required this.isEnrolled,
+    required this.strings,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Row(
       children: [
         Expanded(
@@ -234,19 +266,19 @@ class _SectionHeader extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Course lessons',
-                style: Theme.of(
-                  context,
-                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+                strings.courseLessons,
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
               ),
 
               const SizedBox(height: 4),
 
               Text(
                 isEnrolled
-                    ? 'All lessons are unlocked.'
-                    : 'Preview lesson 1 for free.',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    ? strings.allLessonsUnlocked
+                    : strings.previewLessonFree,
+                style: theme.textTheme.bodySmall?.copyWith(
                   color: AppColors.subtitleColor(context),
                 ),
               ),
@@ -256,17 +288,15 @@ class _SectionHeader extends StatelessWidget {
 
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
-
           decoration: BoxDecoration(
             color: AppColors.muted,
             borderRadius: BorderRadius.circular(20),
           ),
-
           child: Text(
-            '$lessonCount lessons',
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w700),
+            strings.lessonsCount(lessonCount),
+            style: theme.textTheme.bodySmall?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
           ),
         ),
       ],

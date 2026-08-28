@@ -14,10 +14,86 @@ class AppStrings {
     return 'Keep learning 🚀';
   }
 
+  String get startLearning {
+    if (isArabic) return 'ابدأ رحلتك في التعلم';
+    if (isDutch) return 'Begin met leren';
+    return 'Start learning';
+  }
+
+  String get chooseCourseImproveDutch {
+    if (isArabic) return 'اختار كورس وطوّر مستواك في اللغة الهولندية.';
+    if (isDutch) return 'Kies een cursus en verbeter je Nederlands.';
+    return 'Choose a course and improve your Dutch.';
+  }
+
   String get learningJourney {
     if (isArabic) return 'رحلتك التعليمية';
     if (isDutch) return 'Jouw leerreis';
     return 'Your learning journey';
+  }
+
+  String get welcomeBack {
+    if (isArabic) return 'أهلاً بيك 👋';
+    if (isDutch) return 'Welkom terug 👋';
+    return 'Welcome back 👋';
+  }
+
+  String get tryLearningFree {
+    if (isArabic) return 'أبدأ رحلتك في التعلم مجانًا بالدروس المفتوحة';
+
+    if (isDutch) {
+      return 'Begin je leerreis gratis met de open lessen';
+    }
+
+    return 'Start learning for free with open lessons';
+  }
+
+  String get enroll {
+    if (isArabic) return 'اشترك';
+    if (isDutch) return 'Inschrijven';
+    return 'Enroll';
+  }
+
+  String get courseLessons {
+    if (isArabic) return 'دروس الكورس';
+    if (isDutch) return 'Cursuslessen';
+    return 'Course lessons';
+  }
+
+  String get allLessonsUnlocked {
+    if (isArabic) return 'كل الدروس متاحة ليك.';
+    if (isDutch) return 'Alle lessen zijn ontgrendeld.';
+    return 'All lessons are unlocked.';
+  }
+
+  String get previewLessonFree {
+    if (isArabic) return 'جرّب الدرس الأول مجانًا.';
+    if (isDutch) return 'Probeer les 1 gratis.';
+    return 'Preview lesson 1 for free.';
+  }
+
+  String lessonsCount(int count) {
+    if (isArabic) {
+      return '$count ${count == 1 ? 'درس' : 'دروس'}';
+    }
+
+    if (isDutch) {
+      return '$count ${count == 1 ? 'les' : 'lessen'}';
+    }
+
+    return '$count ${count == 1 ? 'lesson' : 'lessons'}';
+  }
+
+  String get lessonFreeDescription {
+    if (isArabic) {
+      return 'الدرس الأول مجاني. اشترك لفتح الكورس كامل.';
+    }
+
+    if (isDutch) {
+      return 'Les 1 is gratis. Schrijf je in om de volledige cursus te ontgrendelen.';
+    }
+
+    return 'Lesson 1 is free. Enroll to unlock the entire course.';
   }
 
   String courses(int count) {

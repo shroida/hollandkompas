@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hollandkompas/core/localization/app_locale.dart';
+import 'package:hollandkompas/core/localization/app_strings.dart';
 import 'package:hollandkompas/features/courses/presentation/widgets/course_card.dart';
 import 'package:hollandkompas/features/courses/presentation/widgets/courses_empty.dart';
 import 'package:hollandkompas/features/courses/presentation/widgets/courses_error.dart';
@@ -13,6 +15,8 @@ class MobileHomeView extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final locale = ref.watch(appLocaleProvider);
+    final strings = AppStrings(locale);
     final coursesAsync = ref.watch(publishedCoursesProvider);
 
     return coursesAsync.when(
@@ -41,8 +45,8 @@ class MobileHomeView extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(horizontal: 20),
               sliver: SliverToBoxAdapter(
                 child: SectionHeader(
-                  title: 'Start learning',
-                  subtitle: 'Choose a course and improve your Dutch.',
+                  title: strings.startLearning,
+                  subtitle: strings.chooseCourseImproveDutch,
                 ),
               ),
             ),
