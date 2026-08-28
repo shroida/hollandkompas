@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hollandkompas/core/theme/app_colors.dart';
 import 'package:hollandkompas/features/courses/domain/entities/course.dart';
+import 'package:hollandkompas/features/courses/presentation/providers/course_enrollment_provider.dart';
 import 'package:hollandkompas/features/home/domain/entities/lesson.dart';
-import 'package:hollandkompas/features/home/presentation/providers/course_enrollment_provider.dart';
 import 'package:hollandkompas/features/home/presentation/providers/course_lessons_provider.dart';
 
 class CourseLessonsScreen extends ConsumerWidget {
