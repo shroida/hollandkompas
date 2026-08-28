@@ -1,13 +1,13 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hollandkompas/features/home/data/datasource/enrollment_remote_data_source.dart';
-import 'package:hollandkompas/features/home/data/repositories/enrollment_repository_impl.dart';
-import 'package:hollandkompas/features/home/domain/entities/enrolled_course.dart';
+import 'package:hollandkompas/features/enrollment/data/datasources/enrollment_remote_data_source.dart';
+import 'package:hollandkompas/features/enrollment/data/repositories/enrollment_repository_impl.dart';
+import 'package:hollandkompas/features/enrollment/domain/entities/enrolled_course.dart';
 import 'package:hollandkompas/features/home/domain/repositories/enrollment_repository.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 final enrollmentRemoteDataSourceProvider = Provider<EnrollmentRemoteDataSource>(
   (ref) {
-    return EnrollmentRemoteDataSourceImpl(Supabase.instance.client);
+    return EnrollmentRemoteDataSourceImpl(supabase: Supabase.instance.client);
   },
 );
 

@@ -1,5 +1,5 @@
+import 'package:hollandkompas/features/enrollment/domain/entities/enrolled_course.dart';
 import 'package:hollandkompas/features/home/data/models/course_model.dart';
-import 'package:hollandkompas/features/home/domain/entities/enrolled_course.dart';
 
 class EnrolledCourseModel extends EnrolledCourse {
   const EnrolledCourseModel({
