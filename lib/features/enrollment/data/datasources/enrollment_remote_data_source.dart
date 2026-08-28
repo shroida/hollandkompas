@@ -1,10 +1,10 @@
+import 'package:hollandkompas/features/enrollment/data/models/coupon_model.dart';
 import 'package:hollandkompas/features/enrollment/data/models/enrolled_course_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../models/coupon_model.dart';
-
 abstract class EnrollmentRemoteDataSource {
   Future<CouponModel?> getCoupon(String code);
+
   Future<List<EnrolledCourseModel>> getStudentEnrollments(String studentId);
 }
 
