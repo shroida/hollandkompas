@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:hollandkompas/core/theme/app_colors.dart';
-import 'package:hollandkompas/features/home/domain/entities/course.dart';
+import 'package:hollandkompas/features/courses/domain/entities/course.dart';
 
 class CourseImage extends StatelessWidget {
   final Course course;

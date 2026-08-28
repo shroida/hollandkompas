@@ -1,4 +1,4 @@
-import 'package:hollandkompas/features/home/domain/entities/course.dart';
+import 'package:hollandkompas/features/courses/domain/entities/course.dart';
 
 class EnrolledCourse {
   final Course course;
