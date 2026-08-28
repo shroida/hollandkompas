@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:hollandkompas/core/theme/app_colors.dart';
 import 'package:hollandkompas/features/courses/domain/entities/course.dart';
 import 'package:hollandkompas/features/courses/presentation/widgets/course_header.dart';
+import 'package:hollandkompas/features/courses/presentation/widgets/lesson_card.dart';
 import 'package:hollandkompas/features/home/domain/entities/lesson.dart';
 
 class CourseLessonsContent extends StatelessWidget {
@@ -214,6 +215,61 @@ class _EnrollmentBanner extends StatelessWidget {
           FilledButton(onPressed: onEnroll, child: const Text('Enroll')),
         ],
       ),
+    );
+  }
+}
+
+class _SectionHeader extends StatelessWidget {
+  final int lessonCount;
+  final bool isEnrolled;
+
+  const _SectionHeader({required this.lessonCount, required this.isEnrolled});
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Course lessons',
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+              ),
+
+              const SizedBox(height: 4),
+
+              Text(
+                isEnrolled
+                    ? 'All lessons are unlocked.'
+                    : 'Preview lesson 1 for free.',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: AppColors.subtitleColor(context),
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
+
+          decoration: BoxDecoration(
+            color: AppColors.muted,
+            borderRadius: BorderRadius.circular(20),
+          ),
+
+          child: Text(
+            '$lessonCount lessons',
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w700),
+          ),
+        ),
+      ],
     );
   }
 }
