@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hollandkompas/core/theme/app_colors.dart';
 import 'package:hollandkompas/core/theme/theme_provider.dart';
+import 'package:hollandkompas/features/courses/presentation/widgets/course_image.dart';
 import 'package:hollandkompas/features/home/presentation/widgets/appbar/profile_menu.dart';
 import 'package:hollandkompas/features/home/presentation/widgets/appbar/toggle_theme.dart';
 import 'package:hollandkompas/features/home/presentation/widgets/appbar/welcome_section.dart';
-import 'package:hollandkompas/features/home/presentation/widgets/course_image.dart';
 import 'package:hollandkompas/shared/widgets/language_selector.dart';
 
 class AppBarHomeScreen extends ConsumerWidget implements PreferredSizeWidget {

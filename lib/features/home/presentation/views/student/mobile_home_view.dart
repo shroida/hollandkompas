@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hollandkompas/features/courses/presentation/widgets/course_card.dart';
+import 'package:hollandkompas/features/courses/presentation/widgets/courses_empty.dart';
+import 'package:hollandkompas/features/courses/presentation/widgets/courses_error.dart';
+import 'package:hollandkompas/features/courses/presentation/widgets/courses_loading.dart';
+import 'package:hollandkompas/features/courses/presentation/widgets/section_header.dart';
 import 'package:hollandkompas/features/home/presentation/providers/published_course_provider.dart';
-import 'package:hollandkompas/features/home/presentation/widgets/course_card.dart';
-import 'package:hollandkompas/features/home/presentation/widgets/courses_empty.dart';
-import 'package:hollandkompas/features/home/presentation/widgets/courses_error.dart';
-import 'package:hollandkompas/features/home/presentation/widgets/courses_loading.dart';
-import 'package:hollandkompas/features/home/presentation/widgets/section_header.dart';
 
 class MobileHomeView extends ConsumerWidget {
   const MobileHomeView({super.key});
