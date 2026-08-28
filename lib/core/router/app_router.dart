@@ -4,12 +4,12 @@ import 'package:hollandkompas/features/auth/presentation/pages/login_screen.dart
 import 'package:hollandkompas/features/auth/presentation/pages/register_screen.dart';
 import 'package:hollandkompas/features/auth/presentation/pages/reset_password_screen.dart';
 import 'package:hollandkompas/features/courses/domain/entities/course.dart';
+import 'package:hollandkompas/features/courses/presentation/screens/course_lessons_screen.dart';
 import 'package:hollandkompas/features/enrollment/presentation/screens/my_courses_screen.dart';
 import 'package:hollandkompas/features/enrollment/presentation/screens/payment_screen.dart';
 import 'package:hollandkompas/features/home/domain/entities/lesson.dart';
 import 'package:hollandkompas/features/home/presentation/screens/admin_dashboard.dart';
 import 'package:hollandkompas/features/home/presentation/screens/home_screen.dart';
-import 'package:hollandkompas/features/home/presentation/screens/pages/course_lessons_screen.dart';
 import 'package:hollandkompas/features/home/presentation/screens/pages/lesson_viewer_screen.dart';
 import 'package:hollandkompas/features/home/presentation/screens/pages/total_students_screen.dart';
 import 'package:hollandkompas/features/home/presentation/views/student/profile_screen.dart';
