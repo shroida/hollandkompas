@@ -27,77 +27,95 @@ class AppBarHomeScreen extends ConsumerWidget implements PreferredSizeWidget {
   final VoidCallback? onSettings;
   final VoidCallback? onLogout;
 
+  static const double _appBarHeight = 124;
+
   @override
-  Size get preferredSize => const Size.fromHeight(132);
+  Size get preferredSize => const Size.fromHeight(_appBarHeight);
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final theme = Theme.of(context);
     final themeMode = ref.watch(themeModeProvider);
     final isDark = themeMode == ThemeMode.dark;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.headerBlue,
-        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(32)),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.headerBlue.withValues(alpha: 0.22),
-            blurRadius: 24,
-            offset: const Offset(0, 10),
+    return Material(
+      color: Colors.transparent,
+      child: Container(
+        decoration: BoxDecoration(
+          color: AppColors.headerBlue,
+          borderRadius: const BorderRadius.vertical(
+            bottom: Radius.circular(28),
           ),
-        ],
-      ),
-      child: SafeArea(
-        bottom: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-          child: Container(
-            height: 88,
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-            decoration: BoxDecoration(
-              color: Theme.of(context).colorScheme.surface,
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: AppColors.borderColor(context)),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.10),
-                  blurRadius: 24,
-                  offset: const Offset(0, 8),
-                ),
-              ],
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.headerBlue.withValues(alpha: 0.20),
+              blurRadius: 28,
+              offset: const Offset(0, 10),
             ),
-            child: Row(
-              children: [
-                ProfileMenu(
-                  firstName: firstName,
-                  level: level,
-                  onMyCourses: onMyCourses,
-                  onProfile: onProfile,
-                  onSettings: onSettings,
-                  onLogout: onLogout,
-                ),
+          ],
+        ),
+        child: SafeArea(
+          bottom: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 10, 16, 14),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final isCompact = constraints.maxWidth < 700;
 
-                const SizedBox(width: 14),
+                return Container(
+                  height: 90,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 10,
+                  ),
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surface,
+                    borderRadius: BorderRadius.circular(22),
+                    border: Border.all(color: AppColors.borderColor(context)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.08),
+                        blurRadius: 24,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      ProfileMenu(
+                        firstName: firstName,
+                        level: level,
+                        onMyCourses: onMyCourses,
+                        onProfile: onProfile,
+                        onSettings: onSettings,
+                        onLogout: onLogout,
+                      ),
 
-                Expanded(child: WelcomeSection(firstName: firstName)),
+                      const SizedBox(width: 12),
 
-                const SizedBox(width: 10),
+                      Expanded(child: WelcomeSection(firstName: firstName)),
 
-                LevelBadge(level: level),
+                      const SizedBox(width: 10),
 
-                const SizedBox(width: 8),
+                      if (!isCompact) ...[
+                        LevelBadge(level: level),
+                        const SizedBox(width: 8),
+                      ],
 
-                ThemeToggle(
-                  isDark: isDark,
-                  onPressed: () {
-                    ref.read(themeModeProvider.notifier).toggleTheme();
-                  },
-                ),
+                      ThemeToggle(
+                        isDark: isDark,
+                        onPressed: () {
+                          ref.read(themeModeProvider.notifier).toggleTheme();
+                        },
+                      ),
 
-                const SizedBox(width: 8),
+                      const SizedBox(width: 6),
 
-                const LanguageSelector(),
-              ],
+                      const LanguageSelector(),
+                    ],
+                  ),
+                );
+              },
             ),
           ),
         ),
