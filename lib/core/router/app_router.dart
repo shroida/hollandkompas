@@ -3,6 +3,8 @@ import 'package:hollandkompas/features/auth/presentation/pages/forgot_password_s
 import 'package:hollandkompas/features/auth/presentation/pages/login_screen.dart';
 import 'package:hollandkompas/features/auth/presentation/pages/register_screen.dart';
 import 'package:hollandkompas/features/auth/presentation/pages/reset_password_screen.dart';
+import 'package:hollandkompas/features/enrollment/presentation/screens/my_courses_Screen.dart';
+import 'package:hollandkompas/features/enrollment/presentation/screens/payment_screen.dart';
 import 'package:hollandkompas/features/home/domain/entities/course.dart';
 import 'package:hollandkompas/features/home/domain/entities/lesson.dart';
 import 'package:hollandkompas/features/home/presentation/screens/admin_dashboard.dart';
@@ -11,7 +13,6 @@ import 'package:hollandkompas/features/home/presentation/screens/pages/course_le
 import 'package:hollandkompas/features/home/presentation/screens/pages/lesson_viewer_screen.dart';
 import 'package:hollandkompas/features/home/presentation/screens/pages/total_students_screen.dart';
 import 'package:hollandkompas/features/home/presentation/views/student/profile_screen.dart';
-import 'package:hollandkompas/features/home/presentation/widgets/my_courses.dart';
 import 'package:hollandkompas/features/home/presentation/widgets/sidebar/admin_shell.dart';
 import 'package:hollandkompas/features/onboarding/presentation/pages/onboarding_screen.dart';
 import 'package:hollandkompas/features/splash/presentation/pages/splash_page.dart';
@@ -84,6 +85,7 @@ final appRouter = GoRouter(
         return const MyCoursesScreen();
       },
     ),
+
     GoRoute(
       path: '/course-lessons',
       name: 'courseLessons',
@@ -94,6 +96,21 @@ final appRouter = GoRouter(
         final isEnrolled = extra['isEnrolled'] as bool? ?? false;
 
         return CourseLessonsScreen(course: course, isEnrolled: isEnrolled);
+      },
+    ),
+    GoRoute(
+      path: '/payment',
+      name: 'payment',
+      builder: (context, state) {
+        final extra = state.extra as Map<String, dynamic>;
+
+        final course = extra['course'] as Course;
+
+        return PaymentScreen(
+          courseId: course.id,
+          courseTitle: course.title,
+          price: course.price,
+        );
       },
     ),
 
