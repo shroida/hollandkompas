@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hollandkompas/features/enrollment/domain/entities/coupon.dart';
 import 'package:hollandkompas/features/enrollment/presentation/providers/enrollment_provider.dart';
-import 'package:hollandkompas/features/enrollment/presentation/widgets/course_summary.dart';
-import 'package:hollandkompas/features/enrollment/presentation/widgets/instapay_card.dart';
-import 'package:hollandkompas/features/enrollment/presentation/widgets/payment_instructions.dart';
-import 'package:hollandkompas/features/enrollment/presentation/widgets/receipt_picker.dart';
+import 'package:hollandkompas/features/payment/presentation/widgets/course_summary.dart';
+import 'package:hollandkompas/features/payment/presentation/widgets/instapay_card.dart';
+import 'package:hollandkompas/features/payment/presentation/widgets/payment_instructions.dart';
+import 'package:hollandkompas/features/payment/presentation/widgets/receipt_picker.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class PaymentScreen extends ConsumerStatefulWidget {
   final String courseId;
@@ -37,7 +38,9 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
 
   String? couponMessage;
 
-  static const instaPayAccount = '@hollandkompas';
+  static const instaPayAccount = 'shroida@instapay';
+
+  static const instaPayUrl = 'https://ipn.eg/S/shroida/instapay/1Jqm58';
 
   bool get hasCoupon => appliedCoupon != null;
 
@@ -68,21 +71,42 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
     super.dispose();
   }
 
-  Future<void> pickReceipt() async {
-    final picker = ImagePicker();
+  Future<void> openInstaPay() async {
+    final uri = Uri.parse(instaPayUrl);
 
-    final image = await picker.pickImage(
-      source: ImageSource.gallery,
-      imageQuality: 85,
-    );
+    final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
 
-    if (image == null) {
-      return;
+    if (!launched && mounted) {
+      _showMessage(
+        'Could not open InstaPay. Please open the payment link manually.',
+      );
     }
+  }
 
-    setState(() {
-      receipt = image;
-    });
+  Future<void> pickReceipt() async {
+    try {
+      final picker = ImagePicker();
+
+      final image = await picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 85,
+      );
+
+      if (image == null) {
+        debugPrint('No image selected');
+        return;
+      }
+
+      debugPrint('Image path: ${image.path}');
+      debugPrint('Image name: ${image.name}');
+
+      setState(() {
+        receipt = image;
+      });
+    } catch (e, stackTrace) {
+      debugPrint('IMAGE PICKER ERROR: $e');
+      debugPrintStack(stackTrace: stackTrace);
+    }
   }
 
   Future<void> applyCoupon() async {
@@ -146,7 +170,9 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
       return;
     }
 
-    if (referenceController.text.trim().isEmpty) {
+    final reference = referenceController.text.trim();
+
+    if (reference.isEmpty) {
       _showMessage('Please enter the transaction reference.');
       return;
     }
@@ -156,37 +182,30 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
     });
 
     try {
-      /*
       await ref
-          .read(createEnrollmentProvider)
+          .read(createPaymentRequestProvider)
           .call(
             courseId: widget.courseId,
             originalPrice: widget.price,
-            discountPercentage: appliedCoupon?.percentage,
+            discountPercentage: discountPercentage,
             discountAmount: discountAmount,
             finalPrice: finalPrice,
             couponCode: appliedCoupon?.code,
             receipt: receipt!,
-            reference: referenceController.text.trim(),
+            paymentReference: reference,
           );
-      */
 
       if (!mounted) {
         return;
       }
 
-      _showMessage(
-        'Enrollment request submitted. '
-        'Your payment will be reviewed.',
-      );
-
-      Navigator.pop(context);
+      await _showSuccessDialog();
     } catch (e) {
       if (!mounted) {
         return;
       }
 
-      _showMessage('Something went wrong. Please try again.');
+      _showMessage(_cleanErrorMessage(e));
     } finally {
       if (mounted) {
         setState(() {
@@ -194,6 +213,38 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
         });
       }
     }
+  }
+
+  Future<void> _showSuccessDialog() async {
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) {
+        return AlertDialog(
+          icon: const Icon(Icons.hourglass_top_rounded, size: 48),
+          title: const Text('Payment submitted'),
+          content: const Text(
+            'Your payment request has been submitted successfully.\n\n'
+            'An administrator will review your payment and receipt. '
+            'You will get access to the course after your payment is approved.',
+          ),
+          actions: [
+            FilledButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('Done'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    Navigator.pop(context);
   }
 
   String _cleanErrorMessage(Object error) {
@@ -218,11 +269,14 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
 
     return Scaffold(
       appBar: AppBar(title: const Text('Payment')),
+
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
+
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
+
             children: [
               Text(
                 'Complete your enrollment',
@@ -254,10 +308,14 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                       controller: couponController,
                       enabled: !hasCoupon,
                       textCapitalization: TextCapitalization.characters,
+
                       decoration: InputDecoration(
                         hintText: 'Enter coupon code',
+
                         prefixIcon: const Icon(Icons.local_offer_outlined),
+
                         border: const OutlineInputBorder(),
+
                         suffixIcon: hasCoupon
                             ? IconButton(
                                 onPressed: removeCoupon,
@@ -272,10 +330,12 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
 
                   SizedBox(
                     height: 56,
+
                     child: ElevatedButton(
                       onPressed: isApplyingCoupon || hasCoupon
                           ? null
                           : applyCoupon,
+
                       child: isApplyingCoupon
                           ? const SizedBox(
                               width: 20,
@@ -321,11 +381,15 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(18),
+
                 decoration: BoxDecoration(
                   color: theme.colorScheme.surfaceContainerHighest,
+
                   borderRadius: BorderRadius.circular(16),
+
                   border: Border.all(color: theme.dividerColor),
                 ),
+
                 child: Column(
                   children: [
                     _PriceRow(
@@ -357,11 +421,13 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                     ),
 
                     _PriceRow(
-                      label: 'Total',
+                      label: 'Total to pay',
                       value: '${finalPrice.toStringAsFixed(2)} EGP',
+
                       labelStyle: theme.textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
+
                       valueStyle: theme.textTheme.titleLarge?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
@@ -382,6 +448,53 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
               const SizedBox(height: 12),
 
               const InstaPayCard(account: instaPayAccount),
+
+              const SizedBox(height: 14),
+
+              // FINAL PRICE
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(16),
+
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+
+                  color: theme.colorScheme.primaryContainer,
+                ),
+
+                child: Column(
+                  children: [
+                    Text(
+                      'Amount to transfer',
+                      style: theme.textTheme.bodyMedium,
+                    ),
+
+                    const SizedBox(height: 4),
+
+                    Text(
+                      '${finalPrice.toStringAsFixed(2)} EGP',
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: 14),
+
+              SizedBox(
+                width: double.infinity,
+                height: 52,
+
+                child: FilledButton.icon(
+                  onPressed: openInstaPay,
+
+                  icon: const Icon(Icons.account_balance_wallet_rounded),
+
+                  label: const Text('Open InstaPay'),
+                ),
+              ),
 
               const SizedBox(height: 24),
 
@@ -404,31 +517,34 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
 
               TextField(
                 controller: referenceController,
+
                 decoration: const InputDecoration(
                   labelText: 'Transaction reference',
+
                   hintText: 'Enter transaction reference',
+
                   prefixIcon: Icon(Icons.receipt_long_outlined),
+
                   border: OutlineInputBorder(),
                 ),
               ),
 
               const SizedBox(height: 24),
 
-              // ==================================================
-              // SUBMIT
-              // ==================================================
               SizedBox(
                 width: double.infinity,
                 height: 54,
+
                 child: ElevatedButton(
                   onPressed: isSubmitting ? null : submitEnrollment,
+
                   child: isSubmitting
                       ? const SizedBox(
                           width: 22,
                           height: 22,
                           child: CircularProgressIndicator(strokeWidth: 2),
                         )
-                      : const Text('Submit Enrollment'),
+                      : const Text('Submit Payment Request'),
                 ),
               ),
 
@@ -436,7 +552,7 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
 
               Center(
                 child: Text(
-                  'Your payment will be reviewed by an administrator.',
+                  'Your payment will remain pending until an administrator reviews it.',
                   textAlign: TextAlign.center,
                   style: theme.textTheme.bodySmall,
                 ),
@@ -470,10 +586,20 @@ class _PriceRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+
       children: [
-        Text(label, style: labelStyle ?? Theme.of(context).textTheme.bodyLarge),
+        Expanded(
+          child: Text(
+            label,
+            style: labelStyle ?? Theme.of(context).textTheme.bodyLarge,
+          ),
+        ),
+
+        const SizedBox(width: 12),
+
         Text(
           value,
+
           style:
               valueStyle ??
               Theme.of(context).textTheme.bodyLarge?.copyWith(
