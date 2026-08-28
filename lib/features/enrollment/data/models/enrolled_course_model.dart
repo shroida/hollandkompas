@@ -9,20 +9,33 @@ class EnrolledCourseModel extends EnrolledCourse {
     required super.completedLessons,
   });
 
-  factory EnrolledCourseModel.fromJson(Map<String, dynamic> json) {
-    final rawCourse = json['courses'];
+  factory EnrolledCourseModel.fromJson(
+    Map<String, dynamic> json, {
+    Map<String, dynamic>? course,
+    int totalLessons = 0,
+    int completedLessons = 0,
+  }) {
+    final rawCourse = course ?? json['courses'];
 
     if (rawCourse == null) {
       throw Exception('Course data is missing for enrollment ${json['id']}');
     }
 
-    final course = CourseModel.fromJson(Map<String, dynamic>.from(rawCourse));
+    final courseModel = CourseModel.fromJson(
+      Map<String, dynamic>.from(rawCourse),
+    );
+
+    final enrolledAtValue = json['enrolled_at'];
+
+    if (enrolledAtValue == null) {
+      throw Exception('enrolled_at is missing for enrollment ${json['id']}');
+    }
 
     return EnrolledCourseModel(
-      course: course,
-      enrolledAt: DateTime.parse(json['enrolled_at'] as String),
-      totalLessons: 0,
-      completedLessons: 0,
+      course: courseModel,
+      enrolledAt: DateTime.parse(enrolledAtValue.toString()),
+      totalLessons: totalLessons,
+      completedLessons: completedLessons,
     );
   }
 }

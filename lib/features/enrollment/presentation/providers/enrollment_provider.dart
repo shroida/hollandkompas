@@ -1,10 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hollandkompas/features/enrollment/data/datasources/enrollment_remote_data_source.dart';
+import 'package:hollandkompas/features/enrollment/data/repositories/enrollment_repository_impl.dart';
+import 'package:hollandkompas/features/enrollment/domain/repositories/enrollment_repository.dart';
+import 'package:hollandkompas/features/enrollment/domain/usecases/apply_coupon.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-
-import '../../data/datasources/enrollment_remote_data_source.dart';
-import '../../data/repositories/enrollment_repository_impl.dart';
-import '../../domain/repositories/enrollment_repository.dart';
-import '../../domain/usecases/apply_coupon.dart';
 
 final enrollmentRemoteDataSourceProvider = Provider<EnrollmentRemoteDataSource>(
   (ref) {

@@ -17,14 +17,23 @@ class CourseModel extends Course {
   factory CourseModel.fromJson(Map<String, dynamic> json) {
     return CourseModel(
       id: json['id'] as String,
+
       title: json['title'] as String,
-      description: json['description'] as String,
+
+      description: json['description'] as String? ?? '',
+
       level: json['level'] as String,
-      price: (json['price'] as num).toDouble(),
+
+      price: (json['price'] as num?)?.toDouble() ?? 0.0,
+
       imageUrl: json['image_url'] as String?,
+
       isPublished: json['is_published'] as bool? ?? false,
+
       createdBy: json['created_by'] as String?,
+
       createdAt: DateTime.parse(json['created_at'] as String),
+
       updatedAt: DateTime.parse(json['updated_at'] as String),
     );
   }

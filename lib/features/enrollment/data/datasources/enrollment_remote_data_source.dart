@@ -26,14 +26,18 @@ class EnrollmentRemoteDataSourceImpl implements EnrollmentRemoteDataSource {
       return null;
     }
 
-    return CouponModel.fromJson(response);
+    return CouponModel.fromJson(Map<String, dynamic>.from(response));
   }
 
   @override
   Future<List<EnrolledCourseModel>> getStudentEnrollments(
     String studentId,
   ) async {
-    final response = await supabase
+    // ------------------------------------------------------------
+    // 1. Get student's enrollments + course information
+    // ------------------------------------------------------------
+
+    final enrollmentResponse = await supabase
         .from('enrollments')
         .select('''
           id,
@@ -49,17 +53,86 @@ class EnrollmentRemoteDataSourceImpl implements EnrollmentRemoteDataSource {
             is_published,
             created_by,
             created_at,
-            updated_at
+            updated_at,
+            price
           )
         ''')
         .eq('student_id', studentId)
         .order('enrolled_at', ascending: false);
 
-    return (response as List)
-        .map(
-          (json) =>
-              EnrolledCourseModel.fromJson(Map<String, dynamic>.from(json)),
-        )
-        .toList();
+    final enrollments = List<Map<String, dynamic>>.from(enrollmentResponse);
+
+    if (enrollments.isEmpty) {
+      return [];
+    }
+
+    final result = <EnrolledCourseModel>[];
+
+    // ------------------------------------------------------------
+    // 2. For every enrollment:
+    //    - Get all lessons of the course
+    //    - Get completed lessons of the student
+    // ------------------------------------------------------------
+
+    for (final enrollment in enrollments) {
+      final rawCourse = enrollment['courses'];
+
+      if (rawCourse == null) {
+        continue;
+      }
+
+      final course = Map<String, dynamic>.from(rawCourse);
+
+      final courseId = enrollment['course_id'] as String;
+
+      // ----------------------------------------------------------
+      // Get total lessons
+      // ----------------------------------------------------------
+
+      final lessonsResponse = await supabase
+          .from('lessons')
+          .select('id')
+          .eq('course_id', courseId);
+
+      final lessons = List<Map<String, dynamic>>.from(lessonsResponse);
+
+      final totalLessons = lessons.length;
+
+      // ----------------------------------------------------------
+      // Get completed lessons
+      // ----------------------------------------------------------
+
+      int completedLessons = 0;
+
+      if (lessons.isNotEmpty) {
+        final lessonIds = lessons
+            .map((lesson) => lesson['id'] as String)
+            .toList();
+
+        final progressResponse = await supabase
+            .from('lesson_progress')
+            .select('lesson_id, completed')
+            .eq('student_id', studentId)
+            .eq('completed', true)
+            .inFilter('lesson_id', lessonIds);
+
+        completedLessons = progressResponse.length;
+      }
+
+      // ----------------------------------------------------------
+      // Build model
+      // ----------------------------------------------------------
+
+      result.add(
+        EnrolledCourseModel.fromJson(
+          enrollment,
+          course: course,
+          totalLessons: totalLessons,
+          completedLessons: completedLessons,
+        ),
+      );
+    }
+
+    return result;
   }
 }
