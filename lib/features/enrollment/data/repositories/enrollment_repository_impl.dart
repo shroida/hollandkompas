@@ -1,8 +1,7 @@
+import 'package:hollandkompas/features/enrollment/data/datasources/enrollment_remote_data_source.dart';
+import 'package:hollandkompas/features/enrollment/domain/entities/coupon.dart';
 import 'package:hollandkompas/features/enrollment/domain/entities/enrolled_course.dart';
-
-import '../../domain/entities/coupon.dart';
-import '../../domain/repositories/enrollment_repository.dart';
-import '../datasources/enrollment_remote_data_source.dart';
+import 'package:hollandkompas/features/enrollment/domain/repositories/enrollment_repository.dart';
 
 class EnrollmentRepositoryImpl implements EnrollmentRepository {
   final EnrollmentRemoteDataSource remoteDataSource;
