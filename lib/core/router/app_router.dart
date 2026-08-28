@@ -6,7 +6,6 @@ import 'package:hollandkompas/features/auth/presentation/pages/reset_password_sc
 import 'package:hollandkompas/features/courses/domain/entities/course.dart';
 import 'package:hollandkompas/features/courses/presentation/screens/course_lessons_screen.dart';
 import 'package:hollandkompas/features/enrollment/presentation/screens/my_courses_screen.dart';
-import 'package:hollandkompas/features/enrollment/presentation/screens/payment_screen.dart';
 import 'package:hollandkompas/features/home/domain/entities/lesson.dart';
 import 'package:hollandkompas/features/home/presentation/screens/admin_dashboard.dart';
 import 'package:hollandkompas/features/home/presentation/screens/home_screen.dart';
@@ -15,6 +14,7 @@ import 'package:hollandkompas/features/home/presentation/screens/pages/total_stu
 import 'package:hollandkompas/features/home/presentation/views/student/profile_screen.dart';
 import 'package:hollandkompas/features/home/presentation/widgets/sidebar/admin_shell.dart';
 import 'package:hollandkompas/features/onboarding/presentation/pages/onboarding_screen.dart';
+import 'package:hollandkompas/features/payment/presentation/screen/payment_screen.dart';
 import 'package:hollandkompas/features/splash/presentation/pages/splash_page.dart';
 
 final appRouter = GoRouter(
