@@ -4,7 +4,7 @@ class CourseModel extends Course {
   const CourseModel({
     required super.id,
     required super.title,
-    required super.description,
+    required super.descriptions,
     required super.level,
     required super.imageUrl,
     required super.isPublished,
@@ -15,12 +15,25 @@ class CourseModel extends Course {
   });
 
   factory CourseModel.fromJson(Map<String, dynamic> json) {
+    final rawDescription = json['description'];
+
+    Map<String, String> descriptions = {};
+
+    if (rawDescription is Map) {
+      descriptions = rawDescription.map(
+        (key, value) =>
+            MapEntry(key.toString().toLowerCase(), value?.toString() ?? ''),
+      );
+    } else if (rawDescription is String) {
+      descriptions = {'en': rawDescription};
+    }
+
     return CourseModel(
       id: json['id'] as String,
 
       title: json['title'] as String,
 
-      description: json['description'] as String? ?? '',
+      descriptions: descriptions,
 
       level: json['level'] as String,
 

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hollandkompas/core/localization/app_locale.dart';
 import 'package:hollandkompas/core/theme/app_colors.dart';
 import 'package:hollandkompas/features/courses/domain/entities/course.dart';
 
-class CourseHeader extends StatelessWidget {
+class CourseHeader extends ConsumerWidget {
   final Course course;
   final int lessonCount;
   final int totalMinutes;
@@ -17,7 +19,15 @@ class CourseHeader extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final locale = ref.watch(appLocaleProvider);
+
+    // Get description based on current language
+    final description =
+        course.descriptions[locale.languageCode] ??
+        course.descriptions['en'] ??
+        '';
+    '';
     final theme = Theme.of(context);
 
     return Container(
@@ -135,7 +145,7 @@ class CourseHeader extends StatelessWidget {
           const SizedBox(height: 9),
 
           Text(
-            course.description,
+            description,
             style: theme.textTheme.bodyMedium?.copyWith(
               color: Colors.white.withValues(alpha: 0.76),
               height: 1.55,

@@ -1,7 +1,7 @@
 class Course {
   final String id;
   final String title;
-  final String description;
+  final Map<String, String> descriptions;
   final String level;
   final String? imageUrl;
   final bool isPublished;
@@ -13,7 +13,7 @@ class Course {
   const Course({
     required this.id,
     required this.title,
-    required this.description,
+    required this.descriptions,
     required this.level,
     required this.imageUrl,
     required this.isPublished,
@@ -22,4 +22,7 @@ class Course {
     required this.updatedAt,
     required this.price,
   });
+  String getDescription(String languageCode) {
+    return descriptions[languageCode] ?? descriptions['en'] ?? '';
+  }
 }

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hollandkompas/core/localization/app_locale.dart';
 import 'package:hollandkompas/core/theme/app_colors.dart';
 import 'package:hollandkompas/features/courses/domain/entities/course.dart';
 import 'package:hollandkompas/features/courses/presentation/widgets/course_image.dart';
 
-class CourseCard extends StatelessWidget {
+class CourseCard extends ConsumerWidget {
   final Course course;
   final bool isEnrolled;
   final VoidCallback? onTap;
@@ -16,8 +18,16 @@ class CourseCard extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final locale = ref.watch(appLocaleProvider);
+    final languageCode = locale.languageCode.toLowerCase();
     final theme = Theme.of(context);
+
+    final description =
+        course.descriptions[languageCode] ??
+        course.descriptions['en'] ??
+        course.descriptions.values.firstOrNull ??
+        '';
 
     return Card(
       margin: EdgeInsets.zero,
@@ -54,14 +64,13 @@ class CourseCard extends StatelessWidget {
                   const SizedBox(height: 6),
 
                   Text(
-                    course.description,
+                    description,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: AppColors.subtitleColor(context),
                     ),
                   ),
-
                   const SizedBox(height: 14),
 
                   Row(
@@ -84,6 +93,7 @@ class CourseCard extends StatelessWidget {
                           ),
                         ),
                       ),
+
                       const SizedBox(width: 8),
 
                       Text(

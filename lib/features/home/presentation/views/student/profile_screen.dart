@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hollandkompas/core/localization/app_locale.dart';
 import 'package:hollandkompas/core/theme/app_colors.dart';
 import 'package:hollandkompas/features/enrollment/domain/entities/enrolled_course.dart';
 import 'package:hollandkompas/features/enrollment/presentation/providers/enrolled_courses_provider.dart';
@@ -464,16 +465,23 @@ class _LearningHeader extends StatelessWidget {
   }
 }
 
-class _EnrolledCourseCard extends StatelessWidget {
+class _EnrolledCourseCard extends ConsumerWidget {
   final EnrolledCourse enrollment;
 
   const _EnrolledCourseCard({required this.enrollment});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final locale = ref.watch(appLocaleProvider);
+
     final theme = Theme.of(context);
 
     final course = enrollment.course;
+    final description =
+        course.descriptions[locale.languageCode] ??
+        course.descriptions['en'] ??
+        '';
+    '';
 
     final progress = enrollment.progress.clamp(0.0, 1.0);
 
@@ -528,7 +536,7 @@ class _EnrolledCourseCard extends StatelessWidget {
                         const SizedBox(height: 5),
 
                         Text(
-                          course.description,
+                          description,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: theme.textTheme.bodySmall?.copyWith(
