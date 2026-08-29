@@ -30,4 +30,8 @@ class ThemeModeNotifier extends Notifier<ThemeMode> {
   void setSystem() {
     state = ThemeMode.system;
   }
+
+  void setTheme(ThemeMode mode) {
+    state = mode;
+  }
 }

@@ -46,7 +46,7 @@ class HomeScreen extends ConsumerWidget {
             },
 
             onSettings: () {
-              // TODO: navigate to Settings
+              context.push('/settings');
             },
             onLogout: () async {
               await ref.read(authControllerProvider.notifier).logout();
