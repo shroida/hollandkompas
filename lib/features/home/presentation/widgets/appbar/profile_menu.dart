@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hollandkompas/core/localization/app_locale.dart';
 import 'package:hollandkompas/core/theme/app_colors.dart';
 
-class ProfileMenu extends StatelessWidget {
+class ProfileMenu extends ConsumerWidget {
   final String firstName;
   final String level;
 
@@ -21,9 +23,14 @@ class ProfileMenu extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final locale = ref.watch(appLocaleProvider);
+    final language = locale.languageCode.toLowerCase();
+
+    final t = ProfileTranslations(language);
+
     return PopupMenuButton<ProfileMenuAction>(
-      tooltip: 'Account menu',
+      tooltip: t.accountMenu,
 
       offset: const Offset(0, 58),
 
@@ -48,7 +55,7 @@ class ProfileMenu extends StatelessWidget {
             break;
 
           case ProfileMenuAction.logout:
-            _showLogoutDialog(context);
+            _showLogoutDialog(context, t);
             break;
         }
       },
@@ -57,46 +64,50 @@ class ProfileMenu extends StatelessWidget {
         PopupMenuItem(
           enabled: false,
           padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
-          child: ProfileMenuHeader(firstName: firstName, level: level),
-        ),
-
-        const PopupMenuDivider(),
-
-        const PopupMenuItem(
-          value: ProfileMenuAction.myCourses,
-          child: _MenuItem(icon: Icons.menu_book_rounded, title: 'My Courses'),
-        ),
-
-        const PopupMenuItem(
-          value: ProfileMenuAction.profile,
-          child: _MenuItem(
-            icon: Icons.person_outline_rounded,
-            title: 'Profile',
+          child: ProfileMenuHeader(
+            firstName: firstName,
+            level: level,
+            translations: t,
           ),
         ),
 
-        const PopupMenuItem(
+        const PopupMenuDivider(),
+
+        PopupMenuItem(
+          value: ProfileMenuAction.myCourses,
+          child: _MenuItem(icon: Icons.menu_book_rounded, title: t.myCourses),
+        ),
+
+        PopupMenuItem(
+          value: ProfileMenuAction.profile,
+          child: _MenuItem(
+            icon: Icons.person_outline_rounded,
+            title: t.profile,
+          ),
+        ),
+
+        PopupMenuItem(
           value: ProfileMenuAction.settings,
-          child: _MenuItem(icon: Icons.settings_outlined, title: 'Settings'),
+          child: _MenuItem(icon: Icons.settings_outlined, title: t.settings),
         ),
 
         const PopupMenuDivider(),
 
-        const PopupMenuItem(
+        PopupMenuItem(
           value: ProfileMenuAction.logout,
           child: _MenuItem(
             icon: Icons.logout_rounded,
-            title: 'Logout',
+            title: t.logout,
             destructive: true,
           ),
         ),
       ],
 
-      child: _ProfileAvatar(firstName: firstName),
+      child: _ProfileAvatar(firstName: firstName, tooltip: t.account),
     );
   }
 
-  void _showLogoutDialog(BuildContext context) {
+  void _showLogoutDialog(BuildContext context, ProfileTranslations t) {
     showDialog<void>(
       context: context,
       builder: (dialogContext) {
@@ -105,13 +116,13 @@ class ProfileMenu extends StatelessWidget {
             borderRadius: BorderRadius.circular(24),
           ),
 
-          title: const Text(
-            'Logout',
-            style: TextStyle(fontWeight: FontWeight.w700),
+          title: Text(
+            t.logout,
+            style: const TextStyle(fontWeight: FontWeight.w700),
           ),
 
           content: Text(
-            'Are you sure you want to logout?',
+            t.logoutConfirmation,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               color: AppColors.subtitleColor(context),
             ),
@@ -124,7 +135,7 @@ class ProfileMenu extends StatelessWidget {
               onPressed: () {
                 Navigator.of(dialogContext).pop();
               },
-              child: const Text('Cancel'),
+              child: Text(t.cancel),
             ),
 
             const SizedBox(width: 8),
@@ -140,7 +151,7 @@ class ProfileMenu extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              child: const Text('Logout'),
+              child: Text(t.logout),
             ),
           ],
         );
@@ -199,8 +210,9 @@ class _MenuItem extends StatelessWidget {
 
 class _ProfileAvatar extends StatelessWidget {
   final String firstName;
+  final String tooltip;
 
-  const _ProfileAvatar({required this.firstName});
+  const _ProfileAvatar({required this.firstName, required this.tooltip});
 
   @override
   Widget build(BuildContext context) {
@@ -209,7 +221,7 @@ class _ProfileAvatar extends StatelessWidget {
         : '?';
 
     return Tooltip(
-      message: 'Account',
+      message: tooltip,
 
       child: Container(
         width: 46,
@@ -250,18 +262,20 @@ class _ProfileAvatar extends StatelessWidget {
 class ProfileMenuHeader extends StatelessWidget {
   final String firstName;
   final String level;
+  final ProfileTranslations translations;
 
   const ProfileMenuHeader({
     super.key,
     required this.firstName,
     required this.level,
+    required this.translations,
   });
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        _ProfileAvatar(firstName: firstName),
+        _ProfileAvatar(firstName: firstName, tooltip: translations.account),
 
         const SizedBox(width: 12),
 
@@ -291,7 +305,7 @@ class ProfileMenuHeader extends StatelessWidget {
                   const SizedBox(width: 4),
 
                   Text(
-                    'Student • ${level.toUpperCase()}',
+                    '${translations.student} • ${level.toUpperCase()}',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: AppColors.subtitleColor(context),
                       fontSize: 11,
@@ -304,5 +318,48 @@ class ProfileMenuHeader extends StatelessWidget {
         ),
       ],
     );
+  }
+}
+
+class ProfileTranslations {
+  final String language;
+
+  const ProfileTranslations(this.language);
+
+  String get account => _tr(en: 'Account', nl: 'Account', ar: 'الحساب');
+
+  String get accountMenu =>
+      _tr(en: 'Account menu', nl: 'Accountmenu', ar: 'قائمة الحساب');
+
+  String get myCourses =>
+      _tr(en: 'My Courses', nl: 'Mijn cursussen', ar: 'كورساتي');
+
+  String get profile => _tr(en: 'Profile', nl: 'Profiel', ar: 'الملف الشخصي');
+
+  String get settings =>
+      _tr(en: 'Settings', nl: 'Instellingen', ar: 'الإعدادات');
+
+  String get logout => _tr(en: 'Logout', nl: 'Uitloggen', ar: 'تسجيل الخروج');
+
+  String get cancel => _tr(en: 'Cancel', nl: 'Annuleren', ar: 'إلغاء');
+
+  String get logoutConfirmation => _tr(
+    en: 'Are you sure you want to logout?',
+    nl: 'Weet je zeker dat je wilt uitloggen?',
+    ar: 'هل أنت متأكد أنك تريد تسجيل الخروج؟',
+  );
+
+  String get student => _tr(en: 'Student', nl: 'Student', ar: 'طالب');
+
+  String _tr({required String en, required String nl, required String ar}) {
+    switch (language) {
+      case 'nl':
+        return nl;
+      case 'ar':
+        return ar;
+      case 'en':
+      default:
+        return en;
+    }
   }
 }
