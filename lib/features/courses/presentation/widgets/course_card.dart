@@ -20,14 +20,10 @@ class CourseCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final locale = ref.watch(appLocaleProvider);
-    final languageCode = locale.languageCode.toLowerCase();
+
     final theme = Theme.of(context);
 
-    final description =
-        course.descriptions[languageCode] ??
-        course.descriptions['en'] ??
-        course.descriptions.values.firstOrNull ??
-        '';
+    final description = course.getDescription(locale.languageCode);
 
     return Card(
       margin: EdgeInsets.zero,
@@ -71,6 +67,7 @@ class CourseCard extends ConsumerWidget {
                       color: AppColors.subtitleColor(context),
                     ),
                   ),
+
                   const SizedBox(height: 14),
 
                   Row(

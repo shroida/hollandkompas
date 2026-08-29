@@ -22,7 +22,13 @@ class Course {
     required this.updatedAt,
     required this.price,
   });
+
   String getDescription(String languageCode) {
-    return descriptions[languageCode] ?? descriptions['en'] ?? '';
+    final language = languageCode.toLowerCase();
+
+    return descriptions[language] ??
+        descriptions['en'] ??
+        descriptions.values.firstOrNull ??
+        '';
   }
 }
