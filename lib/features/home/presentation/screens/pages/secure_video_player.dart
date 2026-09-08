@@ -1,207 +1,361 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
-import 'package:video_player/video_player.dart';
+import 'package:youtube_player_iframe/youtube_player_iframe.dart';
 
 class SecureVideoPlayer extends StatefulWidget {
   final String videoUrl;
   final VoidCallback? onVideoCompleted;
+
   const SecureVideoPlayer({
     super.key,
     required this.videoUrl,
     this.onVideoCompleted,
   });
+
   @override
   State<SecureVideoPlayer> createState() => _SecureVideoPlayerState();
 }
 
 class _SecureVideoPlayerState extends State<SecureVideoPlayer> {
-  late final VideoPlayerController _controller;
-  bool _isInitialized = false;
+  YoutubePlayerController? _controller;
+  StreamSubscription<YoutubeVideoState>? _videoStateSubscription;
+
   bool _showControls = true;
-  bool _isFullscreen = false;
+  bool _isInitialized = false;
+  bool _completionCalled = false;
+  bool _isDraggingSlider = false;
+
+  double _dragSliderValue = 0.0;
   double _playbackSpeed = 1.0;
+
+  Timer? _hideControlsTimer;
+  late final String? _videoId;
+
   @override
   void initState() {
     super.initState();
-    _initializePlayer();
+    _videoId = _extractVideoId(widget.videoUrl);
+
+    if (_videoId == null || _videoId.isEmpty) {
+      return;
+    }
+
+    _initializePlayer(_videoId);
   }
 
-  Future<void> _initializePlayer() async {
-    _controller = VideoPlayerController.networkUrl(Uri.parse(widget.videoUrl));
-    await _controller.initialize();
-    _controller.addListener(_videoListener);
-    if (!mounted) return;
-    setState(() {
-      _isInitialized = true;
+  /// استخراج Video ID سواء تم إرسال URL كامل أو ID فقط
+  String? _extractVideoId(String input) {
+    if (input.length == 11 && !input.contains('/')) {
+      return input;
+    }
+    return YoutubePlayerController.convertUrlToId(input);
+  }
+
+  void _initializePlayer(String videoId) {
+    final controller = YoutubePlayerController.fromVideoId(
+      videoId: videoId,
+      autoPlay: false,
+      params: const YoutubePlayerParams(
+        privacyEnhancedMode: true,
+        showControls: false,
+        showFullscreenButton: false,
+        enableKeyboard: false,
+        playsInline: true,
+        strictRelatedVideos: true,
+        enableCaption: false,
+        videoStateUpdateInterval: 250,
+      ),
+    );
+
+    _controller = controller;
+
+    _videoStateSubscription = controller.videoStateStream.listen((state) {
+      if (!mounted) return;
+
+      final currentPlayerState = controller.value.playerState;
+
+      // تعديل: كتابة unStarted بحرف S كبير
+      if (!_isInitialized &&
+          currentPlayerState != PlayerState.unStarted &&
+          currentPlayerState != PlayerState.unknown) {
+        setState(() {
+          _isInitialized = true;
+        });
+      }
+
+      _checkCompletion(state);
+      setState(() {});
     });
   }
 
-  void _videoListener() {
-    if (!_controller.value.isInitialized) return;
-    final position = _controller.value.position;
-    final duration = _controller.value.duration;
-    if (duration.inMilliseconds > 0 &&
-        position >= duration &&
-        !_controller.value.isPlaying) {
-      widget.onVideoCompleted?.call();
-    }
-    if (mounted) {
-      setState(() {});
+  void _resetControlsTimer() {
+    _hideControlsTimer?.cancel();
+    if (_controller?.value.playerState == PlayerState.playing) {
+      _hideControlsTimer = Timer(const Duration(seconds: 3), () {
+        if (mounted && !_isDraggingSlider) {
+          setState(() {
+            _showControls = false;
+          });
+        }
+      });
     }
   }
 
-  @override
-  void dispose() {
-    _controller.removeListener(_videoListener);
-    _controller.dispose();
-    super.dispose();
+  void _checkCompletion(YoutubeVideoState state) {
+    final controller = _controller;
+    if (controller == null) return;
+
+    final duration = controller.metadata.duration;
+    if (duration <= Duration.zero) return;
+
+    final position = state.position;
+    final currentPlayerState = controller.value.playerState;
+
+    final reachedEnd =
+        position >= (duration - const Duration(milliseconds: 500)) &&
+        currentPlayerState == PlayerState.ended;
+
+    if (reachedEnd && !_completionCalled) {
+      _completionCalled = true;
+      widget.onVideoCompleted?.call();
+    }
   }
 
   Future<void> _togglePlayPause() async {
-    if (_controller.value.isPlaying) {
-      await _controller.pause();
+    final controller = _controller;
+    if (controller == null) return;
+
+    final state = controller.value.playerState;
+
+    if (state == PlayerState.playing) {
+      await controller.pauseVideo();
+      _hideControlsTimer?.cancel();
+      setState(() {
+        _showControls = true;
+      });
     } else {
-      await _controller.play();
+      await controller.playVideo();
+      setState(() {
+        _showControls = true;
+      });
+      _resetControlsTimer();
     }
-    if (!mounted) return;
-    setState(() {
-      _showControls = true;
-    });
   }
 
   Future<void> _seekBy(Duration offset) async {
-    final current = _controller.value.position;
-    final duration = _controller.value.duration;
-    var target = current + offset;
-    if (target < Duration.zero) {
-      target = Duration.zero;
+    final controller = _controller;
+    if (controller == null) return;
+
+    final currentSeconds = await controller.currentTime;
+    final durationSeconds = await controller.duration;
+
+    var targetSeconds = currentSeconds + (offset.inMilliseconds / 1000.0);
+
+    if (targetSeconds < 0) {
+      targetSeconds = 0;
     }
-    if (target > duration) {
-      target = duration;
+
+    if (durationSeconds > 0 && targetSeconds > durationSeconds) {
+      targetSeconds = durationSeconds;
     }
-    await _controller.seekTo(target);
+
+    await controller.seekTo(seconds: targetSeconds, allowSeekAhead: true);
+    _resetControlsTimer();
   }
 
   Future<void> _changeSpeed(double speed) async {
-    await _controller.setPlaybackSpeed(speed);
+    final controller = _controller;
+    if (controller == null) return;
+
+    await controller.setPlaybackRate(speed);
+
     if (!mounted) return;
+
     setState(() {
       _playbackSpeed = speed;
     });
+    _resetControlsTimer();
   }
 
-  Future<void> _toggleFullscreen() async {
-    if (_isFullscreen) {
-      await _exitFullscreen();
-    } else {
-      await _enterFullscreen();
-    }
-  }
-
-  Future<void> _enterFullscreen() async {
-    await Navigator.of(context).push(
-      PageRouteBuilder(
-        opaque: true,
-        fullscreenDialog: true,
-        pageBuilder: (_, _, _) {
-          return Scaffold(
-            backgroundColor: Colors.black,
-            body: SafeArea(
-              child: Center(child: _buildVideoContent(fullscreen: true)),
-            ),
-          );
-        },
-      ),
-    );
-    if (!mounted) return;
-    setState(() {
-      _isFullscreen = false;
-    });
-  }
-
-  Future<void> _exitFullscreen() async {
-    Navigator.of(context).pop();
-  }
-
-  Widget _buildVideoContent({bool fullscreen = false}) {
-    if (!_isInitialized) {
-      return const AspectRatio(
-        aspectRatio: 16 / 9,
-        child: Center(child: CircularProgressIndicator()),
+  @override
+  Widget build(BuildContext context) {
+    if (_videoId == null || _videoId.isEmpty) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: _buildErrorState(),
       );
     }
-    final aspectRatio = _controller.value.aspectRatio;
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: () {
-        setState(() {
-          _showControls = !_showControls;
-        });
-      },
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          AspectRatio(
-            aspectRatio: aspectRatio > 0 ? aspectRatio : 16 / 9,
-            child: VideoPlayer(_controller),
-          ),
-          if (_showControls)
-            Positioned.fill(child: _buildControls(fullscreen: fullscreen)),
-        ],
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        color: Colors.black,
+        child: AspectRatio(aspectRatio: 16 / 9, child: _buildPlayer()),
       ),
     );
   }
 
-  Widget _buildControls({required bool fullscreen}) {
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Colors.black54, Colors.transparent, Colors.black87],
-          stops: [0, 0.45, 1],
+  Widget _buildPlayer() {
+    final controller = _controller;
+    if (controller == null) {
+      return _buildErrorState();
+    }
+
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        YoutubePlayer(
+          controller: controller,
+          aspectRatio: 16 / 9,
+          autoFullScreen: false,
+          enableFullScreenOnVerticalDrag: false,
+          keepAlive: false,
         ),
-      ),
-      child: Column(
+
+        Positioned.fill(
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () {
+              setState(() {
+                _showControls = !_showControls;
+              });
+              if (_showControls) {
+                _resetControlsTimer();
+              }
+            },
+            child: Row(
+              children: [
+                Expanded(
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.translucent,
+                    onDoubleTap: () => _seekBy(const Duration(seconds: -10)),
+                  ),
+                ),
+                Expanded(
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.translucent,
+                    onDoubleTap: () => _seekBy(const Duration(seconds: 10)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        Positioned.fill(
+          child: IgnorePointer(
+            ignoring: !_showControls,
+            child: AnimatedOpacity(
+              duration: const Duration(milliseconds: 200),
+              opacity: _showControls ? 1.0 : 0.0,
+              child: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.black54,
+                      Colors.transparent,
+                      Colors.black87,
+                    ],
+                    stops: [0.0, 0.5, 1.0],
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    _buildHeader(),
+                    const Spacer(),
+                    _buildCenterControls(),
+                    const Spacer(),
+                    _buildBottomControls(),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+
+        StreamBuilder<YoutubeVideoState>(
+          stream: controller.videoStateStream,
+          builder: (context, snapshot) {
+            final isBuffering =
+                controller.value.playerState == PlayerState.buffering;
+
+            if (!_isInitialized || isBuffering) {
+              return Positioned.fill(
+                child: Container(
+                  color: !_isInitialized ? Colors.black : Colors.black38,
+                  child: const Center(
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 3,
+                    ),
+                  ),
+                ),
+              );
+            }
+            return const SizedBox.shrink();
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildHeader() {
+    return const Padding(
+      padding: EdgeInsets.all(12),
+      child: Row(
         children: [
-          const Spacer(),
-          _buildCenterControls(),
-          const Spacer(),
-          _buildBottomControls(fullscreen: fullscreen),
+          Icon(Icons.school_rounded, color: Colors.white70, size: 20),
+          SizedBox(width: 8),
+          Text(
+            'HollandKompas Player',
+            style: TextStyle(
+              color: Colors.white70,
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
         ],
       ),
     );
   }
 
   Widget _buildCenterControls() {
+    final controller = _controller;
+    if (controller == null) return const SizedBox.shrink();
+
+    final isPlaying = controller.value.playerState == PlayerState.playing;
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         IconButton(
-          onPressed: () {
-            _seekBy(const Duration(seconds: -10));
-          },
+          tooltip: 'Back 10s',
+          onPressed: () => _seekBy(const Duration(seconds: -10)),
           icon: const Icon(
             Icons.replay_10_rounded,
             color: Colors.white,
             size: 38,
           ),
         ),
-        const SizedBox(width: 20),
+        const SizedBox(width: 28),
         IconButton(
+          tooltip: isPlaying ? 'Pause' : 'Play',
           onPressed: _togglePlayPause,
           icon: Icon(
-            _controller.value.isPlaying
+            isPlaying
                 ? Icons.pause_circle_filled_rounded
                 : Icons.play_circle_fill_rounded,
             color: Colors.white,
             size: 64,
           ),
         ),
-        const SizedBox(width: 20),
+        const SizedBox(width: 28),
         IconButton(
-          onPressed: () {
-            _seekBy(const Duration(seconds: 10));
-          },
+          tooltip: 'Forward 10s',
+          onPressed: () => _seekBy(const Duration(seconds: 10)),
           icon: const Icon(
             Icons.forward_10_rounded,
             color: Colors.white,
@@ -212,95 +366,179 @@ class _SecureVideoPlayerState extends State<SecureVideoPlayer> {
     );
   }
 
-  Widget _buildBottomControls({required bool fullscreen}) {
-    final position = _controller.value.position;
-    final duration = _controller.value.duration;
+  Widget _buildBottomControls() {
+    final controller = _controller;
+    if (controller == null) return const SizedBox.shrink();
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          VideoProgressIndicator(
-            _controller,
-            allowScrubbing: true,
-            padding: const EdgeInsets.symmetric(vertical: 8),
-          ),
+          _buildProgressBar(),
           Row(
-            children: [
-              Text(
-                _formatDuration(position),
-                style: const TextStyle(color: Colors.white, fontSize: 12),
-              ),
-              const Text(
-                ' / ',
-                style: TextStyle(color: Colors.white70, fontSize: 12),
-              ),
-              Text(
-                _formatDuration(duration),
-                style: const TextStyle(color: Colors.white, fontSize: 12),
-              ),
-              const Spacer(),
-              _buildSpeedButton(),
-              const SizedBox(width: 4),
-              IconButton(
-                tooltip: fullscreen ? 'Exit fullscreen' : 'Fullscreen',
-                onPressed: _toggleFullscreen,
-                icon: Icon(
-                  fullscreen
-                      ? Icons.fullscreen_exit_rounded
-                      : Icons.fullscreen_rounded,
-                  color: Colors.white,
-                ),
-              ),
-            ],
+            children: [_buildTimeLabel(), const Spacer(), _buildSpeedButton()],
           ),
         ],
       ),
     );
   }
 
+  Widget _buildProgressBar() {
+    final controller = _controller;
+    if (controller == null) return const SizedBox.shrink();
+
+    return StreamBuilder<YoutubeVideoState>(
+      stream: controller.videoStateStream,
+      builder: (context, snapshot) {
+        final state = snapshot.data;
+        final position = state?.position ?? Duration.zero;
+        final duration = controller.metadata.duration;
+
+        final totalMs = duration.inMilliseconds.toDouble();
+        final currentMs = position.inMilliseconds.toDouble();
+
+        double sliderValue = 0.0;
+        if (totalMs > 0) {
+          sliderValue = (currentMs / totalMs).clamp(0.0, 1.0);
+        }
+
+        final displayValue = _isDraggingSlider ? _dragSliderValue : sliderValue;
+
+        return SliderTheme(
+          data: SliderTheme.of(context).copyWith(
+            trackHeight: 3,
+            thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
+            overlayShape: const RoundSliderOverlayShape(overlayRadius: 12),
+            activeTrackColor: Theme.of(context).primaryColor,
+            inactiveTrackColor: Colors.white24,
+            thumbColor: Colors.white,
+          ),
+          child: Slider(
+            value: displayValue,
+            onChangeStart: (val) {
+              setState(() {
+                _isDraggingSlider = true;
+                _dragSliderValue = val;
+              });
+              _hideControlsTimer?.cancel();
+            },
+            onChanged: (val) {
+              setState(() {
+                _dragSliderValue = val;
+              });
+            },
+            onChangeEnd: (val) async {
+              setState(() {
+                _isDraggingSlider = false;
+              });
+
+              if (totalMs > 0) {
+                final targetSeconds = (totalMs * val) / 1000.0;
+                await controller.seekTo(
+                  seconds: targetSeconds,
+                  allowSeekAhead: true,
+                );
+              }
+              _resetControlsTimer();
+            },
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildTimeLabel() {
+    final controller = _controller;
+    if (controller == null) return const SizedBox.shrink();
+
+    return StreamBuilder<YoutubeVideoState>(
+      stream: controller.videoStateStream,
+      builder: (context, snapshot) {
+        final position = snapshot.data?.position ?? Duration.zero;
+        final duration = controller.metadata.duration;
+
+        return Text(
+          '${_formatDuration(position)} / ${_formatDuration(duration)}',
+          style: const TextStyle(
+            color: Colors.white70,
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+          ),
+        );
+      },
+    );
+  }
+
   Widget _buildSpeedButton() {
     return PopupMenuButton<double>(
       initialValue: _playbackSpeed,
-      tooltip: 'Playback speed',
-      color: Colors.black87,
+      tooltip: 'Playback Speed',
+      color: Colors.grey[900],
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       onSelected: _changeSpeed,
-      itemBuilder: (_) {
-        return const [
-          PopupMenuItem(
-            value: 0.5,
-            child: Text('0.5x', style: TextStyle(color: Colors.white)),
-          ),
-          PopupMenuItem(
-            value: 0.75,
-            child: Text('0.75x', style: TextStyle(color: Colors.white)),
-          ),
-          PopupMenuItem(
-            value: 1.0,
-            child: Text('1x', style: TextStyle(color: Colors.white)),
-          ),
-          PopupMenuItem(
-            value: 1.25,
-            child: Text('1.25x', style: TextStyle(color: Colors.white)),
-          ),
-          PopupMenuItem(
-            value: 1.5,
-            child: Text('1.5x', style: TextStyle(color: Colors.white)),
-          ),
-          PopupMenuItem(
-            value: 2.0,
-            child: Text('2x', style: TextStyle(color: Colors.white)),
-          ),
-        ];
-      },
-      child: Padding(
-        padding: const EdgeInsets.all(8),
+      itemBuilder: (_) => const [
+        PopupMenuItem(
+          value: 0.5,
+          child: Text('0.5x', style: TextStyle(color: Colors.white)),
+        ),
+        PopupMenuItem(
+          value: 0.75,
+          child: Text('0.75x', style: TextStyle(color: Colors.white)),
+        ),
+        PopupMenuItem(
+          value: 1.0,
+          child: Text('1.0x (Normal)', style: TextStyle(color: Colors.white)),
+        ),
+        PopupMenuItem(
+          value: 1.25,
+          child: Text('1.25x', style: TextStyle(color: Colors.white)),
+        ),
+        PopupMenuItem(
+          value: 1.5,
+          child: Text('1.5x', style: TextStyle(color: Colors.white)),
+        ),
+        PopupMenuItem(
+          value: 2.0,
+          child: Text('2.0x', style: TextStyle(color: Colors.white)),
+        ),
+      ],
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        decoration: BoxDecoration(
+          color: Colors.white12,
+          borderRadius: BorderRadius.circular(8),
+        ),
         child: Text(
           '${_playbackSpeed}x',
           style: const TextStyle(
             color: Colors.white,
+            fontSize: 12,
             fontWeight: FontWeight.w600,
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildErrorState() {
+    return Container(
+      color: Colors.grey[900],
+      alignment: Alignment.center,
+      child: const Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            Icons.play_circle_outline_rounded,
+            color: Colors.white38,
+            size: 48,
+          ),
+          SizedBox(height: 12),
+          Text(
+            'Unable to load video',
+            style: TextStyle(color: Colors.white70, fontSize: 14),
+          ),
+        ],
       ),
     );
   }
@@ -309,30 +547,18 @@ class _SecureVideoPlayerState extends State<SecureVideoPlayer> {
     final hours = duration.inHours;
     final minutes = duration.inMinutes.remainder(60);
     final seconds = duration.inSeconds.remainder(60);
+
     if (hours > 0) {
-      return '$hours:'
-          '${minutes.toString().padLeft(2, '0')}:'
-          '${seconds.toString().padLeft(2, '0')}';
+      return '$hours:${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
     }
-    return '$minutes:'
-        '${seconds.toString().padLeft(2, '0')}';
+    return '$minutes:${seconds.toString().padLeft(2, '0')}';
   }
 
   @override
-  Widget build(BuildContext context) {
-    if (!_isInitialized) {
-      return AspectRatio(
-        aspectRatio: 16 / 9,
-        child: Container(
-          color: Colors.black,
-          alignment: Alignment.center,
-          child: const CircularProgressIndicator(),
-        ),
-      );
-    }
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(16),
-      child: _buildVideoContent(),
-    );
+  void dispose() {
+    _hideControlsTimer?.cancel();
+    _videoStateSubscription?.cancel();
+    _controller?.close();
+    super.dispose();
   }
 }

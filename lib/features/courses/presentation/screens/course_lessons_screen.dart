@@ -9,7 +9,6 @@ import 'package:hollandkompas/core/theme/app_colors.dart';
 import 'package:hollandkompas/features/courses/domain/entities/course.dart';
 import 'package:hollandkompas/features/courses/presentation/providers/course_enrollment_provider.dart';
 import 'package:hollandkompas/features/courses/presentation/widgets/course_lessons_content.dart';
-import 'package:hollandkompas/features/courses/presentation/widgets/course_state_widgets.dart';
 import 'package:hollandkompas/features/courses/presentation/widgets/enrollment_dialog.dart';
 import 'package:hollandkompas/features/home/presentation/providers/course_lessons_provider.dart';
 
@@ -147,7 +146,7 @@ class _EnrollmentAction extends StatelessWidget {
         ),
       ),
 
-      error: (_, __) => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
 
       data: (isEnrolled) {
         if (isEnrolled) {
