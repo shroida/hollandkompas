@@ -16,17 +16,12 @@ class HollandKompas extends ConsumerWidget {
 
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
-
       title: 'HollandKompas',
-
       theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
-
       themeMode: themeMode,
-
-      routerConfig: appRouter,
-
       locale: locale,
+      routerConfig: appRouter,
     );
   }
 }
