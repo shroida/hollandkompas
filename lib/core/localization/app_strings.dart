@@ -258,15 +258,79 @@ class AppStrings {
     return 'Something went wrong while loading your enrolled courses.';
   }
 
-  String get tryAgain {
-    if (isArabic) return 'حاول تاني';
-    if (isDutch) return 'Opnieuw proberen';
-    return 'Try again';
-  }
-
   String get loading {
     if (isArabic) return 'جاري التحميل...';
     if (isDutch) return 'Laden...';
     return 'Loading...';
+  }
+
+  String unlockCourse(String courseTitle) {
+    if (isArabic) return 'افتح $courseTitle';
+    if (isDutch) return 'Ontgrendel $courseTitle';
+    return 'Unlock $courseTitle';
+  }
+
+  String get previewFirstLessonDescription {
+    if (isArabic) {
+      return 'تقدر تجرّب أول درس مجانًا. اشترك في الكورس لفتح كل الدروس ومتابعة تقدمك في التعلم.';
+    }
+
+    if (isDutch) {
+      return 'Je kunt de eerste les gratis bekijken. Schrijf je in voor de cursus om alle lessen te ontgrendelen en je voortgang bij te houden.';
+    }
+
+    return 'You can preview the first lesson for free. Enroll in this course to unlock all lessons and track your learning progress.';
+  }
+
+  String get unlockAllLessons {
+    if (isArabic) return 'افتح جميع دروس الكورس';
+    if (isDutch) return 'Ontgrendel alle cursuslessen';
+    return 'Unlock all course lessons';
+  }
+
+  String get trackLearningProgress {
+    if (isArabic) return 'تابع تقدمك في التعلم';
+    if (isDutch) return 'Houd je leer voortgang bij';
+    return 'Track your learning progress';
+  }
+
+  String get continueDutchJourney {
+    if (isArabic) return 'كمّل رحلتك في تعلم الهولندية';
+    if (isDutch) return 'Ga verder met je leerreis Nederlands';
+    return 'Continue your Dutch learning journey';
+  }
+
+  String get enrollNow {
+    if (isArabic) return 'اشترك الآن';
+    if (isDutch) return 'Schrijf je nu in';
+    return 'Enroll now';
+  }
+
+  String get maybeLater {
+    if (isArabic) return 'يمكن بعدين';
+    if (isDutch) return 'Misschien later';
+    return 'Maybe later';
+  }
+
+  // =========================
+  // General Error
+  // =========================
+
+  String get somethingWentWrong {
+    if (isArabic) return 'حصلت مشكلة';
+    if (isDutch) return 'Er is iets misgegaan';
+    return 'Something went wrong';
+  }
+
+  String get pleaseTryAgain {
+    if (isArabic) return 'حصلت مشكلة. حاول تاني من فضلك.';
+    if (isDutch) return 'Er is iets misgegaan. Probeer het opnieuw.';
+    return 'Something went wrong. Please try again.';
+  }
+
+  String get tryAgain {
+    if (isArabic) return 'حاول تاني';
+    if (isDutch) return 'Opnieuw proberen';
+    return 'Try again';
   }
 }
