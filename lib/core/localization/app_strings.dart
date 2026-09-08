@@ -8,6 +8,10 @@ class AppStrings {
   bool get isArabic => locale.languageCode == 'ar';
   bool get isDutch => locale.languageCode == 'nl';
 
+  // =========================
+  // Learning
+  // =========================
+
   String get keepLearning {
     if (isArabic) return 'كمّل تعلُّمك 🚀';
     if (isDutch) return 'Blijf leren 🚀';
@@ -15,14 +19,20 @@ class AppStrings {
   }
 
   String get startLearning {
-    if (isArabic) return 'ابدأ رحلتك في التعلم';
+    if (isArabic) return 'ابدأ رحلة التعلُّم';
     if (isDutch) return 'Begin met leren';
     return 'Start learning';
   }
 
   String get chooseCourseImproveDutch {
-    if (isArabic) return 'اختار كورس وطوّر مستواك في اللغة الهولندية.';
-    if (isDutch) return 'Kies een cursus en verbeter je Nederlands.';
+    if (isArabic) {
+      return 'اختار كورس وطوّر مستواك في اللغة الهولندية.';
+    }
+
+    if (isDutch) {
+      return 'Kies een cursus en verbeter je Nederlands.';
+    }
+
     return 'Choose a course and improve your Dutch.';
   }
 
@@ -39,20 +49,78 @@ class AppStrings {
   }
 
   String get tryLearningFree {
-    if (isArabic) return 'أبدأ رحلتك في التعلم مجانًا بالدروس المفتوحة';
-
-    if (isDutch) {
-      return 'Begin je leerreis gratis met de open lessen';
+    if (isArabic) {
+      return 'ابدأ رحلتك مجانًا مع الدروس المتاحة';
     }
 
-    return 'Start learning for free with open lessons';
+    if (isDutch) {
+      return 'Begin je leerreis gratis met de beschikbare lessen';
+    }
+
+    return 'Start learning for free with available lessons';
   }
+
+  // =========================
+  // Enrollment
+  // =========================
 
   String get enroll {
     if (isArabic) return 'اشترك';
     if (isDutch) return 'Inschrijven';
     return 'Enroll';
   }
+
+  String get enrollNow {
+    if (isArabic) return 'اشترك دلوقتي';
+    if (isDutch) return 'Schrijf je nu in';
+    return 'Enroll now';
+  }
+
+  String get maybeLater {
+    if (isArabic) return 'ممكن بعدين';
+    if (isDutch) return 'Misschien later';
+    return 'Maybe later';
+  }
+
+  String unlockCourse(String courseTitle) {
+    if (isArabic) return 'افتح $courseTitle';
+    if (isDutch) return 'Ontgrendel $courseTitle';
+    return 'Unlock $courseTitle';
+  }
+
+  String get previewFirstLessonDescription {
+    if (isArabic) {
+      return 'تقدر تجرّب أول درس مجانًا. اشترك في الكورس عشان تفتح كل الدروس وتتابع تقدمك في التعلُّم.';
+    }
+
+    if (isDutch) {
+      return 'Je kunt de eerste les gratis bekijken. Schrijf je in voor de cursus om alle lessen te ontgrendelen en je voortgang bij te houden.';
+    }
+
+    return 'You can preview the first lesson for free. Enroll in this course to unlock all lessons and track your learning progress.';
+  }
+
+  String get unlockAllLessons {
+    if (isArabic) return 'افتح كل دروس الكورس';
+    if (isDutch) return 'Ontgrendel alle cursuslessen';
+    return 'Unlock all course lessons';
+  }
+
+  String get trackLearningProgress {
+    if (isArabic) return 'تابع تقدمك في التعلُّم';
+    if (isDutch) return 'Houd je voortgang bij';
+    return 'Track your learning progress';
+  }
+
+  String get continueDutchJourney {
+    if (isArabic) return 'كمّل رحلتك في تعلُّم الهولندية';
+    if (isDutch) return 'Ga verder met je leerreis in het Nederlands';
+    return 'Continue your Dutch learning journey';
+  }
+
+  // =========================
+  // Course Lessons
+  // =========================
 
   String get courseLessons {
     if (isArabic) return 'دروس الكورس';
@@ -67,26 +135,14 @@ class AppStrings {
   }
 
   String get previewLessonFree {
-    if (isArabic) return 'جرّب الدرس الأول مجانًا.';
+    if (isArabic) return 'جرّب أول درس مجانًا.';
     if (isDutch) return 'Probeer les 1 gratis.';
     return 'Preview lesson 1 for free.';
   }
 
-  String lessonsCount(int count) {
-    if (isArabic) {
-      return '$count ${count == 1 ? 'درس' : 'دروس'}';
-    }
-
-    if (isDutch) {
-      return '$count ${count == 1 ? 'les' : 'lessen'}';
-    }
-
-    return '$count ${count == 1 ? 'lesson' : 'lessons'}';
-  }
-
   String get lessonFreeDescription {
     if (isArabic) {
-      return 'الدرس الأول مجاني. اشترك لفتح الكورس كامل.';
+      return 'أول درس مجاني. اشترك عشان تفتح الكورس كامل.';
     }
 
     if (isDutch) {
@@ -95,6 +151,22 @@ class AppStrings {
 
     return 'Lesson 1 is free. Enroll to unlock the entire course.';
   }
+
+  String lessonsCount(int count) {
+    if (isArabic) {
+      return count == 1 ? '$count درس' : '$count دروس';
+    }
+
+    if (isDutch) {
+      return count == 1 ? '$count les' : '$count lessen';
+    }
+
+    return count == 1 ? '$count lesson' : '$count lessons';
+  }
+
+  // =========================
+  // Courses
+  // =========================
 
   String courses(int count) {
     if (isArabic) {
@@ -108,17 +180,45 @@ class AppStrings {
     return count == 1 ? '1 course' : '$count courses';
   }
 
-  String averageProgress(int percentage) {
+  String get coursesLabel {
+    if (isArabic) return 'الكورسات';
+    if (isDutch) return 'Cursussen';
+    return 'Courses';
+  }
+
+  String get myCourses {
+    if (isArabic) return 'كورساتي';
+    if (isDutch) return 'Mijn cursussen';
+    return 'My Courses';
+  }
+
+  String get exploreCourses {
+    if (isArabic) return 'استكشف الكورسات';
+    if (isDutch) return 'Ontdek cursussen';
+    return 'Explore courses';
+  }
+
+  String get yourCoursesAreWaiting {
+    if (isArabic) return 'كورساتك مستنياك';
+    if (isDutch) return 'Je cursussen wachten op je';
+    return 'Your courses are waiting';
+  }
+
+  String get noEnrolledCourses {
     if (isArabic) {
-      return '$percentage% متوسط التقدم';
+      return 'لسه ما اشتركتش في أي كورسات. ابدأ تعلُّم الهولندي النهارده.';
     }
 
     if (isDutch) {
-      return '$percentage% gemiddelde voortgang';
+      return 'Je bent nog niet ingeschreven voor cursussen. Begin vandaag met Nederlands leren.';
     }
 
-    return '$percentage% average progress';
+    return 'You have not enrolled in any courses yet. Start learning Dutch today.';
   }
+
+  // =========================
+  // Progress
+  // =========================
 
   String get myLearning {
     if (isArabic) return 'تعلّمي';
@@ -132,15 +232,9 @@ class AppStrings {
     return 'Continue where you left off.';
   }
 
-  String get coursesLabel {
-    if (isArabic) return 'الكورسات';
-    if (isDutch) return 'Cursussen';
-    return 'Courses';
-  }
-
   String get totalLessons {
     if (isArabic) return 'إجمالي الدروس';
-    if (isDutch) return 'Totaal lessen';
+    if (isDutch) return 'Totaal aantal lessen';
     return 'Total lessons';
   }
 
@@ -180,6 +274,18 @@ class AppStrings {
     return '$completed / $total lessons';
   }
 
+  String averageProgress(int percentage) {
+    if (isArabic) {
+      return '$percentage% متوسط التقدم';
+    }
+
+    if (isDutch) {
+      return '$percentage% gemiddelde voortgang';
+    }
+
+    return '$percentage% average progress';
+  }
+
   String get continueButton {
     if (isArabic) return 'كمّل';
     if (isDutch) return 'Doorgaan';
@@ -187,22 +293,14 @@ class AppStrings {
   }
 
   String get review {
-    if (isArabic) return 'مراجعة';
+    if (isArabic) return 'راجع';
     if (isDutch) return 'Herhalen';
     return 'Review';
   }
 
-  String get myCourses {
-    if (isArabic) return 'كورساتي';
-    if (isDutch) return 'Mijn cursussen';
-    return 'My Courses';
-  }
-
-  String get exploreCourses {
-    if (isArabic) return 'استكشف الكورسات';
-    if (isDutch) return 'Ontdek cursussen';
-    return 'Explore courses';
-  }
+  // =========================
+  // Settings / Profile
+  // =========================
 
   String get settings {
     if (isArabic) return 'الإعدادات';
@@ -222,23 +320,47 @@ class AppStrings {
     return 'Profile';
   }
 
-  String get yourCoursesAreWaiting {
-    if (isArabic) return 'الكورسات مستنياك';
-    if (isDutch) return 'Je cursussen wachten op je';
-    return 'Your courses are waiting';
+  // =========================
+  // Loading
+  // =========================
+
+  String get loading {
+    if (isArabic) return 'جاري التحميل...';
+    if (isDutch) return 'Laden...';
+    return 'Loading...';
   }
 
-  String get noEnrolledCourses {
+  // =========================
+  // General Errors
+  // =========================
+
+  String get somethingWentWrong {
+    if (isArabic) return 'حصلت مشكلة';
+    if (isDutch) return 'Er is iets misgegaan';
+    return 'Something went wrong';
+  }
+
+  String get pleaseTryAgain {
     if (isArabic) {
-      return 'لسه مش مشترك في أي كورسات. ابدأ تعلّم الهولندي النهارده.';
+      return 'حصلت مشكلة. حاول تاني من فضلك.';
     }
 
     if (isDutch) {
-      return 'Je bent nog niet ingeschreven voor cursussen. Begin vandaag met Nederlands leren.';
+      return 'Er is iets misgegaan. Probeer het opnieuw.';
     }
 
-    return 'You have not enrolled in any courses yet. Start learning Dutch today.';
+    return 'Something went wrong. Please try again.';
   }
+
+  String get tryAgain {
+    if (isArabic) return 'حاول تاني';
+    if (isDutch) return 'Opnieuw proberen';
+    return 'Try again';
+  }
+
+  // =========================
+  // Course Errors
+  // =========================
 
   String get unableToLoadCourses {
     if (isArabic) return 'مش قادرين نحمّل الكورسات';
@@ -258,79 +380,15 @@ class AppStrings {
     return 'Something went wrong while loading your enrolled courses.';
   }
 
-  String get loading {
-    if (isArabic) return 'جاري التحميل...';
-    if (isDutch) return 'Laden...';
-    return 'Loading...';
+  String get unableToLoadLessons {
+    if (isArabic) return 'مش قادرين نحمّل الدروس';
+    if (isDutch) return 'De lessen kunnen niet worden geladen';
+    return 'Unable to load lessons';
   }
 
-  String unlockCourse(String courseTitle) {
-    if (isArabic) return 'افتح $courseTitle';
-    if (isDutch) return 'Ontgrendel $courseTitle';
-    return 'Unlock $courseTitle';
-  }
-
-  String get previewFirstLessonDescription {
-    if (isArabic) {
-      return 'تقدر تجرّب أول درس مجانًا. اشترك في الكورس لفتح كل الدروس ومتابعة تقدمك في التعلم.';
-    }
-
-    if (isDutch) {
-      return 'Je kunt de eerste les gratis bekijken. Schrijf je in voor de cursus om alle lessen te ontgrendelen en je voortgang bij te houden.';
-    }
-
-    return 'You can preview the first lesson for free. Enroll in this course to unlock all lessons and track your learning progress.';
-  }
-
-  String get unlockAllLessons {
-    if (isArabic) return 'افتح جميع دروس الكورس';
-    if (isDutch) return 'Ontgrendel alle cursuslessen';
-    return 'Unlock all course lessons';
-  }
-
-  String get trackLearningProgress {
-    if (isArabic) return 'تابع تقدمك في التعلم';
-    if (isDutch) return 'Houd je leer voortgang bij';
-    return 'Track your learning progress';
-  }
-
-  String get continueDutchJourney {
-    if (isArabic) return 'كمّل رحلتك في تعلم الهولندية';
-    if (isDutch) return 'Ga verder met je leerreis Nederlands';
-    return 'Continue your Dutch learning journey';
-  }
-
-  String get enrollNow {
-    if (isArabic) return 'اشترك الآن';
-    if (isDutch) return 'Schrijf je nu in';
-    return 'Enroll now';
-  }
-
-  String get maybeLater {
-    if (isArabic) return 'يمكن بعدين';
-    if (isDutch) return 'Misschien later';
-    return 'Maybe later';
-  }
-
-  // =========================
-  // General Error
-  // =========================
-
-  String get somethingWentWrong {
-    if (isArabic) return 'حصلت مشكلة';
-    if (isDutch) return 'Er is iets misgegaan';
-    return 'Something went wrong';
-  }
-
-  String get pleaseTryAgain {
-    if (isArabic) return 'حصلت مشكلة. حاول تاني من فضلك.';
-    if (isDutch) return 'Er is iets misgegaan. Probeer het opnieuw.';
-    return 'Something went wrong. Please try again.';
-  }
-
-  String get tryAgain {
-    if (isArabic) return 'حاول تاني';
-    if (isDutch) return 'Opnieuw proberen';
-    return 'Try again';
+  String get unableToCheckEnrollment {
+    if (isArabic) return 'مش قادرين نتحقق من اشتراكك';
+    if (isDutch) return 'Je inschrijving kan niet worden gecontroleerd';
+    return 'Unable to check enrollment';
   }
 }
