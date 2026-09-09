@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import 'package:hollandkompas/core/responsive/responsive_builder.dart';
 import 'package:hollandkompas/features/auth/domain/enums/user_role.dart';
 import 'package:hollandkompas/features/auth/presentation/providers/auth_controller.dart';
-import 'package:hollandkompas/features/home/presentation/providers/current_user_provider.dart';
 import 'package:hollandkompas/features/home/presentation/screens/admin_dashboard.dart';
 import 'package:hollandkompas/features/home/presentation/views/student/desktop_home_view.dart';
 import 'package:hollandkompas/features/home/presentation/views/student/mobile_home_view.dart';
@@ -17,35 +16,53 @@ class HomeScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final currentUser = ref.watch(currentUserProvider);
+    final authState = ref.watch(authControllerProvider);
+    final user = authState.user;
 
-    return currentUser.when(
-      loading: () => const _HomeLoading(),
-      error: (error, _) => _HomeError(error: error),
-      data: (user) {
-        if (user == null) {
-          return const _UserNotFound();
-        }
+    // Loading
+    if (authState.isLoading) {
+      return const _HomeLoading();
+    }
 
-        return Scaffold(
-          backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-          appBar: AppBarHomeScreen(
-            firstName: user.firstName,
-            level: user.level.name.toUpperCase(),
-            onMyCourses: () => context.push('/my-courses'),
-            onProfile: () => context.push('/profile'),
-            onSettings: () => context.push('/settings'),
-            onLogout: () => _logout(context, ref),
-          ),
-          body: user.role == UserRole.admin
-              ? const AdminShell(child: AdminDashboard())
-              : const ResponsiveBuilder(
-                  mobile: MobileHomeView(),
-                  tablet: TabletHomeView(),
-                  desktop: DesktopHomeView(),
-                ),
-        );
-      },
+    // No authenticated user
+    if (user == null) {
+      return const _UserNotFound();
+    }
+
+    debugPrint('======================================');
+    debugPrint('HOME SCREEN');
+    debugPrint('User email: ${user.email}');
+    debugPrint('User ID: ${user.id}');
+    debugPrint('Role: ${user.role}');
+    debugPrint('======================================');
+
+    return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+
+      appBar: AppBarHomeScreen(
+        firstName: user.firstName,
+        level: user.level.name.toUpperCase(),
+        onMyCourses: () {
+          context.push('/my-courses');
+        },
+        onProfile: () {
+          context.push('/profile');
+        },
+        onSettings: () {
+          context.push('/settings');
+        },
+        onLogout: () {
+          _logout(context, ref);
+        },
+      ),
+
+      body: user.role == UserRole.admin
+          ? const AdminShell(child: AdminDashboard())
+          : const ResponsiveBuilder(
+              mobile: MobileHomeView(),
+              tablet: TabletHomeView(),
+              desktop: DesktopHomeView(),
+            ),
     );
   }
 
@@ -72,24 +89,6 @@ class _HomeLoading extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Scaffold(body: Center(child: CircularProgressIndicator()));
-  }
-}
-
-class _HomeError extends StatelessWidget {
-  final Object error;
-
-  const _HomeError({required this.error});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Text(error.toString(), textAlign: TextAlign.center),
-        ),
-      ),
-    );
   }
 }
 

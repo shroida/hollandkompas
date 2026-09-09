@@ -3,9 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hollandkompas/core/localization/app_locale.dart';
 import 'package:hollandkompas/core/theme/app_colors.dart';
+import 'package:hollandkompas/features/auth/presentation/providers/auth_controller.dart';
 import 'package:hollandkompas/features/enrollment/domain/entities/enrolled_course.dart';
 import 'package:hollandkompas/features/enrollment/presentation/providers/enrolled_courses_provider.dart';
-import 'package:hollandkompas/features/home/presentation/providers/current_user_provider.dart';
 
 class MyCoursesScreen extends ConsumerWidget {
   const MyCoursesScreen({super.key});
@@ -16,17 +16,47 @@ class MyCoursesScreen extends ConsumerWidget {
     await ref.read(enrolledCoursesProvider(userId).future);
   }
 
-  Future<void> _refreshUser(WidgetRef ref) async {
-    ref.invalidate(currentUserProvider);
-
-    await ref.read(currentUserProvider.future);
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
 
-    final userAsync = ref.watch(currentUserProvider);
+    // AuthController is the single source of truth
+    final authState = ref.watch(authControllerProvider);
+    final user = authState.user;
+
+    if (authState.isLoading) {
+      return Scaffold(
+        backgroundColor: theme.scaffoldBackgroundColor,
+        appBar: AppBar(
+          title: const Text(
+            'My Courses',
+            style: TextStyle(fontWeight: FontWeight.w800),
+          ),
+        ),
+        body: const Center(
+          child: CircularProgressIndicator(color: AppColors.primary),
+        ),
+      );
+    }
+
+    if (user == null) {
+      return Scaffold(
+        backgroundColor: theme.scaffoldBackgroundColor,
+        appBar: AppBar(
+          title: const Text(
+            'My Courses',
+            style: TextStyle(fontWeight: FontWeight.w800),
+          ),
+        ),
+        body: const _EmptyState(),
+      );
+    }
+    debugPrint('======================================');
+    debugPrint('MY COURSES SCREEN');
+    debugPrint('Auth user ID: ${user.id}');
+    debugPrint('Auth user email: ${user.email}');
+    debugPrint('======================================');
+    final coursesAsync = ref.watch(enrolledCoursesProvider(user.id));
 
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
@@ -38,7 +68,7 @@ class MyCoursesScreen extends ConsumerWidget {
         ),
       ),
 
-      body: userAsync.when(
+      body: coursesAsync.when(
         loading: () {
           return const Center(
             child: CircularProgressIndicator(color: AppColors.primary),
@@ -48,40 +78,16 @@ class MyCoursesScreen extends ConsumerWidget {
         error: (error, stack) {
           return _ErrorState(
             onRetry: () {
-              return _refreshUser(ref);
+              return _refreshCourses(ref, user.id);
             },
           );
         },
 
-        data: (user) {
-          if (user == null) {
-            return const _EmptyState();
-          }
-
-          final coursesAsync = ref.watch(enrolledCoursesProvider(user.id));
-
-          return coursesAsync.when(
-            loading: () {
-              return const Center(
-                child: CircularProgressIndicator(color: AppColors.primary),
-              );
-            },
-
-            error: (error, stack) {
-              return _ErrorState(
-                onRetry: () {
-                  return _refreshCourses(ref, user.id);
-                },
-              );
-            },
-
-            data: (courses) {
-              return _MyCoursesContent(
-                courses: courses,
-                onRefresh: () {
-                  return _refreshCourses(ref, user.id);
-                },
-              );
+        data: (courses) {
+          return _MyCoursesContent(
+            courses: courses,
+            onRefresh: () {
+              return _refreshCourses(ref, user.id);
             },
           );
         },

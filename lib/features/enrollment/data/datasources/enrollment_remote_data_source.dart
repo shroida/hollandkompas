@@ -50,9 +50,14 @@ class EnrollmentRemoteDataSourceImpl implements EnrollmentRemoteDataSource {
   Future<List<EnrolledCourseModel>> getStudentEnrollments(
     String studentId,
   ) async {
-    // ------------------------------------------------------------
-    // 1. Get student's enrollments + course information
-    // ------------------------------------------------------------
+    final currentAuthUser = supabase.auth.currentUser;
+
+    print('======================================');
+    print('SUPABASE ENROLLMENT QUERY');
+    print('Passed studentId: $studentId');
+    print('Auth currentUser ID: ${currentAuthUser?.id}');
+    print('Auth currentUser email: ${currentAuthUser?.email}');
+    print('======================================');
 
     final enrollmentResponse = await supabase
         .from('enrollments')
