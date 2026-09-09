@@ -7,6 +7,7 @@ class LessonCard extends StatelessWidget {
   final bool isFirst;
   final bool isLocked;
   final bool isEnrolled;
+  final bool isCompleted;
   final VoidCallback? onTap;
 
   const LessonCard({
@@ -15,6 +16,7 @@ class LessonCard extends StatelessWidget {
     required this.isFirst,
     required this.isLocked,
     required this.isEnrolled,
+    required this.isCompleted,
     this.onTap,
   });
 
@@ -26,20 +28,18 @@ class LessonCard extends StatelessWidget {
       margin: EdgeInsets.zero,
       elevation: 0,
       clipBehavior: Clip.antiAlias,
-
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(18),
-
         child: Padding(
           padding: const EdgeInsets.all(17),
-
           child: Row(
             children: [
               _LessonNumber(
                 number: lesson.lessonOrder,
                 isFirst: isFirst,
                 isLocked: isLocked,
+                isCompleted: isCompleted,
               ),
 
               const SizedBox(width: 16),
@@ -47,7 +47,6 @@ class LessonCard extends StatelessWidget {
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-
                   children: [
                     Row(
                       children: [
@@ -64,13 +63,18 @@ class LessonCard extends StatelessWidget {
 
                         const SizedBox(width: 8),
 
-                        if (isFirst && !isEnrolled)
+                        if (isCompleted)
+                          const _LessonBadge(
+                            text: 'COMPLETED',
+                            icon: Icons.check_circle_rounded,
+                            isCompleted: true,
+                          )
+                        else if (isFirst && !isEnrolled)
                           const _LessonBadge(
                             text: 'FREE',
                             icon: Icons.play_circle_rounded,
-                          ),
-
-                        if (isLocked)
+                          )
+                        else if (isLocked)
                           const _LessonBadge(
                             text: 'LOCKED',
                             icon: Icons.lock_rounded,
@@ -148,18 +152,25 @@ class LessonCard extends StatelessWidget {
 
               AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
-
                 width: 44,
                 height: 44,
-
                 decoration: BoxDecoration(
-                  color: isLocked ? AppColors.muted : AppColors.accent,
+                  color: isCompleted
+                      ? Colors.green.withValues(alpha: 0.12)
+                      : isLocked
+                      ? AppColors.muted
+                      : AppColors.accent,
                   borderRadius: BorderRadius.circular(14),
                 ),
-
                 child: Icon(
-                  isLocked ? Icons.lock_rounded : Icons.arrow_forward_rounded,
-                  color: isLocked
+                  isCompleted
+                      ? Icons.check_rounded
+                      : isLocked
+                      ? Icons.lock_rounded
+                      : Icons.arrow_forward_rounded,
+                  color: isCompleted
+                      ? Colors.green
+                      : isLocked
                       ? AppColors.subtitleColor(context)
                       : AppColors.primary,
                   size: 20,
@@ -177,22 +188,28 @@ class _LessonNumber extends StatelessWidget {
   final int number;
   final bool isFirst;
   final bool isLocked;
+  final bool isCompleted;
 
   const _LessonNumber({
     required this.number,
     required this.isFirst,
     required this.isLocked,
+    required this.isCompleted,
   });
 
   @override
   Widget build(BuildContext context) {
-    final backgroundColor = isLocked
+    final backgroundColor = isCompleted
+        ? Colors.green.withValues(alpha: 0.12)
+        : isLocked
         ? AppColors.muted
         : isFirst
         ? AppColors.primary
         : AppColors.accent;
 
-    final textColor = isLocked
+    final textColor = isCompleted
+        ? Colors.green
+        : isLocked
         ? AppColors.subtitleColor(context)
         : isFirst
         ? Colors.white
@@ -201,14 +218,18 @@ class _LessonNumber extends StatelessWidget {
     return Container(
       width: 50,
       height: 50,
-
       decoration: BoxDecoration(
         color: backgroundColor,
         borderRadius: BorderRadius.circular(15),
       ),
-
       child: Center(
-        child: isLocked
+        child: isCompleted
+            ? const Icon(
+                Icons.check_circle_rounded,
+                color: Colors.green,
+                size: 24,
+              )
+            : isLocked
             ? Icon(Icons.lock_rounded, color: textColor, size: 20)
             : Text(
                 number.toString().padLeft(2, '0'),
@@ -223,35 +244,37 @@ class _LessonNumber extends StatelessWidget {
   }
 }
 
-// ═════════════════════════════════════════════════════════════
-// LESSON BADGE
-// ═════════════════════════════════════════════════════════════
-
 class _LessonBadge extends StatelessWidget {
   final String text;
   final IconData icon;
   final bool isLocked;
+  final bool isCompleted;
 
   const _LessonBadge({
     required this.text,
     required this.icon,
     this.isLocked = false,
+    this.isCompleted = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    final color = isLocked
+    final color = isCompleted
+        ? Colors.green
+        : isLocked
         ? AppColors.subtitleColor(context)
         : AppColors.primary;
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
-
       decoration: BoxDecoration(
-        color: isLocked ? AppColors.muted : AppColors.accent,
+        color: isCompleted
+            ? Colors.green.withValues(alpha: 0.10)
+            : isLocked
+            ? AppColors.muted
+            : AppColors.accent,
         borderRadius: BorderRadius.circular(8),
       ),
-
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [

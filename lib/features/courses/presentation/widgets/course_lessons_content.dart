@@ -8,6 +8,7 @@ import 'package:hollandkompas/features/courses/domain/entities/course.dart';
 import 'package:hollandkompas/features/courses/presentation/widgets/course_header.dart';
 import 'package:hollandkompas/features/courses/presentation/widgets/lesson_card.dart';
 import 'package:hollandkompas/features/home/domain/entities/lesson.dart';
+import 'package:hollandkompas/features/home/presentation/providers/lesson_progress_provider.dart';
 
 class CourseLessonsContent extends ConsumerWidget {
   final Course course;
@@ -109,9 +110,6 @@ class CourseLessonsContent extends ConsumerWidget {
                   ),
                 ),
 
-                // =========================
-                // LESSONS
-                // =========================
                 SliverPadding(
                   padding: EdgeInsets.fromLTRB(
                     horizontalPadding,
@@ -124,33 +122,94 @@ class CourseLessonsContent extends ConsumerWidget {
                     itemBuilder: (context, index) {
                       final lesson = lessons[index];
 
-                      // Lesson 1 is free.
                       final isFree = index == 0;
-
-                      // If enrolled -> nothing is locked.
-                      // If not enrolled -> only lesson 1 is open.
                       final isLocked = !isEnrolled && !isFree;
 
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 12),
-                        child: LessonCard(
-                          lesson: lesson,
-                          isFirst: isFree,
-                          isLocked: isLocked,
-                          isEnrolled: isEnrolled,
-                          onTap: () {
-                            if (isLocked) {
-                              onEnroll();
-                              return;
-                            }
+                        child: Consumer(
+                          builder: (context, ref, child) {
+                            final completionAsync = ref.watch(
+                              lessonCompletionProvider(lesson.id),
+                            );
 
-                            context.push(
-                              '/lesson-viewer',
-                              extra: {
-                                'course': course,
-                                'lesson': lesson,
-                                'isEnrolled': isEnrolled,
-                                'totalLessons': lessons.length,
+                            return completionAsync.when(
+                              loading: () {
+                                return LessonCard(
+                                  lesson: lesson,
+                                  isFirst: isFree,
+                                  isLocked: isLocked,
+                                  isEnrolled: isEnrolled,
+                                  isCompleted: false,
+                                  onTap: () {
+                                    if (isLocked) {
+                                      onEnroll();
+                                      return;
+                                    }
+
+                                    context.push(
+                                      '/lesson-viewer',
+                                      extra: {
+                                        'course': course,
+                                        'lesson': lesson,
+                                        'isEnrolled': isEnrolled,
+                                        'totalLessons': lessons.length,
+                                      },
+                                    );
+                                  },
+                                );
+                              },
+
+                              error: (error, stack) {
+                                return LessonCard(
+                                  lesson: lesson,
+                                  isFirst: isFree,
+                                  isLocked: isLocked,
+                                  isEnrolled: isEnrolled,
+                                  isCompleted: false,
+                                  onTap: () {
+                                    if (isLocked) {
+                                      onEnroll();
+                                      return;
+                                    }
+
+                                    context.push(
+                                      '/lesson-viewer',
+                                      extra: {
+                                        'course': course,
+                                        'lesson': lesson,
+                                        'isEnrolled': isEnrolled,
+                                        'totalLessons': lessons.length,
+                                      },
+                                    );
+                                  },
+                                );
+                              },
+
+                              data: (isCompleted) {
+                                return LessonCard(
+                                  lesson: lesson,
+                                  isFirst: isFree,
+                                  isLocked: isLocked,
+                                  isEnrolled: isEnrolled,
+                                  isCompleted: isCompleted,
+                                  onTap: () {
+                                    if (isLocked) {
+                                      onEnroll();
+                                      return;
+                                    }
+
+                                    context.push(
+                                      '/lesson-viewer',
+                                      extra: {
+                                        'course': course,
+                                        'lesson': lesson,
+                                        'isEnrolled': isEnrolled,
+                                        'totalLessons': lessons.length,
+                                      },
+                                    );
+                                  },
+                                );
                               },
                             );
                           },
