@@ -51,9 +51,9 @@ class CourseLessonsContent extends ConsumerWidget {
             child: CustomScrollView(
               physics: const BouncingScrollPhysics(),
               slivers: [
-                // =========================
+                // ============================================================
                 // COURSE HEADER
-                // =========================
+                // ============================================================
                 SliverPadding(
                   padding: EdgeInsets.fromLTRB(
                     horizontalPadding,
@@ -71,9 +71,9 @@ class CourseLessonsContent extends ConsumerWidget {
                   ),
                 ),
 
-                // =========================
+                // ============================================================
                 // ENROLLMENT BANNER
-                // =========================
+                // ============================================================
                 if (!isEnrolled)
                   SliverPadding(
                     padding: EdgeInsets.fromLTRB(
@@ -91,9 +91,9 @@ class CourseLessonsContent extends ConsumerWidget {
                     ),
                   ),
 
-                // =========================
+                // ============================================================
                 // SECTION HEADER
-                // =========================
+                // ============================================================
                 SliverPadding(
                   padding: EdgeInsets.fromLTRB(
                     horizontalPadding,
@@ -110,9 +110,9 @@ class CourseLessonsContent extends ConsumerWidget {
                   ),
                 ),
 
-                // =========================
+                // ============================================================
                 // LESSONS
-                // =========================
+                // ============================================================
                 SliverPadding(
                   padding: EdgeInsets.fromLTRB(
                     horizontalPadding,
@@ -145,11 +145,23 @@ class CourseLessonsContent extends ConsumerWidget {
                               isLocked: isLocked,
                               isEnrolled: isEnrolled,
                               isCompleted: isCompleted,
+
                               onTap: () async {
                                 if (isLocked) {
                                   onEnroll();
                                   return;
                                 }
+
+                                debugPrint(
+                                  '======================================',
+                                );
+                                debugPrint('OPEN LESSON');
+                                debugPrint('Lesson: ${lesson.title}');
+                                debugPrint('Lesson ID: ${lesson.id}');
+                                debugPrint('Current Index: $index');
+                                debugPrint(
+                                  '======================================',
+                                );
 
                                 await context.push(
                                   '/lesson-viewer',
@@ -163,29 +175,15 @@ class CourseLessonsContent extends ConsumerWidget {
                                   },
                                 );
 
+                                if (!context.mounted) {
+                                  return;
+                                }
+
+                                // Refresh this lesson's completion state
+                                // after returning from LessonViewer.
                                 ref.invalidate(
                                   lessonCompletionProvider(lesson.id),
                                 );
-
-                                try {
-                                  debugPrint('Refreshing lesson progress...');
-
-                                  debugPrint('Lesson ID: ${lesson.id}');
-
-                                  ref.invalidate(
-                                    lessonCompletionProvider(lesson.id),
-                                  );
-
-                                  debugPrint('Lesson progress refreshed.');
-                                } catch (e) {
-                                  debugPrint(
-                                    'Failed to refresh lesson progress: $e',
-                                  );
-
-                                  ref.invalidate(
-                                    lessonCompletionProvider(lesson.id),
-                                  );
-                                }
                               },
                             );
                           },
