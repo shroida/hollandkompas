@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:hollandkompas/features/courses/domain/entities/course.dart';
 import 'package:hollandkompas/features/courses/presentation/widgets/course_card.dart';
 import 'package:hollandkompas/features/courses/presentation/widgets/section_header.dart';
-import 'package:hollandkompas/features/home/presentation/views/student/student_courses_view%20.dart';
+import 'package:hollandkompas/features/home/presentation/views/student/student_courses_view.dart';
 
 class DesktopHomeView extends StudentCoursesView {
   const DesktopHomeView({super.key});
