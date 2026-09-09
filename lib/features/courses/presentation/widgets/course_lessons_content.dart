@@ -110,6 +110,9 @@ class CourseLessonsContent extends ConsumerWidget {
                   ),
                 ),
 
+                // =========================
+                // LESSONS
+                // =========================
                 SliverPadding(
                   padding: EdgeInsets.fromLTRB(
                     horizontalPadding,
@@ -133,83 +136,56 @@ class CourseLessonsContent extends ConsumerWidget {
                               lessonCompletionProvider(lesson.id),
                             );
 
-                            return completionAsync.when(
-                              loading: () {
-                                return LessonCard(
-                                  lesson: lesson,
-                                  isFirst: isFree,
-                                  isLocked: isLocked,
-                                  isEnrolled: isEnrolled,
-                                  isCompleted: false,
-                                  onTap: () {
-                                    if (isLocked) {
-                                      onEnroll();
-                                      return;
-                                    }
+                            final isCompleted =
+                                completionAsync.asData?.value ?? false;
 
-                                    context.push(
-                                      '/lesson-viewer',
-                                      extra: {
-                                        'course': course,
-                                        'lesson': lesson,
-                                        'isEnrolled': isEnrolled,
-                                        'totalLessons': lessons.length,
-                                      },
-                                    );
+                            return LessonCard(
+                              lesson: lesson,
+                              isFirst: isFree,
+                              isLocked: isLocked,
+                              isEnrolled: isEnrolled,
+                              isCompleted: isCompleted,
+                              onTap: () async {
+                                if (isLocked) {
+                                  onEnroll();
+                                  return;
+                                }
+
+                                await context.push(
+                                  '/lesson-viewer',
+                                  extra: {
+                                    'course': course,
+                                    'lesson': lesson,
+                                    'lessons': lessons,
+                                    'currentIndex': index,
+                                    'isEnrolled': isEnrolled,
+                                    'totalLessons': lessons.length,
                                   },
                                 );
-                              },
 
-                              error: (error, stack) {
-                                return LessonCard(
-                                  lesson: lesson,
-                                  isFirst: isFree,
-                                  isLocked: isLocked,
-                                  isEnrolled: isEnrolled,
-                                  isCompleted: false,
-                                  onTap: () {
-                                    if (isLocked) {
-                                      onEnroll();
-                                      return;
-                                    }
-
-                                    context.push(
-                                      '/lesson-viewer',
-                                      extra: {
-                                        'course': course,
-                                        'lesson': lesson,
-                                        'isEnrolled': isEnrolled,
-                                        'totalLessons': lessons.length,
-                                      },
-                                    );
-                                  },
+                                ref.invalidate(
+                                  lessonCompletionProvider(lesson.id),
                                 );
-                              },
 
-                              data: (isCompleted) {
-                                return LessonCard(
-                                  lesson: lesson,
-                                  isFirst: isFree,
-                                  isLocked: isLocked,
-                                  isEnrolled: isEnrolled,
-                                  isCompleted: isCompleted,
-                                  onTap: () {
-                                    if (isLocked) {
-                                      onEnroll();
-                                      return;
-                                    }
+                                try {
+                                  debugPrint('Refreshing lesson progress...');
 
-                                    context.push(
-                                      '/lesson-viewer',
-                                      extra: {
-                                        'course': course,
-                                        'lesson': lesson,
-                                        'isEnrolled': isEnrolled,
-                                        'totalLessons': lessons.length,
-                                      },
-                                    );
-                                  },
-                                );
+                                  debugPrint('Lesson ID: ${lesson.id}');
+
+                                  ref.invalidate(
+                                    lessonCompletionProvider(lesson.id),
+                                  );
+
+                                  debugPrint('Lesson progress refreshed.');
+                                } catch (e) {
+                                  debugPrint(
+                                    'Failed to refresh lesson progress: $e',
+                                  );
+
+                                  ref.invalidate(
+                                    lessonCompletionProvider(lesson.id),
+                                  );
+                                }
                               },
                             );
                           },

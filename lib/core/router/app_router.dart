@@ -68,14 +68,23 @@ final appRouter = GoRouter(
       builder: (context, state) {
         final extra = state.extra as Map<String, dynamic>;
 
-        final lesson = extra['lesson'] as Lesson;
-        final isEnrolled = extra['isEnrolled'] as bool;
-        final totalLessons = extra['totalLessons'] as int;
         final course = extra['course'] as Course;
+
+        final lesson = extra['lesson'] as Lesson;
+
+        final lessons = (extra['lessons'] as List).cast<Lesson>();
+
+        final currentIndex = extra['currentIndex'] as int;
+
+        final isEnrolled = extra['isEnrolled'] as bool;
+
+        final totalLessons = extra['totalLessons'] as int;
 
         return LessonViewerScreen(
           course: course,
           lesson: lesson,
+          lessons: lessons,
+          currentIndex: currentIndex,
           isEnrolled: isEnrolled,
           totalLessons: totalLessons,
         );
