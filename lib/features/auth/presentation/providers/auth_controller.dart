@@ -17,7 +17,10 @@ part 'auth_controller.g.dart';
 class AuthController extends _$AuthController {
   @override
   AuthState build() {
-    return const AuthState();
+    // Restore the existing Supabase session when the app starts/reloads.
+    Future.microtask(loadCurrentUser);
+
+    return const AuthState(isLoading: true);
   }
 
   Future<void> register({
@@ -66,6 +69,10 @@ class AuthController extends _$AuthController {
       debugPrint('LOGIN SUCCESS');
       debugPrint('Email: ${user.email}');
       debugPrint('User ID: ${user.id}');
+      debugPrint(
+        'Supabase Auth ID: '
+        '${Supabase.instance.client.auth.currentUser?.id}',
+      );
       debugPrint('======================================');
 
       state = state.copyWith(isLoading: false, user: user, error: null);
@@ -155,15 +162,25 @@ class AuthController extends _$AuthController {
   }
 
   Future<void> loadCurrentUser() async {
-    state = state.copyWith(isLoading: true, error: null);
-
     try {
+      debugPrint('======================================');
+      debugPrint('RESTORING CURRENT USER');
+      debugPrint(
+        'Supabase Auth User ID: '
+        '${Supabase.instance.client.auth.currentUser?.id}',
+      );
+      debugPrint(
+        'Supabase Auth Email: '
+        '${Supabase.instance.client.auth.currentUser?.email}',
+      );
+      debugPrint('======================================');
+
       final user = await ref.read(authRepositoryProvider).getCurrentUser();
 
       if (!ref.mounted) return;
 
       debugPrint('======================================');
-      debugPrint('LOAD CURRENT USER');
+      debugPrint('CURRENT USER RESTORED');
       debugPrint('User ID: ${user?.id}');
       debugPrint('Email: ${user?.email}');
       debugPrint('======================================');
@@ -171,6 +188,11 @@ class AuthController extends _$AuthController {
       state = state.copyWith(isLoading: false, user: user, error: null);
     } catch (e) {
       if (!ref.mounted) return;
+
+      debugPrint('======================================');
+      debugPrint('RESTORE USER ERROR');
+      debugPrint('$e');
+      debugPrint('======================================');
 
       state = state.copyWith(isLoading: false, user: null, error: e.toString());
     }

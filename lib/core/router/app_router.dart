@@ -71,8 +71,10 @@ final appRouter = GoRouter(
         final lesson = extra['lesson'] as Lesson;
         final isEnrolled = extra['isEnrolled'] as bool;
         final totalLessons = extra['totalLessons'] as int;
+        final course = extra['course'] as Course;
 
         return LessonViewerScreen(
+          course: course,
           lesson: lesson,
           isEnrolled: isEnrolled,
           totalLessons: totalLessons,

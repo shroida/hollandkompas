@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:hollandkompas/features/courses/domain/entities/course.dart';
+import 'package:hollandkompas/features/courses/presentation/widgets/enrollment_dialog.dart';
 import 'package:hollandkompas/features/home/domain/entities/lesson.dart';
 import 'package:hollandkompas/features/home/presentation/widgets/lessons%20viewers/continue_learning_card.dart';
-import 'package:hollandkompas/features/home/presentation/widgets/lessons%20viewers/enrollment_dialog.dart';
 import 'package:hollandkompas/features/home/presentation/widgets/lessons%20viewers/free_lesson_card.dart';
 import 'package:hollandkompas/features/home/presentation/widgets/lessons%20viewers/lesson_description.dart';
 import 'package:hollandkompas/features/home/presentation/widgets/lessons%20viewers/lesson_header.dart';
@@ -13,13 +15,14 @@ import 'package:youtube_player_iframe/youtube_player_iframe.dart';
 
 class LessonViewerScreen extends StatefulWidget {
   final Lesson lesson;
-
+  final Course course;
   final bool isEnrolled;
 
   final int totalLessons;
 
   const LessonViewerScreen({
     super.key,
+    required this.course,
     required this.lesson,
     required this.isEnrolled,
     this.totalLessons = 1,
@@ -67,14 +70,11 @@ class _LessonViewerScreenState extends State<LessonViewerScreen> {
       context: context,
       builder: (context) {
         return EnrollmentDialog(
-          onEnroll: () {
+          course: widget.course,
+          onEnroll: () async {
             Navigator.of(context).pop();
 
-            // TODO: Call your enrollment action here.
-            //
-            // Example:
-            // ref.read(enrollmentControllerProvider.notifier)
-            //     .enroll(widget.lesson.courseId);
+            await context.push('/payment', extra: {'course': widget.course});
           },
         );
       },

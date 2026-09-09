@@ -147,6 +147,7 @@ class CourseLessonsContent extends ConsumerWidget {
                             context.push(
                               '/lesson-viewer',
                               extra: {
+                                'course': course,
                                 'lesson': lesson,
                                 'isEnrolled': isEnrolled,
                                 'totalLessons': lessons.length,
