@@ -51,11 +51,7 @@ class MyCoursesScreen extends ConsumerWidget {
         body: const _EmptyState(),
       );
     }
-    debugPrint('======================================');
-    debugPrint('MY COURSES SCREEN');
-    debugPrint('Auth user ID: ${user.id}');
-    debugPrint('Auth user email: ${user.email}');
-    debugPrint('======================================');
+
     final coursesAsync = ref.watch(enrolledCoursesProvider(user.id));
 
     return Scaffold(

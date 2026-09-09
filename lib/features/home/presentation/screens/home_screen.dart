@@ -29,13 +29,6 @@ class HomeScreen extends ConsumerWidget {
       return const _UserNotFound();
     }
 
-    debugPrint('======================================');
-    debugPrint('HOME SCREEN');
-    debugPrint('User email: ${user.email}');
-    debugPrint('User ID: ${user.id}');
-    debugPrint('Role: ${user.role}');
-    debugPrint('======================================');
-
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
 

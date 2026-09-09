@@ -23,14 +23,9 @@ Future<void> _initializeApp() async {
 }
 
 void _listenToAuthChanges() {
-  Supabase.instance.client.auth.onAuthStateChange.listen(
-    (data) {
-      if (data.event == AuthChangeEvent.passwordRecovery) {
-        appRouter.go('/reset-password');
-      }
-    },
-    onError: (error, stackTrace) {
-      debugPrint('Auth state error: $error');
-    },
-  );
+  Supabase.instance.client.auth.onAuthStateChange.listen((data) {
+    if (data.event == AuthChangeEvent.passwordRecovery) {
+      appRouter.go('/reset-password');
+    }
+  }, onError: (error, stackTrace) {});
 }

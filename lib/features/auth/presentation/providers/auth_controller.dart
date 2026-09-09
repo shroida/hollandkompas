@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:hollandkompas/features/auth/data/providers/auth_repository_provider.dart';
 import 'package:hollandkompas/features/auth/domain/providers/forgot_password_usecase_provider.dart';
 import 'package:hollandkompas/features/auth/domain/providers/login_usecase_provider.dart';
@@ -65,21 +64,9 @@ class AuthController extends _$AuthController {
 
       if (!ref.mounted) return;
 
-      debugPrint('======================================');
-      debugPrint('LOGIN SUCCESS');
-      debugPrint('Email: ${user.email}');
-      debugPrint('User ID: ${user.id}');
-      debugPrint(
-        'Supabase Auth ID: '
-        '${Supabase.instance.client.auth.currentUser?.id}',
-      );
-      debugPrint('======================================');
-
       state = state.copyWith(isLoading: false, user: user, error: null);
     } catch (e) {
       if (!ref.mounted) return;
-
-      debugPrint('LOGIN ERROR: $e');
 
       state = state.copyWith(
         isLoading: false,
@@ -92,12 +79,6 @@ class AuthController extends _$AuthController {
   Future<void> logout() async {
     final supabaseUser = Supabase.instance.client.auth.currentUser;
     final oldUserId = supabaseUser?.id;
-
-    debugPrint('======================================');
-    debugPrint('LOGOUT');
-    debugPrint('Supabase User ID: $oldUserId');
-    debugPrint('Supabase Email: ${supabaseUser?.email}');
-    debugPrint('======================================');
 
     state = state.copyWith(isLoading: true, error: null);
 
@@ -113,12 +94,6 @@ class AuthController extends _$AuthController {
       ref.invalidate(currentUserProvider);
 
       state = const AuthState();
-
-      debugPrint('LOGOUT SUCCESS');
-      debugPrint(
-        'Supabase current user after logout: '
-        '${Supabase.instance.client.auth.currentUser?.id}',
-      );
     } catch (e) {
       if (!ref.mounted) return;
 
@@ -163,36 +138,13 @@ class AuthController extends _$AuthController {
 
   Future<void> loadCurrentUser() async {
     try {
-      debugPrint('======================================');
-      debugPrint('RESTORING CURRENT USER');
-      debugPrint(
-        'Supabase Auth User ID: '
-        '${Supabase.instance.client.auth.currentUser?.id}',
-      );
-      debugPrint(
-        'Supabase Auth Email: '
-        '${Supabase.instance.client.auth.currentUser?.email}',
-      );
-      debugPrint('======================================');
-
       final user = await ref.read(authRepositoryProvider).getCurrentUser();
 
       if (!ref.mounted) return;
 
-      debugPrint('======================================');
-      debugPrint('CURRENT USER RESTORED');
-      debugPrint('User ID: ${user?.id}');
-      debugPrint('Email: ${user?.email}');
-      debugPrint('======================================');
-
       state = state.copyWith(isLoading: false, user: user, error: null);
     } catch (e) {
       if (!ref.mounted) return;
-
-      debugPrint('======================================');
-      debugPrint('RESTORE USER ERROR');
-      debugPrint('$e');
-      debugPrint('======================================');
 
       state = state.copyWith(isLoading: false, user: null, error: e.toString());
     }

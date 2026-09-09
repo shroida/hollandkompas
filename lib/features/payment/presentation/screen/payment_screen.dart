@@ -92,19 +92,10 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
         imageQuality: 85,
       );
 
-      if (image == null) {
-        debugPrint('No image selected');
-        return;
-      }
-
-      debugPrint('Image path: ${image.path}');
-      debugPrint('Image name: ${image.name}');
-
       setState(() {
         receipt = image;
       });
     } catch (e, stackTrace) {
-      debugPrint('IMAGE PICKER ERROR: $e');
       debugPrintStack(stackTrace: stackTrace);
     }
   }
