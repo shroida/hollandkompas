@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hollandkompas/core/localization/app_locale.dart';
 import 'package:hollandkompas/core/localization/app_strings.dart';
+import 'package:hollandkompas/core/router/route_paths.dart';
 import 'package:hollandkompas/core/shared/widget/error_state.dart';
 import 'package:hollandkompas/core/shared/widget/loading_state.dart';
 import 'package:hollandkompas/core/theme/app_colors.dart';
@@ -115,7 +116,7 @@ class CourseLessonsScreen extends ConsumerWidget {
           onEnroll: () async {
             Navigator.of(context).pop();
 
-            await context.push('/payment', extra: course);
+            await context.push(RoutePaths.payment, extra: course);
           },
         );
       },
