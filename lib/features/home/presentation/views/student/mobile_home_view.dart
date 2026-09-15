@@ -20,6 +20,17 @@ class MobileHomeView extends StudentCoursesView {
     final locale = ref.watch(appLocaleProvider);
     final strings = AppStrings(locale);
 
+    final sortedCourses = [...courses];
+
+    sortedCourses.sort((a, b) {
+      const levelOrder = {'A1': 1, 'A2': 2, 'B1': 3, 'B2': 4, 'C1': 5, 'C2': 6};
+
+      final aOrder = levelOrder[a.level] ?? 999;
+      final bOrder = levelOrder[b.level] ?? 999;
+
+      return aOrder.compareTo(bOrder);
+    });
+
     return CustomScrollView(
       physics: const BouncingScrollPhysics(),
       slivers: [
@@ -40,9 +51,9 @@ class MobileHomeView extends StudentCoursesView {
         SliverPadding(
           padding: const EdgeInsets.symmetric(horizontal: 20),
           sliver: SliverList.builder(
-            itemCount: courses.length,
+            itemCount: sortedCourses.length,
             itemBuilder: (context, index) {
-              final course = courses[index];
+              final course = sortedCourses[index];
 
               return Padding(
                 padding: const EdgeInsets.only(bottom: 16),
