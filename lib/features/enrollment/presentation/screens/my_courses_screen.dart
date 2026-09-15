@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hollandkompas/core/theme/app_colors.dart';
+import 'package:hollandkompas/core/shared/widget/loading_state.dart';
 import 'package:hollandkompas/features/auth/presentation/providers/auth_controller.dart';
 import 'package:hollandkompas/features/enrollment/presentation/providers/enrolled_courses_provider.dart';
 import 'package:hollandkompas/features/enrollment/presentation/screens/widgets/courses_content.dart';
@@ -22,7 +22,7 @@ class MyCoursesScreen extends ConsumerWidget {
 
   Widget _buildBody(BuildContext context, WidgetRef ref, dynamic authState) {
     if (authState.isLoading) {
-      return const _LoadingState();
+      return const LoadingState();
     }
 
     final user = authState.user;
@@ -34,7 +34,7 @@ class MyCoursesScreen extends ConsumerWidget {
     final coursesAsync = ref.watch(enrolledCoursesProvider(user.id));
 
     return coursesAsync.when(
-      loading: () => const _LoadingState(),
+      loading: () => const LoadingState(),
       error: (_, _) => const EmptyState(),
       data: (courses) => CoursesContent(
         courses: courses,
@@ -49,16 +49,5 @@ class MyCoursesScreen extends ConsumerWidget {
     ref.invalidate(provider);
 
     await ref.read(provider.future);
-  }
-}
-
-class _LoadingState extends StatelessWidget {
-  const _LoadingState();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Center(
-      child: CircularProgressIndicator(color: AppColors.primary),
-    );
   }
 }
