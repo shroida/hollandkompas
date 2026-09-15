@@ -6,9 +6,9 @@ abstract class LessonRemoteDataSource {
 }
 
 class LessonRemoteDataSourceImpl implements LessonRemoteDataSource {
-  final SupabaseClient supabase;
-
   LessonRemoteDataSourceImpl(this.supabase);
+
+  final SupabaseClient supabase;
 
   @override
   Future<List<LessonModel>> getCourseLessons(String courseId) async {
