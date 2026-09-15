@@ -406,7 +406,6 @@ class _CourseCard extends StatelessWidget {
         course.descriptions[languageCode] ?? course.descriptions['en'] ?? '';
 
     final progress = enrollment.progress.clamp(0.0, 1.0);
-
     final percent = (progress * 100).round();
     final isCompleted = progress >= 1.0;
 
@@ -419,23 +418,37 @@ class _CourseCard extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(20),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // ------------------------------------------------------------
+              // Header
+              // ------------------------------------------------------------
               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const _CourseIcon(),
+
                   const SizedBox(width: 14),
+
                   Expanded(
                     child: _CourseInfo(
                       title: course.title,
                       description: description,
                     ),
                   ),
+
                   const SizedBox(width: 10),
+
                   _LevelBadge(level: course.level),
                 ],
               ),
+
               const SizedBox(height: 22),
+
+              // ------------------------------------------------------------
+              // Progress header
+              // ------------------------------------------------------------
               Row(
                 children: [
                   Text(
@@ -444,7 +457,9 @@ class _CourseCard extends StatelessWidget {
                       fontWeight: FontWeight.w700,
                     ),
                   ),
+
                   const Spacer(),
+
                   Text(
                     '$percent%',
                     style: theme.textTheme.bodySmall?.copyWith(
@@ -454,7 +469,12 @@ class _CourseCard extends StatelessWidget {
                   ),
                 ],
               ),
+
               const SizedBox(height: 9),
+
+              // ------------------------------------------------------------
+              // Progress bar
+              // ------------------------------------------------------------
               ClipRRect(
                 borderRadius: BorderRadius.circular(10),
                 child: LinearProgressIndicator(
@@ -464,7 +484,12 @@ class _CourseCard extends StatelessWidget {
                   color: AppColors.primary,
                 ),
               ),
-              const Spacer(),
+
+              const SizedBox(height: 12),
+
+              // ------------------------------------------------------------
+              // Bottom row
+              // ------------------------------------------------------------
               Row(
                 children: [
                   Icon(
@@ -472,15 +497,23 @@ class _CourseCard extends StatelessWidget {
                     size: 15,
                     color: AppColors.subtitleColor(context),
                   ),
+
                   const SizedBox(width: 5),
-                  Text(
-                    '${enrollment.completedLessons} / '
-                    '${enrollment.totalLessons} lessons',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: AppColors.subtitleColor(context),
+
+                  Expanded(
+                    child: Text(
+                      '${enrollment.completedLessons} / '
+                      '${enrollment.totalLessons} lessons',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: AppColors.subtitleColor(context),
+                      ),
                     ),
                   ),
-                  const Spacer(),
+
+                  const SizedBox(width: 8),
+
                   TextButton.icon(
                     onPressed: () => _openCourse(context, course),
                     icon: Icon(

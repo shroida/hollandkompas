@@ -34,10 +34,22 @@ class HomeScreen extends ConsumerWidget {
       appBar: AppBarHomeScreen(
         firstName: user.firstName,
         level: user.level.name.toUpperCase(),
-        onMyCourses: () => context.push(RoutePaths.myCourses),
-        onProfile: () => context.push(RoutePaths.profile),
-        onSettings: () => context.push(RoutePaths.settings),
-        onLogout: () => _logout(context, ref),
+
+        onMyCourses: () {
+          context.pushNamed('myCourses');
+        },
+
+        onProfile: () {
+          context.push(RoutePaths.profile);
+        },
+
+        onSettings: () {
+          context.pushNamed('settings');
+        },
+
+        onLogout: () {
+          _logout(context, ref);
+        },
       ),
       body: _HomeBody(userRole: user.role),
     );
@@ -93,13 +105,6 @@ class _UserNotFound extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: Text(
-          'User not found',
-          style: Theme.of(context).textTheme.titleMedium,
-        ),
-      ),
-    );
+    return const Scaffold(body: Center(child: Text('User not found')));
   }
 }

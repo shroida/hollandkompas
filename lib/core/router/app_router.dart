@@ -110,7 +110,6 @@ final GoRouter appRouter = GoRouter(
         return const SettingsScreen();
       },
     ),
-
     GoRoute(
       path: RoutePaths.myCourses,
       name: 'myCourses',
@@ -118,7 +117,6 @@ final GoRouter appRouter = GoRouter(
         return const MyCoursesScreen();
       },
     ),
-
     GoRoute(
       path: RoutePaths.courseLessons,
       name: 'courseLessons',
