@@ -1,4 +1,5 @@
 import 'package:go_router/go_router.dart';
+import 'package:hollandkompas/core/router/route_paths.dart';
 import 'package:hollandkompas/features/auth/presentation/pages/forgot_password_screen.dart';
 import 'package:hollandkompas/features/auth/presentation/pages/login_screen.dart';
 import 'package:hollandkompas/features/auth/presentation/pages/register_screen.dart';
@@ -27,43 +28,49 @@ final appRouter = GoRouter(
     ),
 
     GoRoute(
-      path: '/onboarding',
+      path: RoutePaths.onboarding,
       builder: (context, state) => const OnboardingScreen(),
     ),
 
-    GoRoute(path: '/home', builder: (context, state) => const HomeScreen()),
+    GoRoute(
+      path: RoutePaths.home,
+      builder: (context, state) => const HomeScreen(),
+    ),
 
     GoRoute(
-      path: '/login',
+      path: RoutePaths.login,
       builder: (context, state) => LoginScreen(
-        onLogin: () => context.go('/home'),
-        onRegister: () => context.go('/register'),
-        onForgot: () => context.push('/forgot-password'),
+        onLogin: () => context.go(RoutePaths.home),
+        onRegister: () => context.go(RoutePaths.register),
+        onForgot: () => context.push(RoutePaths.forgotPassword),
       ),
     ),
 
     GoRoute(
-      path: '/register',
+      path: RoutePaths.register,
       builder: (context, state) => RegisterScreen(
-        onLogin: () => context.go('/login'),
+        onLogin: () => context.go(RoutePaths.login),
         onBack: () => context.pop(),
       ),
     ),
 
     GoRoute(
-      path: '/forgot-password',
+      path: RoutePaths.forgotPassword,
       builder: (context, state) => ForgotPasswordScreen(
         onBack: () => context.pop(),
-        onLogin: () => context.go('/login'),
+        onLogin: () => context.go(RoutePaths.login),
       ),
     ),
-    GoRoute(path: '/profile', builder: (context, state) => ProfileScreen()),
     GoRoute(
-      path: '/reset-password',
+      path: RoutePaths.profile,
+      builder: (context, state) => ProfileScreen(),
+    ),
+    GoRoute(
+      path: RoutePaths.resetPassword,
       builder: (context, state) => const ResetPasswordScreen(),
     ),
     GoRoute(
-      path: '/lesson-viewer',
+      path: RoutePaths.lessonViewer,
       name: 'lessonViewer',
       builder: (context, state) {
         final extra = state.extra as Map<String, dynamic>;
@@ -91,14 +98,14 @@ final appRouter = GoRouter(
       },
     ),
     GoRoute(
-      path: '/my-courses',
+      path: RoutePaths.myCourses,
       name: 'myCourses',
       builder: (context, state) {
         return const MyCoursesScreen();
       },
     ),
     GoRoute(
-      path: '/settings',
+      path: RoutePaths.settings,
       name: 'settings',
       builder: (context, state) {
         return const SettingsScreen();
@@ -106,7 +113,7 @@ final appRouter = GoRouter(
     ),
 
     GoRoute(
-      path: '/course-lessons',
+      path: RoutePaths.courseLessons,
       name: 'courseLessons',
       builder: (context, state) {
         final extra = state.extra as Map<String, dynamic>;
@@ -117,7 +124,7 @@ final appRouter = GoRouter(
       },
     ),
     GoRoute(
-      path: '/payment',
+      path: RoutePaths.payment,
       name: 'payment',
       builder: (context, state) {
         final extra = state.extra as Map<String, dynamic>;
@@ -133,13 +140,13 @@ final appRouter = GoRouter(
     ),
 
     GoRoute(
-      path: '/admin',
+      path: RoutePaths.admin,
       builder: (context, state) {
         return const AdminShell(child: AdminDashboard());
       },
       routes: [
         GoRoute(
-          path: 'students',
+          path: RoutePaths.totalStudents,
           builder: (context, state) {
             return const AdminShell(child: TotalStudentsScreen());
           },

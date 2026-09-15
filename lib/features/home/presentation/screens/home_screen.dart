@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hollandkompas/core/responsive/responsive_builder.dart';
+import 'package:hollandkompas/core/router/route_paths.dart';
 import 'package:hollandkompas/features/auth/domain/enums/user_role.dart';
 import 'package:hollandkompas/features/auth/presentation/providers/auth_controller.dart';
 import 'package:hollandkompas/features/home/presentation/screens/admin_dashboard.dart';
@@ -36,13 +37,13 @@ class HomeScreen extends ConsumerWidget {
         firstName: user.firstName,
         level: user.level.name.toUpperCase(),
         onMyCourses: () {
-          context.push('/my-courses');
+          context.push(RoutePaths.myCourses);
         },
         onProfile: () {
-          context.push('/profile');
+          context.push(RoutePaths.profile);
         },
         onSettings: () {
-          context.push('/settings');
+          context.push(RoutePaths.settings);
         },
         onLogout: () {
           _logout(context, ref);
@@ -65,7 +66,7 @@ class HomeScreen extends ConsumerWidget {
 
       if (!context.mounted) return;
 
-      context.go('/login');
+      context.go(RoutePaths.login);
     } catch (error) {
       if (!context.mounted) return;
 
