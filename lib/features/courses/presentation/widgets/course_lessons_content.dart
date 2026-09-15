@@ -26,24 +26,12 @@ class CourseLessonsContent extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final locale = ref.watch(appLocaleProvider);
-    final strings = AppStrings(locale);
+    final strings = AppStrings(ref.watch(appLocaleProvider));
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final isDesktop = constraints.maxWidth >= 1000;
-        final isTablet = constraints.maxWidth >= 650;
-
-        final horizontalPadding = isDesktop
-            ? 48.0
-            : isTablet
-            ? 32.0
-            : 20.0;
-
-        final totalMinutes = lessons.fold<int>(
-          0,
-          (sum, lesson) => sum + lesson.durationMinutes,
-        );
+        final padding = _getHorizontalPadding(constraints.maxWidth);
+        final totalMinutes = _calculateTotalMinutes();
 
         return Center(
           child: ConstrainedBox(
@@ -51,132 +39,32 @@ class CourseLessonsContent extends ConsumerWidget {
             child: CustomScrollView(
               physics: const BouncingScrollPhysics(),
               slivers: [
-                SliverPadding(
-                  padding: EdgeInsets.fromLTRB(
-                    horizontalPadding,
-                    24,
-                    horizontalPadding,
-                    0,
-                  ),
-                  sliver: SliverToBoxAdapter(
-                    child: CourseHeader(
-                      course: course,
-                      lessonCount: lessons.length,
-                      totalMinutes: totalMinutes,
-                      isEnrolled: isEnrolled,
-                    ),
-                  ),
+                _CourseHeaderSliver(
+                  course: course,
+                  lessonsCount: lessons.length,
+                  totalMinutes: totalMinutes,
+                  isEnrolled: isEnrolled,
+                  padding: padding,
                 ),
-
                 if (!isEnrolled)
-                  SliverPadding(
-                    padding: EdgeInsets.fromLTRB(
-                      horizontalPadding,
-                      18,
-                      horizontalPadding,
-                      0,
-                    ),
-                    sliver: SliverToBoxAdapter(
-                      child: _EnrollmentBanner(
-                        course: course,
-                        onEnroll: onEnroll,
-                        strings: strings,
-                      ),
-                    ),
+                  _EnrollmentBannerSliver(
+                    course: course,
+                    onEnroll: onEnroll,
+                    strings: strings,
+                    padding: padding,
                   ),
-
-                SliverPadding(
-                  padding: EdgeInsets.fromLTRB(
-                    horizontalPadding,
-                    32,
-                    horizontalPadding,
-                    0,
-                  ),
-                  sliver: SliverToBoxAdapter(
-                    child: _SectionHeader(
-                      lessonCount: lessons.length,
-                      isEnrolled: isEnrolled,
-                      strings: strings,
-                    ),
-                  ),
+                _SectionHeaderSliver(
+                  lessonCount: lessons.length,
+                  isEnrolled: isEnrolled,
+                  strings: strings,
+                  padding: padding,
                 ),
-
-                SliverPadding(
-                  padding: EdgeInsets.fromLTRB(
-                    horizontalPadding,
-                    16,
-                    horizontalPadding,
-                    40,
-                  ),
-                  sliver: SliverList.builder(
-                    itemCount: lessons.length,
-                    itemBuilder: (context, index) {
-                      final lesson = lessons[index];
-
-                      final isFree = index == 0;
-                      final isLocked = !isEnrolled && !isFree;
-
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
-                        child: Consumer(
-                          builder: (context, ref, child) {
-                            final completionAsync = ref.watch(
-                              lessonCompletionProvider(lesson.id),
-                            );
-
-                            final isCompleted =
-                                completionAsync.asData?.value ?? false;
-
-                            return LessonCard(
-                              lesson: lesson,
-                              isFirst: isFree,
-                              isLocked: isLocked,
-                              isEnrolled: isEnrolled,
-                              isCompleted: isCompleted,
-
-                              onTap: () async {
-                                if (isLocked) {
-                                  onEnroll();
-                                  return;
-                                }
-
-                                debugPrint(
-                                  '======================================',
-                                );
-                                debugPrint('OPEN LESSON');
-                                debugPrint('Lesson: ${lesson.title}');
-                                debugPrint('Lesson ID: ${lesson.id}');
-                                debugPrint('Current Index: $index');
-                                debugPrint(
-                                  '======================================',
-                                );
-
-                                await context.push(
-                                  '/lesson-viewer',
-                                  extra: {
-                                    'course': course,
-                                    'lesson': lesson,
-                                    'lessons': lessons,
-                                    'currentIndex': index,
-                                    'isEnrolled': isEnrolled,
-                                    'totalLessons': lessons.length,
-                                  },
-                                );
-
-                                if (!context.mounted) {
-                                  return;
-                                }
-
-                                ref.invalidate(
-                                  lessonCompletionProvider(lesson.id),
-                                );
-                              },
-                            );
-                          },
-                        ),
-                      );
-                    },
-                  ),
+                _LessonsListSliver(
+                  lessons: lessons,
+                  course: course,
+                  isEnrolled: isEnrolled,
+                  onEnroll: onEnroll,
+                  padding: padding,
                 ),
               ],
             ),
@@ -185,15 +73,208 @@ class CourseLessonsContent extends ConsumerWidget {
       },
     );
   }
+
+  double _getHorizontalPadding(double width) {
+    if (width >= 1000) return 48;
+    if (width >= 650) return 32;
+    return 20;
+  }
+
+  int _calculateTotalMinutes() {
+    return lessons.fold(0, (total, lesson) => total + lesson.durationMinutes);
+  }
 }
 
-class _EnrollmentBanner extends StatelessWidget {
+class _CourseHeaderSliver extends StatelessWidget {
+  final Course course;
+  final int lessonsCount;
+  final int totalMinutes;
+  final bool isEnrolled;
+  final double padding;
+
+  const _CourseHeaderSliver({
+    required this.course,
+    required this.lessonsCount,
+    required this.totalMinutes,
+    required this.isEnrolled,
+    required this.padding,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SliverPadding(
+      padding: EdgeInsets.fromLTRB(padding, 24, padding, 0),
+      sliver: SliverToBoxAdapter(
+        child: CourseHeader(
+          course: course,
+          lessonCount: lessonsCount,
+          totalMinutes: totalMinutes,
+          isEnrolled: isEnrolled,
+        ),
+      ),
+    );
+  }
+}
+
+class _EnrollmentBannerSliver extends StatelessWidget {
   final Course course;
   final VoidCallback onEnroll;
   final AppStrings strings;
+  final double padding;
 
-  const _EnrollmentBanner({
+  const _EnrollmentBannerSliver({
     required this.course,
+    required this.onEnroll,
+    required this.strings,
+    required this.padding,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SliverPadding(
+      padding: EdgeInsets.fromLTRB(padding, 18, padding, 0),
+      sliver: SliverToBoxAdapter(
+        child: EnrollmentBanner(onEnroll: onEnroll, strings: strings),
+      ),
+    );
+  }
+}
+
+class _SectionHeaderSliver extends StatelessWidget {
+  final int lessonCount;
+  final bool isEnrolled;
+  final AppStrings strings;
+  final double padding;
+
+  const _SectionHeaderSliver({
+    required this.lessonCount,
+    required this.isEnrolled,
+    required this.strings,
+    required this.padding,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SliverPadding(
+      padding: EdgeInsets.fromLTRB(padding, 32, padding, 0),
+      sliver: SliverToBoxAdapter(
+        child: SectionHeader(
+          lessonCount: lessonCount,
+          isEnrolled: isEnrolled,
+          strings: strings,
+        ),
+      ),
+    );
+  }
+}
+
+class _LessonsListSliver extends StatelessWidget {
+  final List<Lesson> lessons;
+  final Course course;
+  final bool isEnrolled;
+  final VoidCallback onEnroll;
+  final double padding;
+
+  const _LessonsListSliver({
+    required this.lessons,
+    required this.course,
+    required this.isEnrolled,
+    required this.onEnroll,
+    required this.padding,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SliverPadding(
+      padding: EdgeInsets.fromLTRB(padding, 16, padding, 40),
+      sliver: SliverList.builder(
+        itemCount: lessons.length,
+        itemBuilder: (context, index) {
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: LessonListItem(
+              lesson: lessons[index],
+              course: course,
+              lessons: lessons,
+              index: index,
+              isEnrolled: isEnrolled,
+              onEnroll: onEnroll,
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class LessonListItem extends ConsumerWidget {
+  final Lesson lesson;
+  final Course course;
+  final List<Lesson> lessons;
+  final int index;
+  final bool isEnrolled;
+  final VoidCallback onEnroll;
+
+  const LessonListItem({
+    super.key,
+    required this.lesson,
+    required this.course,
+    required this.lessons,
+    required this.index,
+    required this.isEnrolled,
+    required this.onEnroll,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isFree = index == 0;
+    final isLocked = !isEnrolled && !isFree;
+    final completion = ref.watch(lessonCompletionProvider(lesson.id));
+    final isCompleted = completion.asData?.value ?? false;
+    return LessonCard(
+      lesson: lesson,
+      isFirst: isFree,
+      isLocked: isLocked,
+      isEnrolled: isEnrolled,
+      isCompleted: isCompleted,
+      onTap: () => _openLesson(context, ref, isLocked),
+    );
+  }
+
+  Future<void> _openLesson(
+    BuildContext context,
+    WidgetRef ref,
+    bool isLocked,
+  ) async {
+    if (isLocked) {
+      onEnroll();
+      return;
+    }
+
+    await context.push(
+      '/lesson-viewer',
+      extra: {
+        'course': course,
+        'lesson': lesson,
+        'lessons': lessons,
+        'currentIndex': index,
+        'isEnrolled': isEnrolled,
+        'totalLessons': lessons.length,
+      },
+    );
+
+    if (!context.mounted) return;
+
+    ref.invalidate(lessonCompletionProvider(lesson.id));
+  }
+}
+
+class EnrollmentBanner extends StatelessWidget {
+  final VoidCallback onEnroll;
+  final AppStrings strings;
+
+  const EnrollmentBanner({
+    super.key,
     required this.onEnroll,
     required this.strings,
   });
@@ -220,9 +301,7 @@ class _EnrollmentBanner extends StatelessWidget {
             ),
             child: const Icon(Icons.school_rounded, color: AppColors.primary),
           ),
-
           const SizedBox(width: 14),
-
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -233,9 +312,7 @@ class _EnrollmentBanner extends StatelessWidget {
                     fontWeight: FontWeight.w800,
                   ),
                 ),
-
                 const SizedBox(height: 4),
-
                 Text(
                   strings.lessonFreeDescription,
                   style: theme.textTheme.bodySmall?.copyWith(
@@ -246,9 +323,7 @@ class _EnrollmentBanner extends StatelessWidget {
               ],
             ),
           ),
-
           const SizedBox(width: 12),
-
           FilledButton(onPressed: onEnroll, child: Text(strings.enroll)),
         ],
       ),
@@ -256,12 +331,13 @@ class _EnrollmentBanner extends StatelessWidget {
   }
 }
 
-class _SectionHeader extends StatelessWidget {
+class SectionHeader extends StatelessWidget {
   final int lessonCount;
   final bool isEnrolled;
   final AppStrings strings;
 
-  const _SectionHeader({
+  const SectionHeader({
+    super.key,
     required this.lessonCount,
     required this.isEnrolled,
     required this.strings,
@@ -283,9 +359,7 @@ class _SectionHeader extends StatelessWidget {
                   fontWeight: FontWeight.w800,
                 ),
               ),
-
               const SizedBox(height: 4),
-
               Text(
                 isEnrolled
                     ? strings.allLessonsUnlocked
@@ -297,7 +371,6 @@ class _SectionHeader extends StatelessWidget {
             ],
           ),
         ),
-
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
           decoration: BoxDecoration(
