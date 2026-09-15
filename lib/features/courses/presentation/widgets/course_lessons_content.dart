@@ -51,9 +51,6 @@ class CourseLessonsContent extends ConsumerWidget {
             child: CustomScrollView(
               physics: const BouncingScrollPhysics(),
               slivers: [
-                // ============================================================
-                // COURSE HEADER
-                // ============================================================
                 SliverPadding(
                   padding: EdgeInsets.fromLTRB(
                     horizontalPadding,
@@ -71,9 +68,6 @@ class CourseLessonsContent extends ConsumerWidget {
                   ),
                 ),
 
-                // ============================================================
-                // ENROLLMENT BANNER
-                // ============================================================
                 if (!isEnrolled)
                   SliverPadding(
                     padding: EdgeInsets.fromLTRB(
@@ -91,9 +85,6 @@ class CourseLessonsContent extends ConsumerWidget {
                     ),
                   ),
 
-                // ============================================================
-                // SECTION HEADER
-                // ============================================================
                 SliverPadding(
                   padding: EdgeInsets.fromLTRB(
                     horizontalPadding,
@@ -110,9 +101,6 @@ class CourseLessonsContent extends ConsumerWidget {
                   ),
                 ),
 
-                // ============================================================
-                // LESSONS
-                // ============================================================
                 SliverPadding(
                   padding: EdgeInsets.fromLTRB(
                     horizontalPadding,
@@ -179,8 +167,6 @@ class CourseLessonsContent extends ConsumerWidget {
                                   return;
                                 }
 
-                                // Refresh this lesson's completion state
-                                // after returning from LessonViewer.
                                 ref.invalidate(
                                   lessonCompletionProvider(lesson.id),
                                 );
@@ -200,10 +186,6 @@ class CourseLessonsContent extends ConsumerWidget {
     );
   }
 }
-
-// ============================================================
-// ENROLLMENT BANNER
-// ============================================================
 
 class _EnrollmentBanner extends StatelessWidget {
   final Course course;
@@ -273,10 +255,6 @@ class _EnrollmentBanner extends StatelessWidget {
     );
   }
 }
-
-// ============================================================
-// SECTION HEADER
-// ============================================================
 
 class _SectionHeader extends StatelessWidget {
   final int lessonCount;
