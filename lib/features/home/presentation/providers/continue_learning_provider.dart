@@ -21,14 +21,6 @@ final continueLearningProvider = FutureProvider.autoDispose<ContinueLearning?>((
     return null;
   }
 
-  /*
-   * IMPORTANT:
-   * This currently assumes the first enrollment is
-   * the course the user is currently studying.
-   *
-   * The enrolledCoursesProvider itself should ideally
-   * return the most recently active enrollment first.
-   */
   final enrollment = enrollments.first;
 
   final lessons = await ref.watch(
@@ -41,13 +33,6 @@ final continueLearningProvider = FutureProvider.autoDispose<ContinueLearning?>((
 
   final completedLessons = enrollment.completedLessons;
 
-  /*
-   * Example:
-   *
-   * completedLessons = 0 → lesson 1
-   * completedLessons = 1 → lesson 2
-   * completedLessons = 2 → lesson 3
-   */
   final currentIndex = completedLessons.clamp(0, lessons.length - 1);
 
   final currentLesson = lessons[currentIndex];
