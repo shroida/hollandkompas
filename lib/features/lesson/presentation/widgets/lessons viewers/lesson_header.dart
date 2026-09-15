@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:hollandkompas/core/theme/app_colors.dart';
-import 'package:hollandkompas/features/home/presentation/widgets/lessons%20viewers/small_badge.dart';
 import 'package:hollandkompas/features/lesson/domain/entities/lesson.dart';
+import 'package:hollandkompas/features/lesson/presentation/widgets/lessons%20viewers/small_badge.dart';
 
 class LessonHeader extends StatelessWidget {
   final Lesson lesson;

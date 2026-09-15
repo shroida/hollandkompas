@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:hollandkompas/features/home/presentation/widgets/lessons%20viewers/info_tile.dart';
 import 'package:hollandkompas/features/lesson/domain/entities/lesson.dart';
+import 'package:hollandkompas/features/lesson/presentation/widgets/lessons%20viewers/info_tile.dart';
 
 class LessonInformation extends StatelessWidget {
   final Lesson lesson;
