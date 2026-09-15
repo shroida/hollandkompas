@@ -115,7 +115,7 @@ class CourseLessonsScreen extends ConsumerWidget {
           onEnroll: () async {
             Navigator.of(context).pop();
 
-            await context.push('/payment', extra: {'course': course});
+            await context.push('/payment', extra: course);
           },
         );
       },

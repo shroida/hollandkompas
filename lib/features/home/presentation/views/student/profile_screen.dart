@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hollandkompas/core/localization/app_locale.dart';
+import 'package:hollandkompas/core/router/route_paths.dart';
 import 'package:hollandkompas/core/theme/app_colors.dart';
 import 'package:hollandkompas/features/enrollment/domain/entities/enrolled_course.dart';
 import 'package:hollandkompas/features/enrollment/presentation/providers/enrolled_courses_provider.dart';
@@ -629,10 +630,7 @@ class _EnrolledCourseCard extends ConsumerWidget {
 
                   TextButton.icon(
                     onPressed: () {
-                      context.push(
-                        '/course-lessons',
-                        extra: {'course': course, 'isEnrolled': true},
-                      );
+                      context.push(RoutePaths.courseLessons, extra: course);
                     },
                     icon: const Icon(Icons.arrow_forward_rounded, size: 17),
                     label: Text(progress == 0 ? 'Start learning' : 'Continue'),
