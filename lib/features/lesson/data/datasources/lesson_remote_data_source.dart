@@ -1,4 +1,4 @@
-import 'package:hollandkompas/features/home/data/models/lesson_model.dart';
+import 'package:hollandkompas/features/lesson/data/models/lesson_model.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 abstract class LessonRemoteDataSource {

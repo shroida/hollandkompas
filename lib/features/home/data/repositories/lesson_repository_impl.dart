@@ -1,5 +1,5 @@
-import 'package:hollandkompas/features/home/data/datasource/lesson_remote_data_source.dart';
 import 'package:hollandkompas/features/home/domain/repositories/lesson_repository.dart';
+import 'package:hollandkompas/features/lesson/data/datasources/lesson_remote_data_source.dart';
 import 'package:hollandkompas/features/lesson/domain/entities/lesson.dart';
 
 class LessonRepositoryImpl implements LessonRepository {
