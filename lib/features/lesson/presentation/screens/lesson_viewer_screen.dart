@@ -7,7 +7,6 @@ import 'package:hollandkompas/core/theme/app_colors.dart';
 import 'package:hollandkompas/features/courses/domain/entities/course.dart';
 import 'package:hollandkompas/features/courses/presentation/widgets/enrollment_dialog.dart';
 import 'package:hollandkompas/features/enrollment/presentation/providers/enrolled_courses_provider.dart';
-import 'package:hollandkompas/features/home/presentation/screens/pages/secure_video_player.dart';
 import 'package:hollandkompas/features/home/presentation/widgets/lessons%20viewers/continue_learning_card.dart';
 import 'package:hollandkompas/features/home/presentation/widgets/lessons%20viewers/free_lesson_card.dart';
 import 'package:hollandkompas/features/home/presentation/widgets/lessons%20viewers/lesson_description.dart';
@@ -17,6 +16,7 @@ import 'package:hollandkompas/features/home/presentation/widgets/lessons%20viewe
 import 'package:hollandkompas/features/home/presentation/widgets/lessons%20viewers/locked_video.dart';
 import 'package:hollandkompas/features/lesson/domain/entities/lesson.dart';
 import 'package:hollandkompas/features/lesson/presentation/providers/lesson_progress_provider.dart';
+import 'package:hollandkompas/features/lesson/presentation/widgets/secure_video_player.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class LessonViewerScreen extends ConsumerStatefulWidget {
