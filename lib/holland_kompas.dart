@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import 'package:hollandkompas/core/localization/app_locale.dart';
 import 'package:hollandkompas/core/router/app_router.dart';
 import 'package:hollandkompas/core/theme/app_theme.dart';
