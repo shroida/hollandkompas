@@ -16,6 +16,7 @@ import 'package:hollandkompas/features/lesson/presentation/widgets/lessons%20vie
 import 'package:hollandkompas/features/lesson/presentation/widgets/lessons%20viewers/lesson_information.dart';
 import 'package:hollandkompas/features/lesson/presentation/widgets/lessons%20viewers/lessons_status_banner.dart';
 import 'package:hollandkompas/features/lesson/presentation/widgets/lessons%20viewers/locked_video.dart';
+import 'package:hollandkompas/features/lesson/presentation/widgets/next_lesson_card.dart';
 import 'package:hollandkompas/features/lesson/presentation/widgets/secure_video_player.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -24,10 +25,8 @@ class LessonViewerScreen extends ConsumerStatefulWidget {
   final Course course;
   final bool isEnrolled;
 
-  /// All lessons in the current course.
   final List<Lesson> lessons;
 
-  /// Current lesson index in [lessons].
   final int currentIndex;
 
   final int totalLessons;
@@ -145,9 +144,6 @@ class _LessonViewerScreenState extends ConsumerState<LessonViewerScreen>
     }
   }
 
-  // ============================================================
-  // MARK LESSON COMPLETED
-  // ============================================================
   Future<void> _markLessonCompleted() async {
     if (_isSavingProgress || _isLessonCompleted || _isOpeningNextLesson) {
       return;
@@ -181,10 +177,8 @@ class _LessonViewerScreenState extends ConsumerState<LessonViewerScreen>
         _isSavingProgress = false;
       });
 
-      // Refresh My Courses.
       ref.invalidate(enrolledCoursesProvider(user.id));
 
-      // Refresh current lesson completion.
       ref.invalidate(lessonCompletionProvider(widget.lesson.id));
 
       if (nextLesson != null) {
@@ -193,7 +187,6 @@ class _LessonViewerScreenState extends ConsumerState<LessonViewerScreen>
           _countdown = 3;
         });
 
-        // Give Flutter one frame to render the panel.
         await Future.delayed(const Duration(milliseconds: 80));
 
         if (!mounted) {
@@ -208,7 +201,6 @@ class _LessonViewerScreenState extends ConsumerState<LessonViewerScreen>
 
         _startNextLessonCountdown();
       } else {
-        // Last lesson.
         setState(() {
           _showNextLessonPanel = true;
         });
@@ -236,14 +228,10 @@ class _LessonViewerScreenState extends ConsumerState<LessonViewerScreen>
       );
     }
   }
-  // ============================================================
-  // START COUNTDOWN
-  // ============================================================
 
   void _startNextLessonCountdown() {
     final next = nextLesson;
 
-    // Last lesson.
     if (next == null) {
       if (!mounted) {
         return;
@@ -286,10 +274,6 @@ class _LessonViewerScreenState extends ConsumerState<LessonViewerScreen>
       });
     });
   }
-
-  // ============================================================
-  // OPEN NEXT LESSON
-  // ============================================================
 
   Future<void> _openNextLesson() async {
     final next = nextLesson;
@@ -360,10 +344,6 @@ class _LessonViewerScreenState extends ConsumerState<LessonViewerScreen>
     );
   }
 
-  // ============================================================
-  // ENROLLMENT DIALOG
-  // ============================================================
-
   void _showEnrollmentDialog() {
     showDialog<void>(
       context: context,
@@ -380,10 +360,6 @@ class _LessonViewerScreenState extends ConsumerState<LessonViewerScreen>
     );
   }
 
-  // ============================================================
-  // BACK
-  // ============================================================
-
   void _goBack() {
     _nextLessonTimer?.cancel();
 
@@ -391,10 +367,6 @@ class _LessonViewerScreenState extends ConsumerState<LessonViewerScreen>
       context.pop(_isLessonCompleted);
     }
   }
-
-  // ============================================================
-  // BUILD
-  // ============================================================
 
   @override
   Widget build(BuildContext context) {
@@ -489,9 +461,6 @@ class _LessonViewerScreenState extends ConsumerState<LessonViewerScreen>
                       crossAxisAlignment: CrossAxisAlignment.start,
 
                       children: [
-                        // ====================================================
-                        // LESSON STATUS
-                        // ====================================================
                         LessonStatusBanner(
                           lessonOrder: widget.lesson.lessonOrder,
 
@@ -506,9 +475,6 @@ class _LessonViewerScreenState extends ConsumerState<LessonViewerScreen>
 
                         const SizedBox(height: 20),
 
-                        // ====================================================
-                        // VIDEO
-                        // ====================================================
                         if (isLocked)
                           LockedVideo(onUnlock: _showEnrollmentDialog)
                         else
@@ -520,9 +486,6 @@ class _LessonViewerScreenState extends ConsumerState<LessonViewerScreen>
 
                         const SizedBox(height: 28),
 
-                        // ====================================================
-                        // LESSON HEADER
-                        // ====================================================
                         LessonHeader(
                           lesson: widget.lesson,
 
@@ -533,25 +496,16 @@ class _LessonViewerScreenState extends ConsumerState<LessonViewerScreen>
 
                         const SizedBox(height: 24),
 
-                        // ====================================================
-                        // DESCRIPTION
-                        // ====================================================
                         LessonDescription(
                           description: widget.lesson.description,
                         ),
 
                         const SizedBox(height: 28),
 
-                        // ====================================================
-                        // INFORMATION
-                        // ====================================================
                         LessonInformation(lesson: widget.lesson),
 
                         const SizedBox(height: 28),
 
-                        // ====================================================
-                        // BOTTOM CONTENT
-                        // ====================================================
                         if (!widget.isEnrolled)
                           FreeLessonCard(onEnroll: _showEnrollmentDialog)
                         else ...[
@@ -559,9 +513,6 @@ class _LessonViewerScreenState extends ConsumerState<LessonViewerScreen>
 
                           const SizedBox(height: 16),
 
-                          // ==================================================
-                          // COMPLETION BUTTON
-                          // ==================================================
                           AnimatedSwitcher(
                             duration: const Duration(milliseconds: 250),
 
@@ -616,9 +567,6 @@ class _LessonViewerScreenState extends ConsumerState<LessonViewerScreen>
                             ),
                           ),
 
-                          // ==================================================
-                          // NEXT LESSON PANEL
-                          // ==================================================
                           AnimatedSwitcher(
                             duration: const Duration(milliseconds: 350),
 
@@ -643,7 +591,7 @@ class _LessonViewerScreenState extends ConsumerState<LessonViewerScreen>
 
                                     padding: const EdgeInsets.only(top: 16),
 
-                                    child: _NextLessonCard(
+                                    child: NextLessonCard(
                                       nextLesson: nextLesson,
 
                                       countdown: _countdown,
@@ -683,230 +631,5 @@ class _LessonViewerScreenState extends ConsumerState<LessonViewerScreen>
     _countdownAnimationController?.dispose();
 
     super.dispose();
-  }
-}
-
-// ============================================================
-// NEXT LESSON CARD
-// ============================================================
-
-class _NextLessonCard extends StatelessWidget {
-  final Lesson? nextLesson;
-  final int countdown;
-  final bool hasNextLesson;
-  final AnimationController? animationController;
-  final VoidCallback onSkip;
-  final bool isOpening;
-
-  const _NextLessonCard({
-    required this.nextLesson,
-    required this.countdown,
-    required this.hasNextLesson,
-    required this.animationController,
-    required this.onSkip,
-    required this.isOpening,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    // ==========================================================
-    // COURSE COMPLETED
-    // ==========================================================
-
-    if (!hasNextLesson || nextLesson == null) {
-      return Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              AppColors.secondary.withValues(alpha: 0.95),
-              AppColors.primary,
-            ],
-          ),
-          borderRadius: BorderRadius.circular(22),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.primary.withValues(alpha: 0.16),
-              blurRadius: 24,
-              offset: const Offset(0, 10),
-            ),
-          ],
-        ),
-        child: const Row(
-          children: [
-            SizedBox(
-              width: 52,
-              height: 52,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  color: Colors.white24,
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.emoji_events_rounded,
-                  color: Colors.white,
-                  size: 28,
-                ),
-              ),
-            ),
-            SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Course completed!',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 17,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  SizedBox(height: 4),
-                  Text(
-                    'Amazing work. You finished all lessons 🎉',
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 13,
-                      height: 1.3,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    // ==========================================================
-    // NEXT LESSON
-    // ==========================================================
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: theme.cardColor,
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: AppColors.primary.withValues(alpha: 0.10)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 46,
-                height: 46,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [AppColors.secondary, AppColors.primary],
-                  ),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: const Icon(
-                  Icons.arrow_forward_rounded,
-                  color: Colors.white,
-                  size: 23,
-                ),
-              ),
-
-              const SizedBox(width: 12),
-
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Up next',
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: AppColors.subtitleColor(context),
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-
-                    const SizedBox(height: 3),
-
-                    Text(
-                      nextLesson!.title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 16),
-
-          // ========================================================
-          // COUNTDOWN
-          // ========================================================
-          if (!isOpening) ...[
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    'Starting in $countdown seconds',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      color: AppColors.subtitleColor(context),
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-
-                TextButton(onPressed: onSkip, child: const Text('Skip')),
-              ],
-            ),
-
-            const SizedBox(height: 8),
-
-            ClipRRect(
-              borderRadius: BorderRadius.circular(20),
-              child: LinearProgressIndicator(
-                minHeight: 6,
-                value: (3 - countdown) / 3,
-                backgroundColor: AppColors.muted,
-                color: AppColors.primary,
-              ),
-            ),
-          ] else ...[
-            const Row(
-              children: [
-                SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
-                SizedBox(width: 10),
-                Text(
-                  'Opening next lesson...',
-                  style: TextStyle(fontWeight: FontWeight.w700),
-                ),
-              ],
-            ),
-          ],
-        ],
-      ),
-    );
   }
 }
