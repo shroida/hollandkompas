@@ -9,11 +9,11 @@ import 'package:hollandkompas/features/enrollment/presentation/screens/my_course
 import 'package:hollandkompas/features/home/domain/entities/lesson.dart';
 import 'package:hollandkompas/features/home/presentation/screens/admin_dashboard.dart';
 import 'package:hollandkompas/features/home/presentation/screens/home_screen.dart';
-import 'package:hollandkompas/features/home/presentation/screens/pages/lesson_viewer_screen.dart';
 import 'package:hollandkompas/features/home/presentation/screens/pages/settings_screen.dart';
 import 'package:hollandkompas/features/home/presentation/screens/pages/total_students_screen.dart';
 import 'package:hollandkompas/features/home/presentation/views/student/profile_screen.dart';
 import 'package:hollandkompas/features/home/presentation/widgets/sidebar/admin_shell.dart';
+import 'package:hollandkompas/features/lesson/presentation/screens/lesson_viewer_screen.dart';
 import 'package:hollandkompas/features/onboarding/presentation/pages/onboarding_screen.dart';
 import 'package:hollandkompas/features/payment/presentation/screen/payment_screen.dart';
 import 'package:hollandkompas/features/splash/presentation/pages/splash_page.dart';
