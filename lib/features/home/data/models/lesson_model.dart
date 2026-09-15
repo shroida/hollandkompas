@@ -1,4 +1,4 @@
-import 'package:hollandkompas/features/home/domain/entities/lesson.dart';
+import 'package:hollandkompas/features/lesson/domain/entities/lesson.dart';
 
 class LessonModel extends Lesson {
   const LessonModel({

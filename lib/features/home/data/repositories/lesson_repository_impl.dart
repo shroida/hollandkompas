@@ -1,6 +1,6 @@
 import 'package:hollandkompas/features/home/data/datasource/lesson_remote_data_source.dart';
-import 'package:hollandkompas/features/home/domain/entities/lesson.dart';
 import 'package:hollandkompas/features/home/domain/repositories/lesson_repository.dart';
+import 'package:hollandkompas/features/lesson/domain/entities/lesson.dart';
 
 class LessonRepositoryImpl implements LessonRepository {
   final LessonRemoteDataSource remoteDataSource;

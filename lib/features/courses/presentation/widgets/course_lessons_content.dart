@@ -7,8 +7,8 @@ import 'package:hollandkompas/core/theme/app_colors.dart';
 import 'package:hollandkompas/features/courses/domain/entities/course.dart';
 import 'package:hollandkompas/features/courses/presentation/widgets/course_header.dart';
 import 'package:hollandkompas/features/courses/presentation/widgets/lesson_card.dart';
-import 'package:hollandkompas/features/home/domain/entities/lesson.dart';
 import 'package:hollandkompas/features/home/presentation/providers/lesson_progress_provider.dart';
+import 'package:hollandkompas/features/lesson/domain/entities/lesson.dart';
 
 class CourseLessonsContent extends ConsumerWidget {
   final Course course;
