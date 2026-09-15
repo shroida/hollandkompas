@@ -18,45 +18,28 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authControllerProvider);
-    final user = authState.user;
 
-    // Loading
     if (authState.isLoading) {
       return const _HomeLoading();
     }
 
-    // No authenticated user
+    final user = authState.user;
+
     if (user == null) {
       return const _UserNotFound();
     }
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-
       appBar: AppBarHomeScreen(
         firstName: user.firstName,
         level: user.level.name.toUpperCase(),
-        onMyCourses: () {
-          context.push(RoutePaths.myCourses);
-        },
-        onProfile: () {
-          context.push(RoutePaths.profile);
-        },
-        onSettings: () {
-          context.push(RoutePaths.settings);
-        },
-        onLogout: () {
-          _logout(context, ref);
-        },
+        onMyCourses: () => context.push(RoutePaths.myCourses),
+        onProfile: () => context.push(RoutePaths.profile),
+        onSettings: () => context.push(RoutePaths.settings),
+        onLogout: () => _logout(context, ref),
       ),
-
-      body: user.role == UserRole.admin
-          ? const AdminShell(child: AdminDashboard())
-          : const ResponsiveBuilder(
-              mobile: MobileHomeView(),
-              tablet: TabletHomeView(),
-              desktop: DesktopHomeView(),
-            ),
+      body: _HomeBody(userRole: user.role),
     );
   }
 
@@ -77,6 +60,25 @@ class HomeScreen extends ConsumerWidget {
   }
 }
 
+class _HomeBody extends StatelessWidget {
+  const _HomeBody({required this.userRole});
+
+  final UserRole userRole;
+
+  @override
+  Widget build(BuildContext context) {
+    if (userRole == UserRole.admin) {
+      return const AdminShell(child: AdminDashboard());
+    }
+
+    return const ResponsiveBuilder(
+      mobile: MobileHomeView(),
+      tablet: TabletHomeView(),
+      desktop: DesktopHomeView(),
+    );
+  }
+}
+
 class _HomeLoading extends StatelessWidget {
   const _HomeLoading();
 
@@ -91,6 +93,13 @@ class _UserNotFound extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(body: Center(child: Text('User not found')));
+    return Scaffold(
+      body: Center(
+        child: Text(
+          'User not found',
+          style: Theme.of(context).textTheme.titleMedium,
+        ),
+      ),
+    );
   }
 }
