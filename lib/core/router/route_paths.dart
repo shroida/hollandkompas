@@ -1,17 +1,26 @@
-class RoutePaths {
-  static const home = '/';
+abstract final class RoutePaths {
+  // Root
+  static const splash = '/';
+
+  // Onboarding
+  static const onboarding = '/onboarding';
+
+  // Authentication
   static const login = '/login';
   static const register = '/register';
-  static const profile = '/profile';
-  static const splash = '/splash';
-  static const onboarding = '/onboarding';
   static const forgotPassword = '/forgot-password';
   static const resetPassword = '/reset-password';
-  static const myCourses = '/my-courses';
+
+  // Student
+  static const home = '/home';
+  static const profile = '/profile';
   static const settings = '/settings';
+  static const myCourses = '/my-courses';
   static const courseLessons = '/course-lessons';
-  static const payment = '/payment';
-  static const admin = '/admin';
-  static const totalStudents = '/total-students';
   static const lessonViewer = '/lesson-viewer';
+  static const payment = '/payment';
+
+  // Admin
+  static const admin = '/admin';
+  static const totalStudents = 'total-students';
 }

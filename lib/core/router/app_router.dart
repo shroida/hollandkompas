@@ -19,56 +19,130 @@ import 'package:hollandkompas/features/onboarding/presentation/pages/onboarding_
 import 'package:hollandkompas/features/payment/presentation/screen/payment_screen.dart';
 import 'package:hollandkompas/features/splash/presentation/pages/splash_page.dart';
 
-final appRouter = GoRouter(
+final GoRouter appRouter = GoRouter(
+  initialLocation: RoutePaths.splash,
   routes: [
+    // ---------------------------------------------------------------------------
+    // Splash
+    // ---------------------------------------------------------------------------
     GoRoute(
-      path: '/',
-      builder: (context, state) =>
-          SplashPage(onDone: () => context.go('/onboarding')),
+      path: RoutePaths.splash,
+      builder: (context, state) {
+        return SplashPage(onDone: () => context.go(RoutePaths.onboarding));
+      },
     ),
 
+    // ---------------------------------------------------------------------------
+    // Onboarding
+    // ---------------------------------------------------------------------------
     GoRoute(
       path: RoutePaths.onboarding,
-      builder: (context, state) => const OnboardingScreen(),
+      builder: (context, state) {
+        return const OnboardingScreen();
+      },
     ),
 
-    GoRoute(
-      path: RoutePaths.home,
-      builder: (context, state) => const HomeScreen(),
-    ),
-
+    // ---------------------------------------------------------------------------
+    // Authentication
+    // ---------------------------------------------------------------------------
     GoRoute(
       path: RoutePaths.login,
-      builder: (context, state) => LoginScreen(
-        onLogin: () => context.go(RoutePaths.home),
-        onRegister: () => context.go(RoutePaths.register),
-        onForgot: () => context.push(RoutePaths.forgotPassword),
-      ),
+      builder: (context, state) {
+        return LoginScreen(
+          onLogin: () => context.go(RoutePaths.home),
+          onRegister: () => context.go(RoutePaths.register),
+          onForgot: () => context.push(RoutePaths.forgotPassword),
+        );
+      },
     ),
 
     GoRoute(
       path: RoutePaths.register,
-      builder: (context, state) => RegisterScreen(
-        onLogin: () => context.go(RoutePaths.login),
-        onBack: () => context.pop(),
-      ),
+      builder: (context, state) {
+        return RegisterScreen(
+          onLogin: () => context.go(RoutePaths.login),
+          onBack: context.pop,
+        );
+      },
     ),
 
     GoRoute(
       path: RoutePaths.forgotPassword,
-      builder: (context, state) => ForgotPasswordScreen(
-        onBack: () => context.pop(),
-        onLogin: () => context.go(RoutePaths.login),
-      ),
+      builder: (context, state) {
+        return ForgotPasswordScreen(
+          onBack: context.pop,
+          onLogin: () => context.go(RoutePaths.login),
+        );
+      },
     ),
-    GoRoute(
-      path: RoutePaths.profile,
-      builder: (context, state) => ProfileScreen(),
-    ),
+
     GoRoute(
       path: RoutePaths.resetPassword,
-      builder: (context, state) => const ResetPasswordScreen(),
+      builder: (context, state) {
+        return const ResetPasswordScreen();
+      },
     ),
+
+    // ---------------------------------------------------------------------------
+    // Home
+    // ---------------------------------------------------------------------------
+    GoRoute(
+      path: RoutePaths.home,
+      builder: (context, state) {
+        return const HomeScreen();
+      },
+    ),
+
+    // ---------------------------------------------------------------------------
+    // Student
+    // ---------------------------------------------------------------------------
+    GoRoute(
+      path: RoutePaths.profile,
+      builder: (context, state) {
+        return ProfileScreen();
+      },
+    ),
+
+    GoRoute(
+      path: RoutePaths.settings,
+      name: 'settings',
+      builder: (context, state) {
+        return const SettingsScreen();
+      },
+    ),
+
+    GoRoute(
+      path: RoutePaths.myCourses,
+      name: 'myCourses',
+      builder: (context, state) {
+        return const MyCoursesScreen();
+      },
+    ),
+
+    GoRoute(
+      path: RoutePaths.courseLessons,
+      name: 'courseLessons',
+      builder: (context, state) {
+        final course = state.extra as Course;
+
+        return CourseLessonsScreen(course: course);
+      },
+    ),
+
+    GoRoute(
+      path: RoutePaths.payment,
+      name: 'payment',
+      builder: (context, state) {
+        final course = state.extra as Course;
+
+        return PaymentScreen(
+          courseId: course.id,
+          courseTitle: course.title,
+          price: course.price,
+        );
+      },
+    ),
+
     GoRoute(
       path: RoutePaths.lessonViewer,
       name: 'lessonViewer',
@@ -76,15 +150,10 @@ final appRouter = GoRouter(
         final extra = state.extra as Map<String, dynamic>;
 
         final course = extra['course'] as Course;
-
         final lesson = extra['lesson'] as Lesson;
-
         final lessons = (extra['lessons'] as List).cast<Lesson>();
-
         final currentIndex = extra['currentIndex'] as int;
-
         final isEnrolled = extra['isEnrolled'] as bool;
-
         final totalLessons = extra['totalLessons'] as int;
 
         return LessonViewerScreen(
@@ -97,95 +166,29 @@ final appRouter = GoRouter(
         );
       },
     ),
-    GoRoute(
-      path: RoutePaths.myCourses,
-      name: 'myCourses',
-      builder: (context, state) {
-        return const MyCoursesScreen();
-      },
-    ),
-    GoRoute(
-      path: RoutePaths.settings,
-      name: 'settings',
-      builder: (context, state) {
-        return const SettingsScreen();
-      },
-    ),
 
-    GoRoute(
-      path: RoutePaths.courseLessons,
-      name: 'courseLessons',
-      builder: (context, state) {
-        final extra = state.extra as Map<String, dynamic>;
-
-        final course = extra['course'] as Course;
-
-        return CourseLessonsScreen(course: course);
-      },
-    ),
-    GoRoute(
-      path: RoutePaths.payment,
-      name: 'payment',
-      builder: (context, state) {
-        final extra = state.extra as Map<String, dynamic>;
-
-        final course = extra['course'] as Course;
-
-        return PaymentScreen(
-          courseId: course.id,
-          courseTitle: course.title,
-          price: course.price,
-        );
-      },
-    ),
-
-    GoRoute(
-      path: RoutePaths.admin,
-      builder: (context, state) {
-        return const AdminShell(child: AdminDashboard());
+    // ---------------------------------------------------------------------------
+    // Admin
+    // ---------------------------------------------------------------------------
+    ShellRoute(
+      builder: (context, state, child) {
+        return AdminShell(child: child);
       },
       routes: [
         GoRoute(
-          path: RoutePaths.totalStudents,
+          path: RoutePaths.admin,
           builder: (context, state) {
-            return const AdminShell(child: TotalStudentsScreen());
+            return const AdminDashboard();
           },
+          routes: [
+            GoRoute(
+              path: RoutePaths.totalStudents,
+              builder: (context, state) {
+                return const TotalStudentsScreen();
+              },
+            ),
+          ],
         ),
-
-        // GoRoute(
-        //   path: 'courses',
-        //   builder: (context, state) {
-        //     return const AdminShell(child: AdminCoursesScreen());
-        //   },
-        // ),
-
-        // GoRoute(
-        //   path: 'lessons',
-        //   builder: (context, state) {
-        //     return const AdminShell(child: AdminLessonsScreen());
-        //   },
-        // ),
-
-        // GoRoute(
-        //   path: 'enrollments',
-        //   builder: (context, state) {
-        //     return const AdminShell(child: AdminEnrollmentsScreen());
-        //   },
-        // ),
-
-        // GoRoute(
-        //   path: 'analytics',
-        //   builder: (context, state) {
-        //     return const AdminShell(child: AdminAnalyticsScreen());
-        //   },
-        // ),
-
-        // GoRoute(
-        //   path: 'settings',
-        //   builder: (context, state) {
-        //     return const AdminShell(child: AdminSettingsScreen());
-        //   },
-        // ),
       ],
     ),
   ],

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hollandkompas/core/router/route_paths.dart';
 import 'package:hollandkompas/core/theme/app_colors.dart';
 
 class AdminSidebar extends StatelessWidget {
@@ -50,7 +51,7 @@ class AdminSidebar extends StatelessWidget {
                     collapsed: collapsed,
                     selected: _isCurrentRoute(context, '/home'),
                     onTap: () {
-                      context.go('/home');
+                      context.go(RoutePaths.home);
                       onItemSelected?.call();
                     },
                   ),
