@@ -18,6 +18,12 @@ import 'package:hollandkompas/features/lesson/presentation/screens/lesson_viewer
 import 'package:hollandkompas/features/onboarding/presentation/pages/onboarding_screen.dart';
 import 'package:hollandkompas/features/payment/presentation/screen/payment_screen.dart';
 import 'package:hollandkompas/features/splash/presentation/pages/splash_page.dart';
+import 'package:hollandkompas/features/vocabulary/domain/entities/vocabulary_word.dart';
+import 'package:hollandkompas/features/vocabulary/presentation/screen/pages/favorite_words_screen.dart';
+import 'package:hollandkompas/features/vocabulary/presentation/screen/pages/vocabulary_home_screen.dart';
+import 'package:hollandkompas/features/vocabulary/presentation/screen/pages/vocabulary_progress_screen.dart';
+import 'package:hollandkompas/features/vocabulary/presentation/screen/pages/vocabulary_search_screen.dart';
+import 'package:hollandkompas/features/vocabulary/presentation/screen/pages/word_details_screen.dart';
 
 final GoRouter appRouter = GoRouter(
   initialLocation: RoutePaths.splash,
@@ -164,7 +170,29 @@ final GoRouter appRouter = GoRouter(
         );
       },
     ),
-
+    GoRoute(
+      path: '/vocabulary',
+      builder: (context, state) => const VocabularyHomeScreen(),
+    ),
+    GoRoute(
+      path: '/vocabulary/search',
+      builder: (context, state) => const VocabularySearchScreen(),
+    ),
+    GoRoute(
+      path: '/vocabulary/favorites',
+      builder: (context, state) => const FavoriteWordsScreen(),
+    ),
+    GoRoute(
+      path: '/vocabulary/progress',
+      builder: (context, state) => const VocabularyProgressScreen(),
+    ),
+    GoRoute(
+      path: '/vocabulary/word/:id',
+      builder: (context, state) => WordDetailsScreen(
+        wordId: state.pathParameters['id']!,
+        initialWord: state.extra as VocabularyWord?,
+      ),
+    ),
     // ---------------------------------------------------------------------------
     // Admin
     // ---------------------------------------------------------------------------
