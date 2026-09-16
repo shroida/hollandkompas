@@ -7,6 +7,7 @@ import 'package:hollandkompas/features/courses/domain/entities/course.dart';
 import 'package:hollandkompas/features/courses/presentation/widgets/course_card.dart';
 import 'package:hollandkompas/features/home/presentation/views/student/student_courses_view.dart';
 import 'package:hollandkompas/features/home/presentation/widgets/continue_learning_card.dart';
+import 'package:hollandkompas/features/home/presentation/widgets/vocabulary_home_card.dart';
 
 class MobileHomeView extends StudentCoursesView {
   const MobileHomeView({super.key});
@@ -40,7 +41,14 @@ class MobileHomeView extends StudentCoursesView {
           padding: EdgeInsets.symmetric(horizontal: 20),
           sliver: SliverToBoxAdapter(child: ContinueLearningSection()),
         ),
+        const SliverToBoxAdapter(child: SizedBox(height: 16)),
 
+        const SliverPadding(
+          padding: EdgeInsets.symmetric(horizontal: 20),
+          sliver: SliverToBoxAdapter(child: VocabularyHomeCard()),
+        ),
+
+        const SliverToBoxAdapter(child: SizedBox(height: 28)),
         const SliverToBoxAdapter(child: SizedBox(height: 28)),
 
         SliverPadding(
