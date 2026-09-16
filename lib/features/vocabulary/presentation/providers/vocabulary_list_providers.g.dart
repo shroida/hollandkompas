@@ -8,18 +8,12 @@ part of 'vocabulary_list_providers.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
-/// Selected level filter on the Vocabulary Database screen.
-/// `null` = all levels.
 
 @ProviderFor(SelectedVocabularyLevel)
 final selectedVocabularyLevelProvider = SelectedVocabularyLevelProvider._();
 
-/// Selected level filter on the Vocabulary Database screen.
-/// `null` = all levels.
 final class SelectedVocabularyLevelProvider
-    extends $NotifierProvider<SelectedVocabularyLevel, VocabularyLevel?> {
-  /// Selected level filter on the Vocabulary Database screen.
-  /// `null` = all levels.
+    extends $NotifierProvider<SelectedVocabularyLevel, String?> {
   SelectedVocabularyLevelProvider._()
     : super(
         from: null,
@@ -39,31 +33,28 @@ final class SelectedVocabularyLevelProvider
   SelectedVocabularyLevel create() => SelectedVocabularyLevel();
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(VocabularyLevel? value) {
+  Override overrideWithValue(String? value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<VocabularyLevel?>(value),
+      providerOverride: $SyncValueProvider<String?>(value),
     );
   }
 }
 
 String _$selectedVocabularyLevelHash() =>
-    r'd3f904a9277185d3570a10cb246b67a80f8b229b';
+    r'51cbf1c53684b586233047fb1a7d4ec46d1b843a';
 
-/// Selected level filter on the Vocabulary Database screen.
-/// `null` = all levels.
-
-abstract class _$SelectedVocabularyLevel extends $Notifier<VocabularyLevel?> {
-  VocabularyLevel? build();
+abstract class _$SelectedVocabularyLevel extends $Notifier<String?> {
+  String? build();
   @$mustCallSuper
   @override
   void runBuild() {
-    final ref = this.ref as $Ref<VocabularyLevel?, VocabularyLevel?>;
+    final ref = this.ref as $Ref<String?, String?>;
     final element =
         ref.element
             as $ClassProviderElement<
-              AnyNotifier<VocabularyLevel?, VocabularyLevel?>,
-              VocabularyLevel?,
+              AnyNotifier<String?, String?>,
+              String?,
               Object?,
               Object?
             >;
@@ -71,19 +62,12 @@ abstract class _$SelectedVocabularyLevel extends $Notifier<VocabularyLevel?> {
   }
 }
 
-/// Selected topic filter on the Vocabulary Database / Categories screen.
-/// `null` = all categories.
-
 @ProviderFor(SelectedVocabularyCategory)
 final selectedVocabularyCategoryProvider =
     SelectedVocabularyCategoryProvider._();
 
-/// Selected topic filter on the Vocabulary Database / Categories screen.
-/// `null` = all categories.
 final class SelectedVocabularyCategoryProvider
-    extends $NotifierProvider<SelectedVocabularyCategory, VocabularyCategory?> {
-  /// Selected topic filter on the Vocabulary Database / Categories screen.
-  /// `null` = all categories.
+    extends $NotifierProvider<SelectedVocabularyCategory, String?> {
   SelectedVocabularyCategoryProvider._()
     : super(
         from: null,
@@ -103,32 +87,28 @@ final class SelectedVocabularyCategoryProvider
   SelectedVocabularyCategory create() => SelectedVocabularyCategory();
 
   /// {@macro riverpod.override_with_value}
-  Override overrideWithValue(VocabularyCategory? value) {
+  Override overrideWithValue(String? value) {
     return $ProviderOverride(
       origin: this,
-      providerOverride: $SyncValueProvider<VocabularyCategory?>(value),
+      providerOverride: $SyncValueProvider<String?>(value),
     );
   }
 }
 
 String _$selectedVocabularyCategoryHash() =>
-    r'a6a3ad0e6e22c244ebd9aa5ab538efd0ffe84dc1';
+    r'b98b19c77dd1250a45ab2d6fad6eecbf14e543cb';
 
-/// Selected topic filter on the Vocabulary Database / Categories screen.
-/// `null` = all categories.
-
-abstract class _$SelectedVocabularyCategory
-    extends $Notifier<VocabularyCategory?> {
-  VocabularyCategory? build();
+abstract class _$SelectedVocabularyCategory extends $Notifier<String?> {
+  String? build();
   @$mustCallSuper
   @override
   void runBuild() {
-    final ref = this.ref as $Ref<VocabularyCategory?, VocabularyCategory?>;
+    final ref = this.ref as $Ref<String?, String?>;
     final element =
         ref.element
             as $ClassProviderElement<
-              AnyNotifier<VocabularyCategory?, VocabularyCategory?>,
-              VocabularyCategory?,
+              AnyNotifier<String?, String?>,
+              String?,
               Object?,
               Object?
             >;
@@ -136,12 +116,8 @@ abstract class _$SelectedVocabularyCategory
   }
 }
 
-/// Word list for the current filter selection above.
-
 @ProviderFor(vocabularyWords)
 final vocabularyWordsProvider = VocabularyWordsProvider._();
-
-/// Word list for the current filter selection above.
 
 final class VocabularyWordsProvider
     extends
@@ -153,7 +129,6 @@ final class VocabularyWordsProvider
     with
         $FutureModifier<List<VocabularyWord>>,
         $FutureProvider<List<VocabularyWord>> {
-  /// Word list for the current filter selection above.
   VocabularyWordsProvider._()
     : super(
         from: null,
@@ -182,15 +157,11 @@ final class VocabularyWordsProvider
 
 String _$vocabularyWordsHash() => r'a6124cce2094b31e99b8c5487469a5d6cf605bd2';
 
-/// Live text typed into the Vocabulary Search screen.
-
 @ProviderFor(VocabularySearchQuery)
 final vocabularySearchQueryProvider = VocabularySearchQueryProvider._();
 
-/// Live text typed into the Vocabulary Search screen.
 final class VocabularySearchQueryProvider
     extends $NotifierProvider<VocabularySearchQuery, String> {
-  /// Live text typed into the Vocabulary Search screen.
   VocabularySearchQueryProvider._()
     : super(
         from: null,
@@ -219,9 +190,7 @@ final class VocabularySearchQueryProvider
 }
 
 String _$vocabularySearchQueryHash() =>
-    r'92d79c6ad19588227c0d58261818d230982d3b7c';
-
-/// Live text typed into the Vocabulary Search screen.
+    r'610607d1dd7eabb1e6339cc88a8cc8424fcb667e';
 
 abstract class _$VocabularySearchQuery extends $Notifier<String> {
   String build();
@@ -281,14 +250,10 @@ final class VocabularySearchResultsProvider
 }
 
 String _$vocabularySearchResultsHash() =>
-    r'3ba8df3dd1fa698be9a12c4287350fc8897ae326';
-
-/// Today's word of the day.
+    r'd5b310bb58be13004ac163ef4763e6cd2c3415b4';
 
 @ProviderFor(dailyVocabularyWord)
 final dailyVocabularyWordProvider = DailyVocabularyWordProvider._();
-
-/// Today's word of the day.
 
 final class DailyVocabularyWordProvider
     extends
@@ -298,7 +263,6 @@ final class DailyVocabularyWordProvider
           FutureOr<VocabularyWord>
         >
     with $FutureModifier<VocabularyWord>, $FutureProvider<VocabularyWord> {
-  /// Today's word of the day.
   DailyVocabularyWordProvider._()
     : super(
         from: null,
@@ -328,14 +292,8 @@ final class DailyVocabularyWordProvider
 String _$dailyVocabularyWordHash() =>
     r'2998bb5ea4ca971abc5f07819b21a2a8a7af373c';
 
-/// A single word by id, kept live so the details screen reflects
-/// favorite/progress changes without a manual refresh.
-
 @ProviderFor(vocabularyWordById)
 final vocabularyWordByIdProvider = VocabularyWordByIdFamily._();
-
-/// A single word by id, kept live so the details screen reflects
-/// favorite/progress changes without a manual refresh.
 
 final class VocabularyWordByIdProvider
     extends
@@ -345,8 +303,6 @@ final class VocabularyWordByIdProvider
           FutureOr<VocabularyWord>
         >
     with $FutureModifier<VocabularyWord>, $FutureProvider<VocabularyWord> {
-  /// A single word by id, kept live so the details screen reflects
-  /// favorite/progress changes without a manual refresh.
   VocabularyWordByIdProvider._({
     required VocabularyWordByIdFamily super.from,
     required String super.argument,
@@ -394,9 +350,6 @@ final class VocabularyWordByIdProvider
 String _$vocabularyWordByIdHash() =>
     r'04674ad4d36960e296be2001afe6269699af1dd6';
 
-/// A single word by id, kept live so the details screen reflects
-/// favorite/progress changes without a manual refresh.
-
 final class VocabularyWordByIdFamily extends $Family
     with $FunctionalFamilyOverride<FutureOr<VocabularyWord>, String> {
   VocabularyWordByIdFamily._()
@@ -407,9 +360,6 @@ final class VocabularyWordByIdFamily extends $Family
         $allTransitiveDependencies: null,
         isAutoDispose: true,
       );
-
-  /// A single word by id, kept live so the details screen reflects
-  /// favorite/progress changes without a manual refresh.
 
   VocabularyWordByIdProvider call(String id) =>
       VocabularyWordByIdProvider._(argument: id, from: this);

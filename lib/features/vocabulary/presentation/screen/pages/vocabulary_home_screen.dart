@@ -52,19 +52,36 @@ class VocabularyHomeScreen extends ConsumerWidget {
               child: dailyWordAsync.when(
                 data: (word) => DailyWordCard(
                   word: word,
-                  onTap: () => context.push('/vocabulary/word/${word.id}', extra: word),
+                  onTap: () =>
+                      context.push('/vocabulary/word/${word.id}', extra: word),
                 ),
                 loading: () => const SizedBox(
                   height: 110,
                   child: Center(child: CircularProgressIndicator()),
                 ),
-                error: (_, __) => const SizedBox.shrink(),
+                error: (_, _) => const SizedBox.shrink(),
               ),
             ),
             const SizedBox(height: 14),
-            const LevelFilterTabs(),
+            LevelFilterTabs(levels: const ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']),
             const SizedBox(height: 10),
-            const CategoryFilterChips(),
+            CategoryFilterChips(
+              categories: const [
+                'verb',
+                'expression',
+                'phone',
+                'grammar',
+                'location',
+                'food',
+                'money',
+                'drink',
+                'question',
+                'pronoun',
+                'family',
+                'weather',
+                'time',
+              ],
+            ),
             const SizedBox(height: 14),
             wordsAsync.when(
               data: (words) {

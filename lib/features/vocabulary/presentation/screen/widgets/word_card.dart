@@ -5,7 +5,6 @@ import 'package:hollandkompas/core/theme/app_colors.dart';
 import '../../../domain/entities/vocabulary_word.dart';
 import '../../providers/vocabulary_user_providers.dart';
 import 'pronunciation_button.dart';
-import 'vocabulary_labels.dart';
 
 class WordCard extends ConsumerWidget {
   const WordCard({super.key, required this.word, required this.onTap});
@@ -32,29 +31,33 @@ class WordCard extends ConsumerWidget {
                     Text(
                       word.dutchWord,
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       word.arabicMeaning,
                       textDirection: TextDirection.rtl,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: AppColors.subtitleColor(context),
-                          ),
+                        color: AppColors.subtitleColor(context),
+                      ),
                     ),
                   ],
                 ),
               ),
               PronunciationButton(text: word.dutchWord, size: 20),
               IconButton(
-                tooltip: 'حفظ الكلمة',
-                onPressed: () => ref
-                    .read(vocabularyActionsProvider.notifier)
-                    .toggleFavorite(word.id, !word.isFavorite),
+                tooltip: word.isFavorite ? 'إزالة من المحفوظات' : 'حفظ الكلمة',
+                onPressed: () {
+                  ref
+                      .read(vocabularyActionsProvider.notifier)
+                      .toggleFavorite(word.id, !word.isFavorite);
+                },
                 icon: Icon(
                   word.isFavorite ? Icons.bookmark : Icons.bookmark_border,
-                  color: word.isFavorite ? AppColors.primary : AppColors.mutedForeground,
+                  color: word.isFavorite
+                      ? AppColors.primary
+                      : AppColors.mutedForeground,
                 ),
               ),
             ],
@@ -68,7 +71,7 @@ class WordCard extends ConsumerWidget {
 class _LevelBadge extends StatelessWidget {
   const _LevelBadge({required this.level});
 
-  final VocabularyLevel level;
+  final String level;
 
   @override
   Widget build(BuildContext context) {
@@ -81,7 +84,7 @@ class _LevelBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(10),
       ),
       child: Text(
-        level.label,
+        level.toUpperCase(),
         style: const TextStyle(
           fontFamily: 'Cairo',
           fontWeight: FontWeight.w700,

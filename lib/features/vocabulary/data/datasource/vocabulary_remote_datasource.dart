@@ -17,7 +17,6 @@ abstract class VocabularyRemoteDataSource {
 
   Future<void> removeFavorite(String userId, String wordId);
 
-  /// wordId -> raw status string ('new' | 'learning' | 'mastered').
   Future<Map<String, String>> getProgressMap(String userId);
 
   Future<void> upsertProgress(String userId, String wordId, String status);
@@ -32,59 +31,123 @@ class VocabularyRemoteDataSourceImpl implements VocabularyRemoteDataSource {
   static const _favoritesTable = 'user_favorite_words';
   static const _progressTable = 'user_vocabulary_progress';
 
+  /*
+   * vocabularies does not contain `level`.
+   *
+   * Current relation:
+   *
+   * vocabularies.lesson_id
+   *       ↓
+   * lessons.course_id
+   *       ↓
+   * courses.level
+   *
+   * This nested select assumes those foreign keys
+   * exist in Supabase.
+   */
+  static const _wordSelect = '''
+    id,
+    lesson_id,
+    word,
+    translation_en,
+    translation_ar,
+    category,
+    created_at,
+    lessons!inner(
+      course_id,
+      courses!inner(
+        level
+      )
+    )
+  ''';
+
+  VocabularyWordModel _mapRow(Map<String, dynamic> row) {
+    final lesson = row['lessons'] as Map<String, dynamic>?;
+
+    final course = lesson?['courses'] as Map<String, dynamic>?;
+
+    final level = course?['level']?.toString() ?? '';
+
+    return VocabularyWordModel.fromJson({...row, 'level': level});
+  }
+
   @override
   Future<List<VocabularyWordModel>> getWords({
     String? level,
     String? category,
   }) async {
-    var query = _client.from(_wordsTable).select();
+    var query = _client.from(_wordsTable).select(_wordSelect);
+
     if (level != null) {
-      query = query.eq('level', level);
+      query = query.eq('lessons.courses.level', level);
     }
+
     if (category != null) {
       query = query.eq('category', category);
     }
-    final rows = await query.order('dutch_word', ascending: true);
+
+    final rows = await query.order('word', ascending: true);
+
     return (rows as List)
-        .map((row) => VocabularyWordModel.fromJson(row as Map<String, dynamic>))
+        .map((row) => _mapRow(Map<String, dynamic>.from(row)))
         .toList();
   }
 
   @override
   Future<List<VocabularyWordModel>> searchWords(String query) async {
-    // Commas would break the .or() filter string below, so strip them.
-    final safeQuery = query.replaceAll(',', ' ');
+    final safeQuery = query.replaceAll(',', ' ').trim();
+
+    if (safeQuery.isEmpty) {
+      return [];
+    }
+
     final rows = await _client
         .from(_wordsTable)
-        .select()
-        .or('dutch_word.ilike.%$safeQuery%,arabic_meaning.ilike.%$safeQuery%')
-        .order('dutch_word', ascending: true);
+        .select(_wordSelect)
+        .or(
+          'word.ilike.%$safeQuery%,'
+          'translation_ar.ilike.%$safeQuery%,'
+          'translation_en.ilike.%$safeQuery%',
+        )
+        .order('word', ascending: true);
+
     return (rows as List)
-        .map((row) => VocabularyWordModel.fromJson(row as Map<String, dynamic>))
+        .map((row) => _mapRow(Map<String, dynamic>.from(row)))
         .toList();
   }
 
   @override
   Future<VocabularyWordModel> getWordById(String id) async {
-    final row = await _client.from(_wordsTable).select().eq('id', id).single();
-    return VocabularyWordModel.fromJson(row);
+    final row = await _client
+        .from(_wordsTable)
+        .select(_wordSelect)
+        .eq('id', id)
+        .single();
+
+    return _mapRow(Map<String, dynamic>.from(row));
   }
 
   @override
   Future<VocabularyWordModel> getDailyWord() async {
-    // No dedicated "daily word" table: the word of the day is derived
-    // deterministically from the current date, so it's the same for
-    // every user and rotates automatically at midnight with no cron
-    // job or extra writes needed.
-    final rows = await _client.from(_wordsTable).select().order('dutch_word');
-    final list = (rows as List).cast<Map<String, dynamic>>();
-    if (list.isEmpty) {
+    final rows = await _client
+        .from(_wordsTable)
+        .select(_wordSelect)
+        .order('word', ascending: true);
+
+    if (rows.isEmpty) {
       throw StateError('No vocabulary words found yet.');
     }
+
+    final list = (rows as List)
+        .map((row) => _mapRow(Map<String, dynamic>.from(row)))
+        .toList();
+
     final now = DateTime.now();
     final dayOfYear = now.difference(DateTime(now.year, 1, 1)).inDays;
+
     final index = dayOfYear % list.length;
-    return VocabularyWordModel.fromJson(list[index]);
+
+    return list[index];
   }
 
   @override
@@ -93,6 +156,7 @@ class VocabularyRemoteDataSourceImpl implements VocabularyRemoteDataSource {
         .from(_favoritesTable)
         .select('word_id')
         .eq('user_id', userId);
+
     return (rows as List).map((row) => row['word_id'] as String).toList();
   }
 
@@ -119,13 +183,19 @@ class VocabularyRemoteDataSourceImpl implements VocabularyRemoteDataSource {
         .from(_progressTable)
         .select('word_id, status')
         .eq('user_id', userId);
+
     return {
-      for (final row in (rows as List)) row['word_id'] as String: row['status'] as String,
+      for (final row in rows as List)
+        row['word_id'] as String: row['status'] as String,
     };
   }
 
   @override
-  Future<void> upsertProgress(String userId, String wordId, String status) async {
+  Future<void> upsertProgress(
+    String userId,
+    String wordId,
+    String status,
+  ) async {
     await _client.from(_progressTable).upsert({
       'user_id': userId,
       'word_id': wordId,

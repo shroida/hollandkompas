@@ -6,7 +6,6 @@ import '../../../domain/entities/vocabulary_word.dart';
 import '../../providers/vocabulary_list_providers.dart';
 import '../../providers/vocabulary_user_providers.dart';
 import '../widgets/pronunciation_button.dart';
-import '../widgets/vocabulary_labels.dart';
 
 class WordDetailsScreen extends ConsumerWidget {
   const WordDetailsScreen({super.key, required this.wordId, this.initialWord});
@@ -39,7 +38,15 @@ class WordDetailsScreen extends ConsumerWidget {
 
         return Scaffold(
           appBar: AppBar(),
-          body: Center(child: Text('حصل خطأ: $error')),
+          body: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Text(
+                'حصل خطأ أثناء تحميل الكلمة:\n$error',
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ),
         );
       },
     );
@@ -55,13 +62,15 @@ class _DetailsBody extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(word.category.labelAr),
+        title: Text(_categoryLabel(word.category)),
         actions: [
           IconButton(
-            tooltip: 'حفظ الكلمة',
-            onPressed: () => ref
-                .read(vocabularyActionsProvider.notifier)
-                .toggleFavorite(word.id, !word.isFavorite),
+            tooltip: word.isFavorite ? 'إزالة من المحفوظات' : 'حفظ الكلمة',
+            onPressed: () {
+              ref
+                  .read(vocabularyActionsProvider.notifier)
+                  .toggleFavorite(word.id, !word.isFavorite);
+            },
             icon: Icon(
               word.isFavorite ? Icons.bookmark : Icons.bookmark_border,
               color: word.isFavorite ? AppColors.primary : null,
@@ -72,94 +81,49 @@ class _DetailsBody extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.all(18),
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  word.dutchWord,
-                  style: Theme.of(context).textTheme.headlineLarge,
-                ),
-              ),
-              PronunciationButton(text: word.dutchWord, size: 30),
-            ],
-          ),
-          if (word.pronunciation != null) ...[
-            const SizedBox(height: 4),
-            Text(
-              word.pronunciation!,
-              style: TextStyle(
-                fontFamily: 'Cairo',
-                color: AppColors.subtitleColor(context),
-              ),
-            ),
-          ],
-          const SizedBox(height: 10),
+          _WordHeader(word: word),
+
+          const SizedBox(height: 20),
+
           Wrap(
             spacing: 8,
+            runSpacing: 8,
             children: [
-              Chip(label: Text(word.level.label)),
-              Chip(
-                avatar: Icon(word.category.icon, size: 16),
-                label: Text(word.category.labelAr),
-              ),
+              if (word.level.isNotEmpty)
+                Chip(
+                  avatar: const Icon(Icons.school_outlined, size: 16),
+                  label: Text(word.level.toUpperCase()),
+                ),
+              if (word.category.isNotEmpty)
+                Chip(
+                  avatar: const Icon(Icons.category_outlined, size: 16),
+                  label: Text(_categoryLabel(word.category)),
+                ),
             ],
           ),
+
           const Divider(height: 32),
-          _MeaningRow(label: 'المعنى بالعربي', value: word.arabicMeaning),
-          if (word.germanMeaning != null)
-            _MeaningRow(label: 'بالألماني', value: word.germanMeaning!),
-          if (word.exampleSentenceDutch != null) ...[
-            const SizedBox(height: 18),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: AppColors.accent,
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          word.exampleSentenceDutch!,
-                          style: const TextStyle(
-                            fontFamily: 'Cairo',
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                      PronunciationButton(text: word.exampleSentenceDutch!),
-                    ],
-                  ),
-                  if (word.exampleSentenceArabic != null) ...[
-                    const SizedBox(height: 6),
-                    Text(
-                      word.exampleSentenceArabic!,
-                      textDirection: TextDirection.rtl,
-                      style: TextStyle(color: AppColors.subtitleColor(context)),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ],
-          if (word.synonyms.isNotEmpty) ...[
-            const SizedBox(height: 18),
-            _WordChipsSection(title: 'مرادفات', words: word.synonyms),
-          ],
-          if (word.antonyms.isNotEmpty) ...[
-            const SizedBox(height: 14),
-            _WordChipsSection(title: 'أضداد', words: word.antonyms),
-          ],
-          const SizedBox(height: 26),
-          Text(
-            'تقدمك في الكلمة دي',
-            style: Theme.of(context).textTheme.bodyLarge,
+
+          _MeaningRow(
+            label: 'المعنى بالعربي',
+            value: word.arabicMeaning,
+            textDirection: TextDirection.rtl,
           ),
+
+          if (word.englishMeaning != null &&
+              word.englishMeaning!.trim().isNotEmpty)
+            _MeaningRow(
+              label: 'المعنى بالإنجليزية',
+              value: word.englishMeaning!,
+              textDirection: TextDirection.ltr,
+            ),
+
+          const SizedBox(height: 26),
+
+          Text('تقدمك في الكلمة', style: Theme.of(context).textTheme.bodyLarge),
+
           const SizedBox(height: 10),
+
           _ProgressSelector(word: word),
         ],
       ),
@@ -167,16 +131,44 @@ class _DetailsBody extends ConsumerWidget {
   }
 }
 
+class _WordHeader extends StatelessWidget {
+  const _WordHeader({required this.word});
+
+  final VocabularyWord word;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Expanded(
+          child: Text(
+            word.dutchWord,
+            style: Theme.of(context).textTheme.headlineLarge,
+          ),
+        ),
+        const SizedBox(width: 12),
+        PronunciationButton(text: word.dutchWord, size: 30),
+      ],
+    );
+  }
+}
+
 class _MeaningRow extends StatelessWidget {
-  const _MeaningRow({required this.label, required this.value});
+  const _MeaningRow({
+    required this.label,
+    required this.value,
+    required this.textDirection,
+  });
 
   final String label;
   final String value;
+  final TextDirection textDirection;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.only(bottom: 14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -187,37 +179,14 @@ class _MeaningRow extends StatelessWidget {
               color: AppColors.subtitleColor(context),
             ),
           ),
-          const SizedBox(height: 2),
+          const SizedBox(height: 4),
           Text(
             value,
-            textDirection: TextDirection.rtl,
+            textDirection: textDirection,
             style: Theme.of(context).textTheme.bodyLarge,
           ),
         ],
       ),
-    );
-  }
-}
-
-class _WordChipsSection extends StatelessWidget {
-  const _WordChipsSection({required this.title, required this.words});
-
-  final String title;
-  final List<String> words;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(title, style: Theme.of(context).textTheme.bodyMedium),
-        const SizedBox(height: 8),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [for (final w in words) Chip(label: Text(w))],
-        ),
-      ],
     );
   }
 }
@@ -236,22 +205,24 @@ class _ProgressSelector extends ConsumerWidget {
             child: Padding(
               padding: const EdgeInsets.only(left: 8),
               child: OutlinedButton(
-                onPressed: () => ref
-                    .read(vocabularyActionsProvider.notifier)
-                    .updateProgress(word.id, status),
+                onPressed: () {
+                  ref
+                      .read(vocabularyActionsProvider.notifier)
+                      .updateProgress(word.id, status);
+                },
                 style: OutlinedButton.styleFrom(
                   backgroundColor: word.progressStatus == status
-                      ? status.color()
+                      ? _progressColor(status)
                       : null,
-                  side: BorderSide(color: status.color()),
+                  side: BorderSide(color: _progressColor(status)),
                 ),
                 child: Text(
-                  status.labelAr,
+                  _progressLabel(status),
                   style: TextStyle(
                     fontFamily: 'Cairo',
                     color: word.progressStatus == status
                         ? Colors.white
-                        : status.color(),
+                        : _progressColor(status),
                   ),
                 ),
               ),
@@ -259,5 +230,77 @@ class _ProgressSelector extends ConsumerWidget {
           ),
       ],
     );
+  }
+}
+
+Color _progressColor(VocabularyProgressStatus status) {
+  switch (status) {
+    case VocabularyProgressStatus.newWord:
+      return Colors.grey;
+
+    case VocabularyProgressStatus.learning:
+      return Colors.orange;
+
+    case VocabularyProgressStatus.mastered:
+      return Colors.green;
+  }
+}
+
+String _progressLabel(VocabularyProgressStatus status) {
+  switch (status) {
+    case VocabularyProgressStatus.newWord:
+      return 'جديدة';
+
+    case VocabularyProgressStatus.learning:
+      return 'بتعلمها';
+
+    case VocabularyProgressStatus.mastered:
+      return 'متقنها';
+  }
+}
+
+String _categoryLabel(String category) {
+  switch (category.toLowerCase()) {
+    case 'verb':
+      return 'فعل';
+
+    case 'expression':
+      return 'تعبير';
+
+    case 'phone':
+      return 'هاتف';
+
+    case 'grammar':
+      return 'قواعد';
+
+    case 'location':
+      return 'مكان';
+
+    case 'food':
+      return 'طعام';
+
+    case 'money':
+      return 'مال';
+
+    case 'drink':
+      return 'مشروبات';
+
+    case 'question':
+      return 'سؤال';
+
+    case 'pronoun':
+      return 'ضمير';
+
+    case 'family':
+      return 'العائلة';
+
+    case 'weather':
+      return 'الطقس';
+
+    case 'time':
+      return 'الوقت';
+
+    default:
+      return category;
   }
 }

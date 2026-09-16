@@ -6,10 +6,7 @@ class GetVocabularyWordsUseCase {
 
   final VocabularyRepository _repository;
 
-  Future<List<VocabularyWord>> call({
-    VocabularyLevel? level,
-    VocabularyCategory? category,
-  }) {
+  Future<List<VocabularyWord>> call({String? level, String? category}) {
     return _repository.getWords(level: level, category: category);
   }
 }

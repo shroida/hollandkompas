@@ -42,8 +42,8 @@ class VocabularyRepositoryImpl implements VocabularyRepository {
 
   @override
   Future<List<VocabularyWord>> getWords({
-    VocabularyLevel? level,
-    VocabularyCategory? category,
+    String? level,
+    String? category,
   }) async {
     // Only the unfiltered "browse everything" call is cached — it's the
     // one the home screen opens with, and the one worth having offline.
@@ -61,10 +61,7 @@ class VocabularyRepositoryImpl implements VocabularyRepository {
       }
     }
 
-    final models = await _remote.getWords(
-      level: level?.name,
-      category: category?.dbValue,
-    );
+    final models = await _remote.getWords(level: level, category: category);
     return _attachUserState(models);
   }
 
