@@ -20,6 +20,7 @@ import 'package:hollandkompas/features/payment/presentation/screen/payment_scree
 import 'package:hollandkompas/features/splash/presentation/pages/splash_page.dart';
 import 'package:hollandkompas/features/vocabulary/domain/entities/vocabulary_word.dart';
 import 'package:hollandkompas/features/vocabulary/presentation/screen/pages/favorite_words_screen.dart';
+import 'package:hollandkompas/features/vocabulary/presentation/screen/pages/lesson_vocabulary_screen.dart';
 import 'package:hollandkompas/features/vocabulary/presentation/screen/pages/vocabulary_home_screen.dart';
 import 'package:hollandkompas/features/vocabulary/presentation/screen/pages/vocabulary_progress_screen.dart';
 import 'package:hollandkompas/features/vocabulary/presentation/screen/pages/vocabulary_search_screen.dart';
@@ -168,6 +169,14 @@ final GoRouter appRouter = GoRouter(
           isEnrolled: isEnrolled,
           totalLessons: totalLessons,
         );
+      },
+    ),
+    GoRoute(
+      path: '/lesson-vocabulary',
+      builder: (context, state) {
+        final lesson = state.extra as Lesson;
+
+        return LessonVocabularyScreen(lesson: lesson);
       },
     ),
     GoRoute(

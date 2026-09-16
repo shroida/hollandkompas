@@ -18,6 +18,7 @@ import 'package:hollandkompas/features/lesson/presentation/widgets/lessons%20vie
 import 'package:hollandkompas/features/lesson/presentation/widgets/lessons%20viewers/locked_video.dart';
 import 'package:hollandkompas/features/lesson/presentation/widgets/next_lesson_card.dart';
 import 'package:hollandkompas/features/lesson/presentation/widgets/secure_video_player.dart';
+import 'package:hollandkompas/features/vocabulary/presentation/screen/widgets/lesson_vocabulary_button.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class LessonViewerScreen extends ConsumerStatefulWidget {
@@ -461,6 +462,8 @@ class _LessonViewerScreenState extends ConsumerState<LessonViewerScreen>
     return Column(
       children: [
         const ContinueLearningCard(),
+        const SizedBox(height: 16),
+        LessonVocabularyButton(lesson: widget.lesson),
         const SizedBox(height: 16),
         _buildCompletionButton(),
         _buildNextLessonPanel(),
