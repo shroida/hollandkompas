@@ -265,9 +265,6 @@ class _LessonVocabularyScreenState extends State<LessonVocabularyScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
     return Scaffold(
       backgroundColor: AppColors.backgroundColor(context),
       appBar: AppBar(
