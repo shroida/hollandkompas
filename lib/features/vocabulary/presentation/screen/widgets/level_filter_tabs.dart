@@ -14,54 +14,151 @@ class LevelFilterTabs extends ConsumerWidget {
     final selected = ref.watch(selectedVocabularyLevelProvider);
 
     return SizedBox(
-      height: 44,
-      child: ListView(
+      height: 48,
+      child: ListView.separated(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        children: [
-          _buildChip(ref: ref, label: 'الكل', level: null, selected: selected),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        physics: const BouncingScrollPhysics(),
+        itemCount: levels.length + 1,
+        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        itemBuilder: (context, index) {
+          if (index == 0) {
+            return _LevelItem(
+              label: 'الكل',
+              level: null,
+              selected: selected == null,
+              onTap: () {
+                ref.read(selectedVocabularyLevelProvider.notifier).set(null);
+              },
+            );
+          }
 
-          for (final level in levels)
-            _buildChip(
-              ref: ref,
-              label: _levelLabel(level),
-              level: level,
-              selected: selected,
-            ),
-        ],
+          final level = levels[index - 1];
+
+          return _LevelItem(
+            label: _levelLabel(level),
+            level: level,
+            selected: selected == level,
+            onTap: () {
+              ref.read(selectedVocabularyLevelProvider.notifier).set(level);
+            },
+          );
+        },
       ),
     );
   }
+}
 
-  Widget _buildChip({
-    required WidgetRef ref,
-    required String label,
-    required String? level,
-    required String? selected,
-  }) {
-    final isSelected = selected == level;
+class _LevelItem extends StatelessWidget {
+  const _LevelItem({
+    required this.label,
+    required this.level,
+    required this.selected,
+    required this.onTap,
+  });
 
-    return Padding(
-      padding: const EdgeInsets.only(left: 8),
-      child: ChoiceChip(
-        label: Text(label),
-        selected: isSelected,
-        onSelected: (_) {
-          ref.read(selectedVocabularyLevelProvider.notifier).set(level);
-        },
-        selectedColor: AppColors.primary,
-        labelStyle: TextStyle(
-          fontFamily: 'Cairo',
-          fontWeight: FontWeight.w600,
-          color: isSelected ? Colors.white : AppColors.foreground,
+  final String label;
+  final String? level;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = _levelColor(level);
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 180),
+      curve: Curves.easeOutCubic,
+      decoration: BoxDecoration(
+        color: selected ? AppColors.primary : AppColors.cardColor(context),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: selected ? AppColors.primary : AppColors.borderColor(context),
         ),
-        backgroundColor: AppColors.muted,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-          side: BorderSide.none,
+        boxShadow: selected
+            ? [
+                BoxShadow(
+                  color: AppColors.primary.withValues(alpha: 0.18),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ]
+            : null,
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 9),
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 160),
+              transitionBuilder: (child, animation) {
+                return FadeTransition(
+                  opacity: animation,
+                  child: ScaleTransition(
+                    scale: Tween<double>(
+                      begin: 0.94,
+                      end: 1,
+                    ).animate(animation),
+                    child: child,
+                  ),
+                );
+              },
+              child: Row(
+                key: ValueKey(selected),
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (selected) ...[
+                    const Icon(
+                      Icons.check_rounded,
+                      size: 17,
+                      color: Colors.white,
+                    ),
+                    const SizedBox(width: 5),
+                  ],
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontFamily: 'Cairo',
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: selected ? Colors.white : color,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ),
       ),
     );
+  }
+}
+
+Color _levelColor(String? level) {
+  switch (level?.toLowerCase()) {
+    case 'a1':
+      return AppColors.secondary;
+
+    case 'a2':
+      return const Color(0xFF2563EB);
+
+    case 'b1':
+      return const Color(0xFF0891B2);
+
+    case 'b2':
+      return const Color(0xFF0D9488);
+
+    case 'c1':
+      return const Color(0xFF7C3AED);
+
+    case 'c2':
+      return const Color(0xFF9333EA);
+
+    default:
+      return AppColors.darkBackground;
   }
 }
 

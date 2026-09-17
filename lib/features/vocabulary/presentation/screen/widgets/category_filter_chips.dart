@@ -14,114 +14,183 @@ class CategoryFilterChips extends ConsumerWidget {
     final selected = ref.watch(selectedVocabularyCategoryProvider);
 
     return SizedBox(
-      height: 40,
-      child: ListView(
+      height: 52,
+      child: ListView.separated(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        children: [
-          _buildChip(
-            context: context,
-            ref: ref,
-            label: 'كل الموضوعات',
-            category: null,
-            selected: selected,
-          ),
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        physics: const BouncingScrollPhysics(),
+        itemCount: categories.length + 1,
+        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        itemBuilder: (context, index) {
+          if (index == 0) {
+            return _CategoryItem(
+              label: 'كل الموضوعات',
+              category: null,
+              selected: selected == null,
+              onTap: () {
+                ref.read(selectedVocabularyCategoryProvider.notifier).set(null);
+              },
+            );
+          }
 
-          for (final category in categories)
-            _buildChip(
-              context: context,
-              ref: ref,
-              label: _categoryLabel(category),
-              category: category,
-              selected: selected,
-            ),
-        ],
+          final category = categories[index - 1];
+
+          return _CategoryItem(
+            label: _categoryLabel(category),
+            category: category,
+            selected: selected == category,
+            onTap: () {
+              ref
+                  .read(selectedVocabularyCategoryProvider.notifier)
+                  .set(category);
+            },
+          );
+        },
       ),
     );
   }
+}
 
-  Widget _buildChip({
-    required BuildContext context,
-    required WidgetRef ref,
-    required String label,
-    required String? category,
-    required String? selected,
-  }) {
-    final isSelected = selected == category;
+class _CategoryItem extends StatelessWidget {
+  const _CategoryItem({
+    required this.label,
+    required this.category,
+    required this.selected,
+    required this.onTap,
+  });
 
-    return Padding(
-      padding: const EdgeInsets.only(left: 8),
-      child: FilterChip(
-        avatar: category == null
-            ? null
-            : Icon(
-                _categoryIcon(category),
-                size: 16,
-                color: isSelected ? Colors.white : AppColors.primary,
-              ),
-        label: Text(label),
-        selected: isSelected,
-        onSelected: (_) {
-          ref.read(selectedVocabularyCategoryProvider.notifier).set(category);
-        },
-        selectedColor: AppColors.secondary,
-        backgroundColor: AppColors.muted,
-        labelStyle: TextStyle(
-          fontFamily: 'Cairo',
-          color: isSelected ? Colors.white : AppColors.foreground,
+  final String label;
+  final String? category;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final categoryColor = _categoryColor(category);
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 180),
+      curve: Curves.easeOutCubic,
+      decoration: BoxDecoration(
+        color: selected ? AppColors.primary : AppColors.cardColor(context),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: selected ? AppColors.primary : AppColors.borderColor(context),
         ),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-          side: BorderSide.none,
+        boxShadow: selected
+            ? [
+                BoxShadow(
+                  color: AppColors.primary.withValues(alpha: 0.18),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ]
+            : null,
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 9),
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 160),
+              transitionBuilder: (child, animation) {
+                return FadeTransition(
+                  opacity: animation,
+                  child: ScaleTransition(
+                    scale: Tween<double>(
+                      begin: 0.94,
+                      end: 1,
+                    ).animate(animation),
+                    child: child,
+                  ),
+                );
+              },
+              child: Row(
+                key: ValueKey('$category-$selected'),
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (selected)
+                    const Icon(
+                      Icons.check_rounded,
+                      size: 17,
+                      color: Colors.white,
+                    )
+                  else
+                    Icon(
+                      category == null
+                          ? Icons.apps_rounded
+                          : _categoryIcon(category!),
+                      size: 17,
+                      color: categoryColor,
+                    ),
+                  const SizedBox(width: 6),
+                  Text(
+                    label,
+                    style: TextStyle(
+                      fontFamily: 'Cairo',
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w700,
+                      color: selected
+                          ? Colors.white
+                          : AppColors.textColor(context),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ),
       ),
     );
   }
 }
 
-String _categoryLabel(String category) {
-  switch (category.toLowerCase()) {
+Color _categoryColor(String? category) {
+  switch (category?.toLowerCase()) {
     case 'verb':
-      return 'أفعال';
+      return const Color(0xFF2563EB);
 
     case 'expression':
-      return 'تعبيرات';
+      return const Color(0xFF7C3AED);
 
     case 'phone':
-      return 'هاتف';
+      return const Color(0xFF0891B2);
 
     case 'grammar':
-      return 'قواعد';
+      return AppColors.secondary;
 
     case 'location':
-      return 'أماكن';
+      return const Color(0xFF059669);
 
     case 'food':
-      return 'طعام';
+      return const Color(0xFFEA580C);
 
     case 'money':
-      return 'مال';
+      return const Color(0xFF16A34A);
 
     case 'drink':
-      return 'مشروبات';
+      return const Color(0xFF0284C7);
 
     case 'question':
-      return 'أسئلة';
+      return const Color(0xFF9333EA);
 
     case 'pronoun':
-      return 'ضمائر';
+      return const Color(0xFFDB2777);
 
     case 'family':
-      return 'العائلة';
+      return const Color(0xFFE11D48);
 
     case 'weather':
-      return 'الطقس';
+      return const Color(0xFF0EA5E9);
 
     case 'time':
-      return 'الوقت';
+      return const Color(0xFF6366F1);
 
     default:
-      return category;
+      return AppColors.primary;
   }
 }
 
@@ -168,5 +237,51 @@ IconData _categoryIcon(String category) {
 
     default:
       return Icons.category_outlined;
+  }
+}
+
+String _categoryLabel(String category) {
+  switch (category.toLowerCase()) {
+    case 'verb':
+      return 'أفعال';
+
+    case 'expression':
+      return 'تعبيرات';
+
+    case 'phone':
+      return 'هاتف';
+
+    case 'grammar':
+      return 'قواعد';
+
+    case 'location':
+      return 'أماكن';
+
+    case 'food':
+      return 'طعام';
+
+    case 'money':
+      return 'مال';
+
+    case 'drink':
+      return 'مشروبات';
+
+    case 'question':
+      return 'أسئلة';
+
+    case 'pronoun':
+      return 'ضمائر';
+
+    case 'family':
+      return 'العائلة';
+
+    case 'weather':
+      return 'الطقس';
+
+    case 'time':
+      return 'الوقت';
+
+    default:
+      return category;
   }
 }
