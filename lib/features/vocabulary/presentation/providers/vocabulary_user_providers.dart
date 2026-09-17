@@ -43,12 +43,15 @@ class VocabularyActions extends _$VocabularyActions {
 
       await usecase(wordId, isFavorite);
 
+      if (!ref.mounted) return;
+
       ref.invalidate(favoriteVocabularyWordsProvider);
       ref.invalidate(vocabularyWordsProvider);
       ref.invalidate(vocabularyWordByIdProvider(wordId));
     } catch (error, stackTrace) {
-      debugPrint('[VOCAB-ACTION] toggleFavorite ERROR: $error');
+      if (!ref.mounted) return;
 
+      debugPrint('[VOCAB-ACTION] toggleFavorite ERROR: $error');
       debugPrintStack(stackTrace: stackTrace);
 
       rethrow;
@@ -72,6 +75,8 @@ class VocabularyActions extends _$VocabularyActions {
 
       await usecase(wordId, status);
 
+      if (!ref.mounted) return;
+
       debugPrint(
         '[VOCAB-PROGRESS] SUCCESS '
         'wordId=$wordId '
@@ -82,6 +87,8 @@ class VocabularyActions extends _$VocabularyActions {
       ref.invalidate(vocabularyWordsProvider);
       ref.invalidate(vocabularyWordByIdProvider(wordId));
     } catch (error, stackTrace) {
+      if (!ref.mounted) return;
+
       debugPrint(
         '[VOCAB-PROGRESS] ERROR '
         'wordId=$wordId '

@@ -61,7 +61,6 @@ class VocabularyHomeScreen extends ConsumerWidget {
           _log('MANUAL REFRESH START');
 
           ref.invalidate(vocabularyWordsProvider);
-
           ref.invalidate(dailyVocabularyWordProvider);
 
           try {
@@ -76,159 +75,156 @@ class VocabularyHomeScreen extends ConsumerWidget {
             rethrow;
           }
         },
-        child: ListView(
-          padding: const EdgeInsets.only(bottom: 24),
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-              child: dailyWordAsync.when(
-                data: (word) {
-                  _log('DAILY WORD DATA: ${word.dutchWord}');
-
-                  return DailyWordCard(
-                    word: word,
-                    onTap: () {
-                      context.push(RoutePaths.vocabularyWord, extra: word);
-                    },
-                  );
-                },
-                loading: () {
-                  _log('DAILY WORD LOADING');
-
-                  return const SizedBox(
-                    height: 110,
-                    child: Center(child: CircularProgressIndicator()),
-                  );
-                },
-                error: (error, stackTrace) {
-                  _log('DAILY WORD ERROR: $error');
-
-                  debugPrintStack(stackTrace: stackTrace);
-
-                  return Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      children: [
-                        const Icon(Icons.error_outline, size: 40),
-                        const SizedBox(height: 8),
-                        const Text(
-                          'خطأ في تحميل كلمة اليوم',
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 8),
-                        Text('$error', textAlign: TextAlign.center),
-                      ],
-                    ),
-                  );
-                },
+        child: CustomScrollView(
+          physics: const AlwaysScrollableScrollPhysics(
+            parent: BouncingScrollPhysics(),
+          ),
+          slivers: [
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                child: dailyWordAsync.when(
+                  data: (word) {
+                    return DailyWordCard(
+                      word: word,
+                      onTap: () {
+                        context.push(RoutePaths.vocabularyWord, extra: word);
+                      },
+                    );
+                  },
+                  loading: () {
+                    return const SizedBox(
+                      height: 110,
+                      child: Center(child: CircularProgressIndicator()),
+                    );
+                  },
+                  error: (error, stackTrace) {
+                    return Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        children: [
+                          const Icon(Icons.error_outline, size: 40),
+                          const SizedBox(height: 8),
+                          const Text(
+                            'خطأ في تحميل كلمة اليوم',
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 8),
+                          Text('$error', textAlign: TextAlign.center),
+                        ],
+                      ),
+                    );
+                  },
+                ),
               ),
             ),
 
-            const SizedBox(height: 14),
+            const SliverToBoxAdapter(child: SizedBox(height: 14)),
 
-            LevelFilterTabs(levels: const ['A1', 'A2', 'B1', 'B2', 'C1', 'C2']),
-
-            const SizedBox(height: 10),
-
-            CategoryFilterChips(
-              categories: const [
-                'verb',
-                'expression',
-                'phone',
-                'grammar',
-                'location',
-                'food',
-                'money',
-                'drink',
-                'question',
-                'pronoun',
-                'family',
-                'weather',
-                'time',
-              ],
+            const SliverToBoxAdapter(
+              child: LevelFilterTabs(
+                levels: ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'],
+              ),
             ),
 
-            const SizedBox(height: 14),
+            const SliverToBoxAdapter(child: SizedBox(height: 10)),
+
+            const SliverToBoxAdapter(
+              child: CategoryFilterChips(
+                categories: [
+                  'verb',
+                  'expression',
+                  'phone',
+                  'grammar',
+                  'location',
+                  'food',
+                  'money',
+                  'drink',
+                  'question',
+                  'pronoun',
+                  'family',
+                  'weather',
+                  'time',
+                ],
+              ),
+            ),
+
+            const SliverToBoxAdapter(child: SizedBox(height: 14)),
 
             wordsAsync.when(
               data: (words) {
-                _log('WORDS DATA: ${words.length} words');
-
-                if (words.isNotEmpty) {
-                  _log(
-                    'FIRST WORD: '
-                    '${words.first.dutchWord} | '
-                    'level=${words.first.level} | '
-                    'category=${words.first.category}',
-                  );
-                }
-
                 if (words.isEmpty) {
-                  return const Padding(
-                    padding: EdgeInsets.all(32),
-                    child: Center(child: Text('مفيش كلمات في القسم ده لسه')),
+                  return const SliverToBoxAdapter(
+                    child: Padding(
+                      padding: EdgeInsets.all(32),
+                      child: Center(child: Text('مفيش كلمات في القسم ده لسه')),
+                    ),
                   );
                 }
 
-                return Padding(
+                return SliverPadding(
                   padding: const EdgeInsets.symmetric(horizontal: 12),
-                  child: Column(
-                    children: [
-                      for (final word in words)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 8),
-                          child: WordCard(
-                            word: word,
-                            onTap: () {
-                              context.push(
-                                '/vocabulary/word/${word.id}',
-                                extra: word,
-                              );
-                            },
-                          ),
+                  sliver: SliverList.builder(
+                    itemCount: words.length,
+                    itemBuilder: (context, index) {
+                      final word = words[index];
+
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: WordCard(
+                          word: word,
+                          onTap: () {
+                            context.push(
+                              '/vocabulary/word/${word.id}',
+                              extra: word,
+                            );
+                          },
                         ),
-                    ],
+                      );
+                    },
                   ),
                 );
               },
-              loading: () {
-                _log('WORDS LOADING');
 
-                return const Padding(
-                  padding: EdgeInsets.all(32),
-                  child: Center(child: CircularProgressIndicator()),
+              loading: () {
+                return const SliverToBoxAdapter(
+                  child: Padding(
+                    padding: EdgeInsets.all(32),
+                    child: Center(child: CircularProgressIndicator()),
+                  ),
                 );
               },
+
               error: (error, stackTrace) {
-                _log('WORDS ERROR: $error');
-
-                debugPrintStack(stackTrace: stackTrace);
-
-                return Padding(
-                  padding: const EdgeInsets.all(32),
-                  child: Column(
-                    children: [
-                      const Icon(Icons.error_outline, size: 48),
-                      const SizedBox(height: 12),
-                      const Text(
-                        'خطأ في تحميل الكلمات',
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 12),
-                      SelectableText('$error', textAlign: TextAlign.center),
-                      const SizedBox(height: 12),
-                      OutlinedButton.icon(
-                        onPressed: () {
-                          ref.invalidate(vocabularyWordsProvider);
-                        },
-                        icon: const Icon(Icons.refresh),
-                        label: const Text('إعادة المحاولة'),
-                      ),
-                    ],
+                return SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.all(32),
+                    child: Column(
+                      children: [
+                        const Icon(Icons.error_outline, size: 48),
+                        const SizedBox(height: 12),
+                        const Text(
+                          'خطأ في تحميل الكلمات',
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 12),
+                        SelectableText('$error', textAlign: TextAlign.center),
+                        const SizedBox(height: 12),
+                        OutlinedButton.icon(
+                          onPressed: () {
+                            ref.invalidate(vocabularyWordsProvider);
+                          },
+                          icon: const Icon(Icons.refresh),
+                          label: const Text('إعادة المحاولة'),
+                        ),
+                      ],
+                    ),
                   ),
                 );
               },
             ),
+
+            const SliverToBoxAdapter(child: SizedBox(height: 24)),
           ],
         ),
       ),

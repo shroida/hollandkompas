@@ -191,38 +191,99 @@ class _MeaningRow extends StatelessWidget {
   }
 }
 
-class _ProgressSelector extends ConsumerWidget {
+class _ProgressSelector extends ConsumerStatefulWidget {
   const _ProgressSelector({required this.word});
 
   final VocabularyWord word;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_ProgressSelector> createState() => _ProgressSelectorState();
+}
+
+class _ProgressSelectorState extends ConsumerState<_ProgressSelector> {
+  late VocabularyProgressStatus _selectedStatus;
+  bool _isUpdating = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedStatus = widget.word.progressStatus;
+  }
+
+  @override
+  void didUpdateWidget(covariant _ProgressSelector oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (oldWidget.word.progressStatus != widget.word.progressStatus &&
+        !_isUpdating) {
+      _selectedStatus = widget.word.progressStatus;
+    }
+  }
+
+  Future<void> _updateProgress(VocabularyProgressStatus status) async {
+    if (_isUpdating || _selectedStatus == status) return;
+
+    final oldStatus = _selectedStatus;
+
+    setState(() {
+      _selectedStatus = status;
+      _isUpdating = true;
+    });
+
+    try {
+      await ref
+          .read(vocabularyActionsProvider.notifier)
+          .updateProgress(widget.word.id, status);
+    } catch (_) {
+      if (!mounted) return;
+
+      setState(() {
+        _selectedStatus = oldStatus;
+      });
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('حصل خطأ أثناء حفظ التقدم')));
+    } finally {
+      if (!mounted) return;
+
+      setState(() {
+        _isUpdating = false;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Row(
       children: [
         for (final status in VocabularyProgressStatus.values)
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.only(left: 8),
+              padding: const EdgeInsetsDirectional.only(end: 8),
               child: OutlinedButton(
-                onPressed: () {
-                  ref
-                      .read(vocabularyActionsProvider.notifier)
-                      .updateProgress(word.id, status);
-                },
+                onPressed: _isUpdating ? null : () => _updateProgress(status),
                 style: OutlinedButton.styleFrom(
-                  backgroundColor: word.progressStatus == status
+                  backgroundColor: _selectedStatus == status
                       ? _progressColor(status)
                       : null,
+                  foregroundColor: _selectedStatus == status
+                      ? Colors.white
+                      : _progressColor(status),
                   side: BorderSide(color: _progressColor(status)),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 12,
+                    horizontal: 8,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
                 ),
                 child: Text(
                   _progressLabel(status),
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontFamily: 'Cairo',
-                    color: word.progressStatus == status
-                        ? Colors.white
-                        : _progressColor(status),
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
               ),

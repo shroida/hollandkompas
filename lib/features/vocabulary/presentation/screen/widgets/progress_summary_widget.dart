@@ -22,9 +22,9 @@ class ProgressSummaryWidget extends StatelessWidget {
             ),
             Text(
               '${stats.masteredPercentage.toStringAsFixed(0)}%',
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                    color: AppColors.primary,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.headlineMedium?.copyWith(color: AppColors.primary),
             ),
           ],
         ),
@@ -66,7 +66,11 @@ class ProgressSummaryWidget extends StatelessWidget {
 }
 
 class _StatTile extends StatelessWidget {
-  const _StatTile({required this.label, required this.value, required this.color});
+  const _StatTile({
+    required this.label,
+    required this.value,
+    required this.color,
+  });
 
   final String label;
   final int value;

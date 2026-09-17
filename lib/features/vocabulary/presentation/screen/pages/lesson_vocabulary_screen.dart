@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_tts/flutter_tts.dart';
 import 'package:hollandkompas/core/theme/app_colors.dart';
 import 'package:hollandkompas/features/lesson/domain/entities/lesson.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+
+import '../../../data/datasource/lesson_vocabulary_remote_datasource.dart';
 
 class LessonVocabularyScreen extends StatefulWidget {
   const LessonVocabularyScreen({super.key, required this.lesson});
@@ -14,202 +15,177 @@ class LessonVocabularyScreen extends StatefulWidget {
 }
 
 class _LessonVocabularyScreenState extends State<LessonVocabularyScreen> {
-  final SupabaseClient _supabase = Supabase.instance.client;
-  final FlutterTts _tts = FlutterTts();
+  late final LessonVocabularyRemoteDataSource _dataSource;
+
   final TextEditingController _searchController = TextEditingController();
 
-  late Future<List<_LessonVocabularyItem>> _wordsFuture;
+  Future<LessonVocabularyData>? _dataFuture;
 
   String _searchQuery = '';
   String? _playingWordId;
+
   final Set<String> _favoriteIds = <String>{};
   final Map<String, String> _progressMap = <String, String>{};
 
-  bool _loadingUserState = true;
+  // الكلمات التي يوجد لها request حالي إلى Supabase.
+  final Set<String> _favoritePendingIds = <String>{};
+  final Set<String> _progressPendingIds = <String>{};
 
   @override
   void initState() {
     super.initState();
 
-    _configureTts();
-    _wordsFuture = _loadWords();
+    _dataSource = LessonVocabularyRemoteDataSource(Supabase.instance.client);
+
+    _initialize();
   }
 
-  Future<void> _configureTts() async {
-    try {
-      await _tts.setLanguage('nl-NL');
-      await _tts.setSpeechRate(0.42);
-      await _tts.setVolume(1.0);
-      await _tts.setPitch(1.0);
+  Future<void> _initialize() async {
+    await _dataSource.initialize();
 
-      await _tts.awaitSpeakCompletion(true);
-    } catch (error) {
-      debugPrint('[LESSON-VOCAB] TTS setup failed: $error');
-    }
+    if (!mounted) return;
+
+    _dataFuture = _loadData();
+
+    setState(() {});
   }
 
-  Future<List<_LessonVocabularyItem>> _loadWords() async {
-    final response = await _supabase
-        .from('vocabularies')
-        .select('''
-          id,
-          lesson_id,
-          word,
-          translation_en,
-          translation_ar,
-          category,
-          created_at
-        ''')
-        .eq('lesson_id', widget.lesson.id)
-        .order('id', ascending: true);
+  Future<LessonVocabularyData> _loadData() async {
+    final data = await _dataSource.getLessonVocabulary(widget.lesson.id);
 
-    final rows = List<Map<String, dynamic>>.from(response);
-
-    final words = rows
-        .map(_LessonVocabularyItem.fromMap)
-        .toList(growable: false);
-
-    await _loadUserState(words);
-
-    return words;
-  }
-
-  Future<void> _loadUserState(List<_LessonVocabularyItem> words) async {
-    final user = _supabase.auth.currentUser;
-
-    if (user == null || words.isEmpty) {
-      if (mounted) {
-        setState(() {
-          _loadingUserState = false;
-        });
-      }
-      return;
+    if (!mounted) {
+      return data;
     }
 
-    try {
-      final wordIds = words.map((word) => word.id).toList();
+    _favoriteIds
+      ..clear()
+      ..addAll(data.userState.favoriteIds);
 
-      final favoritesResponse = await _supabase
-          .from('user_favorite_words')
-          .select('word_id')
-          .eq('user_id', user.id)
-          .inFilter('word_id', wordIds);
+    _progressMap
+      ..clear()
+      ..addAll(data.userState.progressMap);
 
-      final progressResponse = await _supabase
-          .from('user_vocabulary_progress')
-          .select('word_id, status')
-          .eq('user_id', user.id)
-          .inFilter('word_id', wordIds);
-
-      final favoriteRows = List<Map<String, dynamic>>.from(favoritesResponse);
-
-      final progressRows = List<Map<String, dynamic>>.from(progressResponse);
-
-      _favoriteIds
-        ..clear()
-        ..addAll(
-          favoriteRows
-              .map((row) => row['word_id']?.toString())
-              .whereType<String>(),
-        );
-
-      _progressMap
-        ..clear()
-        ..addEntries(
-          progressRows.map(
-            (row) => MapEntry(
-              row['word_id']?.toString() ?? '',
-              row['status']?.toString() ?? 'new',
-            ),
-          ),
-        );
-    } catch (error) {
-      debugPrint('[LESSON-VOCAB] Failed to load user state: $error');
-    } finally {
-      if (mounted) {
-        setState(() {
-          _loadingUserState = false;
-        });
-      }
-    }
+    return data;
   }
 
-  Future<void> _toggleFavorite(_LessonVocabularyItem word) async {
-    final user = _supabase.auth.currentUser;
+  Future<void> _refresh() async {
+    final future = _loadData();
+
+    if (mounted) {
+      setState(() {
+        _dataFuture = future;
+      });
+    }
+
+    await future;
+  }
+
+  Future<void> _toggleFavorite(LessonVocabularyWord word) async {
+    final user = Supabase.instance.client.auth.currentUser;
 
     if (user == null) {
       _showSnackBar('لازم تكون مسجل دخول لحفظ المفضلة.');
       return;
     }
 
-    final currentlyFavorite = _favoriteIds.contains(word.id);
+    // نفس الكلمة لا يمكن إرسال requestين لها في نفس الوقت.
+    if (_favoritePendingIds.contains(word.id)) {
+      return;
+    }
+
+    final oldValue = _favoriteIds.contains(word.id);
+    final newValue = !oldValue;
+
+    // Optimistic UI.
+    if (mounted) {
+      setState(() {
+        if (newValue) {
+          _favoriteIds.add(word.id);
+        } else {
+          _favoriteIds.remove(word.id);
+        }
+
+        _favoritePendingIds.add(word.id);
+      });
+    }
 
     try {
-      if (currentlyFavorite) {
-        await _supabase
-            .from('user_favorite_words')
-            .delete()
-            .eq('user_id', user.id)
-            .eq('word_id', word.id);
-
-        if (!mounted) return;
-
-        setState(() {
-          _favoriteIds.remove(word.id);
-        });
-      } else {
-        await _supabase.from('user_favorite_words').insert({
-          'user_id': user.id,
-          'word_id': word.id,
-        });
-
-        if (!mounted) return;
-
-        setState(() {
-          _favoriteIds.add(word.id);
-        });
-      }
+      await _dataSource.setFavorite(wordId: word.id, isFavorite: newValue);
     } catch (error) {
-      debugPrint('[LESSON-VOCAB] Favorite error: $error');
+      if (!mounted) return;
+
+      // Rollback.
+      setState(() {
+        if (oldValue) {
+          _favoriteIds.add(word.id);
+        } else {
+          _favoriteIds.remove(word.id);
+        }
+      });
 
       _showSnackBar('حصل خطأ أثناء تحديث المفضلة.');
+    } finally {
+      if (!mounted) return;
+
+      setState(() {
+        _favoritePendingIds.remove(word.id);
+      });
     }
   }
 
-  Future<void> _updateProgress(
-    _LessonVocabularyItem word,
-    String status,
-  ) async {
-    final user = _supabase.auth.currentUser;
+  Future<void> _updateProgress(LessonVocabularyWord word, String status) async {
+    final user = Supabase.instance.client.auth.currentUser;
 
     if (user == null) {
       _showSnackBar('لازم تكون مسجل دخول لحفظ التقدم.');
       return;
     }
 
-    try {
-      await _supabase.from('user_vocabulary_progress').upsert({
-        'user_id': user.id,
-        'word_id': word.id,
-        'status': status,
-      }, onConflict: 'user_id,word_id');
+    // نفس الكلمة لا تعمل أكثر من request في نفس الوقت.
+    if (_progressPendingIds.contains(word.id)) {
+      return;
+    }
 
+    final oldStatus = _progressMap[word.id] ?? 'new';
+
+    // لو اختار نفس الحالة الموجودة بالفعل، مفيش داعي لأي request.
+    if (oldStatus == status) {
+      return;
+    }
+
+    // Optimistic UI:
+    // الحالة تتغير فوراً على الشاشة قبل Supabase.
+    if (mounted) {
+      setState(() {
+        _progressMap[word.id] = status;
+        _progressPendingIds.add(word.id);
+      });
+    }
+
+    try {
+      await _dataSource.updateProgress(wordId: word.id, status: status);
+    } catch (error) {
+      if (!mounted) return;
+
+      // Rollback لو Supabase فشل.
+      setState(() {
+        _progressMap[word.id] = oldStatus;
+      });
+
+      _showSnackBar('حصل خطأ أثناء حفظ التقدم.');
+    } finally {
       if (!mounted) return;
 
       setState(() {
-        _progressMap[word.id] = status;
+        _progressPendingIds.remove(word.id);
       });
-    } catch (error) {
-      debugPrint('[LESSON-VOCAB] Progress error: $error');
-
-      _showSnackBar('حصل خطأ أثناء حفظ التقدم.');
     }
   }
 
-  Future<void> _speak(_LessonVocabularyItem word) async {
+  Future<void> _speak(LessonVocabularyWord word) async {
     try {
       if (_playingWordId == word.id) {
-        await _tts.stop();
+        await _dataSource.stopSpeaking();
 
         if (!mounted) return;
 
@@ -220,7 +196,7 @@ class _LessonVocabularyScreenState extends State<LessonVocabularyScreen> {
         return;
       }
 
-      await _tts.stop();
+      await _dataSource.stopSpeaking();
 
       if (!mounted) return;
 
@@ -228,16 +204,14 @@ class _LessonVocabularyScreenState extends State<LessonVocabularyScreen> {
         _playingWordId = word.id;
       });
 
-      await _tts.speak(word.dutchWord);
+      await _dataSource.speak(word.dutchWord);
 
       if (!mounted) return;
 
       setState(() {
         _playingWordId = null;
       });
-    } catch (error) {
-      debugPrint('[LESSON-VOCAB] TTS error: $error');
-
+    } catch (_) {
       if (!mounted) return;
 
       setState(() {
@@ -248,28 +222,31 @@ class _LessonVocabularyScreenState extends State<LessonVocabularyScreen> {
     }
   }
 
-  List<_LessonVocabularyItem> _filterWords(List<_LessonVocabularyItem> words) {
+  List<LessonVocabularyWord> _filterWords(List<LessonVocabularyWord> words) {
     final query = _searchQuery.trim().toLowerCase();
 
     if (query.isEmpty) {
       return words;
     }
 
-    return words.where((word) {
-      return word.dutchWord.toLowerCase().contains(query) ||
-          word.arabicMeaning.toLowerCase().contains(query) ||
-          word.englishMeaning.toLowerCase().contains(query) ||
-          word.category.toLowerCase().contains(query);
-    }).toList();
+    return words
+        .where((word) {
+          return word.dutchWord.toLowerCase().contains(query) ||
+              word.arabicMeaning.toLowerCase().contains(query) ||
+              word.englishMeaning.toLowerCase().contains(query) ||
+              word.category.toLowerCase().contains(query);
+        })
+        .toList(growable: false);
   }
 
   @override
   Widget build(BuildContext context) {
+    final dataFuture = _dataFuture;
+
     return Scaffold(
       backgroundColor: AppColors.backgroundColor(context),
       appBar: AppBar(
         title: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             const Text(
               'كلمات الدرس',
@@ -288,200 +265,237 @@ class _LessonVocabularyScreenState extends State<LessonVocabularyScreen> {
           ],
         ),
       ),
-      body: FutureBuilder<List<_LessonVocabularyItem>>(
-        future: _wordsFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const _LoadingView();
-          }
+      body: dataFuture == null
+          ? const _LoadingView()
+          : FutureBuilder<LessonVocabularyData>(
+              future: dataFuture,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const _LoadingView();
+                }
 
-          if (snapshot.hasError) {
-            return _ErrorView(
-              error: snapshot.error,
-              onRetry: () {
-                setState(() {
-                  _wordsFuture = _loadWords();
-                  _loadingUserState = true;
-                });
+                if (snapshot.hasError) {
+                  return _ErrorView(error: snapshot.error, onRetry: _refresh);
+                }
+
+                final data = snapshot.data;
+
+                if (data == null || data.words.isEmpty) {
+                  return const _EmptyView();
+                }
+
+                return _VocabularyContent(
+                  data: data,
+                  searchController: _searchController,
+                  searchQuery: _searchQuery,
+                  favoriteIds: _favoriteIds,
+                  progressMap: _progressMap,
+                  playingWordId: _playingWordId,
+                  favoritePendingIds: _favoritePendingIds,
+                  progressPendingIds: _progressPendingIds,
+                  onSearchChanged: (value) {
+                    setState(() {
+                      _searchQuery = value;
+                    });
+                  },
+                  onClearSearch: () {
+                    _searchController.clear();
+
+                    setState(() {
+                      _searchQuery = '';
+                    });
+                  },
+                  onRefresh: _refresh,
+                  onSpeak: _speak,
+                  onFavorite: _toggleFavorite,
+                  onProgressChanged: _updateProgress,
+                );
               },
-            );
-          }
-
-          final allWords = snapshot.data ?? const [];
-
-          if (allWords.isEmpty) {
-            return const _EmptyView();
-          }
-
-          final filteredWords = _filterWords(allWords);
-
-          final favoriteCount = allWords
-              .where((word) => _favoriteIds.contains(word.id))
-              .length;
-
-          final masteredCount = allWords
-              .where((word) => _progressMap[word.id] == 'mastered')
-              .length;
-
-          return RefreshIndicator(
-            color: AppColors.primary,
-            backgroundColor: AppColors.cardColor(context),
-            onRefresh: () async {
-              setState(() {
-                _wordsFuture = _loadWords();
-                _loadingUserState = true;
-              });
-
-              await _wordsFuture;
-            },
-            child: CustomScrollView(
-              physics: const AlwaysScrollableScrollPhysics(
-                parent: BouncingScrollPhysics(),
-              ),
-              slivers: [
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                    child: Column(
-                      children: [
-                        _LessonSummaryCard(
-                          totalWords: allWords.length,
-                          favoriteWords: favoriteCount,
-                          masteredWords: masteredCount,
-                        ),
-                        const SizedBox(height: 14),
-                        _SearchField(
-                          controller: _searchController,
-                          onChanged: (value) {
-                            setState(() {
-                              _searchQuery = value;
-                            });
-                          },
-                          onClear: () {
-                            _searchController.clear();
-
-                            setState(() {
-                              _searchQuery = '';
-                            });
-                          },
-                        ),
-                        const SizedBox(height: 14),
-                        if (_searchQuery.isNotEmpty)
-                          Align(
-                            alignment: AlignmentDirectional.centerStart,
-                            child: Text(
-                              '${filteredWords.length} كلمة',
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.subtitleColor(context),
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                ),
-                if (filteredWords.isEmpty)
-                  const SliverFillRemaining(
-                    hasScrollBody: false,
-                    child: _NoSearchResultsView(),
-                  )
-                else
-                  SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
-                    sliver: SliverList.builder(
-                      itemCount: filteredWords.length,
-                      itemBuilder: (context, index) {
-                        final word = filteredWords[index];
-
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 10),
-                          child: _VocabularyCard(
-                            word: word,
-                            index: index,
-                            isFavorite: _favoriteIds.contains(word.id),
-                            progress: _progressMap[word.id] ?? 'new',
-                            isPlaying: _playingWordId == word.id,
-                            onSpeak: () => _speak(word),
-                            onFavorite: () => _toggleFavorite(word),
-                            onProgressChanged: (status) =>
-                                _updateProgress(word, status),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-              ],
             ),
-          );
-        },
-      ),
     );
   }
 
   void _showSnackBar(String message) {
     if (!mounted) return;
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        behavior: SnackBarBehavior.floating,
-        margin: const EdgeInsets.all(16),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        content: Text(message),
-      ),
-    );
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          behavior: SnackBarBehavior.floating,
+          margin: const EdgeInsets.all(16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          content: Text(message),
+        ),
+      );
   }
 
   @override
   void dispose() {
-    _tts.stop();
     _searchController.dispose();
+    _dataSource.dispose();
     super.dispose();
   }
 }
 
-// ============================================================
-// DATA MODEL
-// ============================================================
-
-class _LessonVocabularyItem {
-  const _LessonVocabularyItem({
-    required this.id,
-    required this.lessonId,
-    required this.dutchWord,
-    required this.arabicMeaning,
-    required this.englishMeaning,
-    required this.category,
-    this.createdAt,
+class _VocabularyContent extends StatelessWidget {
+  const _VocabularyContent({
+    required this.data,
+    required this.searchController,
+    required this.searchQuery,
+    required this.favoriteIds,
+    required this.progressMap,
+    required this.playingWordId,
+    required this.favoritePendingIds,
+    required this.progressPendingIds,
+    required this.onSearchChanged,
+    required this.onClearSearch,
+    required this.onRefresh,
+    required this.onSpeak,
+    required this.onFavorite,
+    required this.onProgressChanged,
   });
 
-  final String id;
-  final String lessonId;
-  final String dutchWord;
-  final String arabicMeaning;
-  final String englishMeaning;
-  final String category;
-  final DateTime? createdAt;
+  final LessonVocabularyData data;
 
-  factory _LessonVocabularyItem.fromMap(Map<String, dynamic> map) {
-    return _LessonVocabularyItem(
-      id: map['id']?.toString() ?? '',
-      lessonId: map['lesson_id']?.toString() ?? '',
-      dutchWord: map['word']?.toString() ?? '',
-      arabicMeaning: map['translation_ar']?.toString() ?? '',
-      englishMeaning: map['translation_en']?.toString() ?? '',
-      category: map['category']?.toString() ?? '',
-      createdAt: map['created_at'] == null
-          ? null
-          : DateTime.tryParse(map['created_at'].toString()),
+  final TextEditingController searchController;
+
+  final String searchQuery;
+
+  final Set<String> favoriteIds;
+
+  final Map<String, String> progressMap;
+
+  final String? playingWordId;
+
+  final Set<String> favoritePendingIds;
+
+  final Set<String> progressPendingIds;
+
+  final ValueChanged<String> onSearchChanged;
+
+  final VoidCallback onClearSearch;
+
+  final Future<void> Function() onRefresh;
+
+  final ValueChanged<LessonVocabularyWord> onSpeak;
+
+  final ValueChanged<LessonVocabularyWord> onFavorite;
+
+  final Future<void> Function(LessonVocabularyWord word, String status)
+  onProgressChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final words = _filterWords(data.words);
+
+    final favoriteCount = favoriteIds.length;
+
+    final masteredCount = progressMap.values
+        .where((status) => status == 'mastered')
+        .length;
+
+    return RefreshIndicator(
+      color: AppColors.primary,
+      backgroundColor: AppColors.cardColor(context),
+      onRefresh: onRefresh,
+      child: CustomScrollView(
+        physics: const AlwaysScrollableScrollPhysics(
+          parent: BouncingScrollPhysics(),
+        ),
+        slivers: [
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+              child: Column(
+                children: [
+                  _LessonSummaryCard(
+                    totalWords: data.words.length,
+                    favoriteWords: favoriteCount,
+                    masteredWords: masteredCount,
+                  ),
+                  const SizedBox(height: 14),
+                  _SearchField(
+                    controller: searchController,
+                    onChanged: onSearchChanged,
+                    onClear: onClearSearch,
+                  ),
+                  if (searchQuery.isNotEmpty) ...[
+                    const SizedBox(height: 10),
+                    Align(
+                      alignment: AlignmentDirectional.centerStart,
+                      child: Text(
+                        '${words.length} كلمة',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.subtitleColor(context),
+                        ),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+          if (words.isEmpty)
+            const SliverFillRemaining(
+              hasScrollBody: false,
+              child: _NoSearchResultsView(),
+            )
+          else
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+              sliver: SliverList.builder(
+                itemCount: words.length,
+                itemBuilder: (context, index) {
+                  final word = words[index];
+
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: RepaintBoundary(
+                      child: _VocabularyCard(
+                        word: word,
+                        index: index,
+                        isFavorite: favoriteIds.contains(word.id),
+                        progress: progressMap[word.id] ?? 'new',
+                        isPlaying: playingWordId == word.id,
+                        isFavoritePending: favoritePendingIds.contains(word.id),
+                        isProgressPending: progressPendingIds.contains(word.id),
+                        onSpeak: () => onSpeak(word),
+                        onFavorite: () => onFavorite(word),
+                        onProgressChanged: (status) =>
+                            onProgressChanged(word, status),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+        ],
+      ),
     );
   }
-}
 
-// ============================================================
-// SUMMARY CARD
-// ============================================================
+  List<LessonVocabularyWord> _filterWords(List<LessonVocabularyWord> words) {
+    final query = searchQuery.trim().toLowerCase();
+
+    if (query.isEmpty) {
+      return words;
+    }
+
+    return words
+        .where((word) {
+          return word.dutchWord.toLowerCase().contains(query) ||
+              word.arabicMeaning.toLowerCase().contains(query) ||
+              word.englishMeaning.toLowerCase().contains(query) ||
+              word.category.toLowerCase().contains(query);
+        })
+        .toList(growable: false);
+  }
+}
 
 class _LessonSummaryCard extends StatelessWidget {
   const _LessonSummaryCard({
@@ -548,7 +562,7 @@ class _LessonSummaryCard extends StatelessWidget {
                   icon: Icons.translate_rounded,
                 ),
               ),
-              _SummaryDivider(),
+              const _SummaryDivider(),
               Expanded(
                 child: _SummaryItem(
                   value: '$favoriteWords',
@@ -556,7 +570,7 @@ class _LessonSummaryCard extends StatelessWidget {
                   icon: Icons.favorite_rounded,
                 ),
               ),
-              _SummaryDivider(),
+              const _SummaryDivider(),
               Expanded(
                 child: _SummaryItem(
                   value: '$masteredWords',
@@ -619,10 +633,6 @@ class _SummaryDivider extends StatelessWidget {
   }
 }
 
-// ============================================================
-// SEARCH
-// ============================================================
-
 class _SearchField extends StatelessWidget {
   const _SearchField({
     required this.controller,
@@ -640,6 +650,7 @@ class _SearchField extends StatelessWidget {
       controller: controller,
       onChanged: onChanged,
       textDirection: TextDirection.rtl,
+      textInputAction: TextInputAction.search,
       decoration: InputDecoration(
         hintText: 'ابحث في كلمات الدرس...',
         prefixIcon: const Icon(Icons.search_rounded),
@@ -654,14 +665,12 @@ class _SearchField extends StatelessWidget {
   }
 }
 
-// ============================================================
-// VOCABULARY CARD
-// ============================================================
-
 class _VocabularyCard extends StatelessWidget {
   const _VocabularyCard({
     required this.word,
     required this.index,
+    required this.isFavoritePending,
+    required this.isProgressPending,
     required this.isFavorite,
     required this.progress,
     required this.isPlaying,
@@ -670,10 +679,12 @@ class _VocabularyCard extends StatelessWidget {
     required this.onProgressChanged,
   });
 
-  final _LessonVocabularyItem word;
+  final LessonVocabularyWord word;
   final int index;
   final bool isFavorite;
   final String progress;
+  final bool isFavoritePending;
+  final bool isProgressPending;
   final bool isPlaying;
   final VoidCallback onSpeak;
   final VoidCallback onFavorite;
@@ -681,7 +692,7 @@ class _VocabularyCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final progressData = _progressData(context, progress);
+    final progressData = _progressData(progress);
 
     return Card(
       margin: EdgeInsets.zero,
@@ -692,8 +703,8 @@ class _VocabularyCard extends StatelessWidget {
         side: BorderSide(color: AppColors.borderColor(context)),
       ),
       child: InkWell(
-        borderRadius: BorderRadius.circular(20),
         onTap: onSpeak,
+        borderRadius: BorderRadius.circular(20),
         child: Padding(
           padding: const EdgeInsets.all(15),
           child: Column(
@@ -757,6 +768,7 @@ class _VocabularyCard extends StatelessWidget {
                             ? Icons.favorite_rounded
                             : Icons.favorite_border_rounded,
                         active: isFavorite,
+                        loading: isFavoritePending,
                         onTap: onFavorite,
                       ),
                     ],
@@ -775,6 +787,7 @@ class _VocabularyCard extends StatelessWidget {
                     label: progressData.label,
                     icon: progressData.icon,
                     color: progressData.color,
+                    loading: isProgressPending,
                     onTap: () {
                       _showProgressMenu(context, current: progress);
                     },
@@ -788,10 +801,7 @@ class _VocabularyCard extends StatelessWidget {
     );
   }
 
-  ({String label, IconData icon, Color color}) _progressData(
-    BuildContext context,
-    String value,
-  ) {
+  ({String label, IconData icon, Color color}) _progressData(String value) {
     switch (value) {
       case 'learning':
         return (
@@ -799,12 +809,14 @@ class _VocabularyCard extends StatelessWidget {
           icon: Icons.school_rounded,
           color: AppColors.warning,
         );
+
       case 'mastered':
         return (
-          label: 'محفوظة',
+          label: 'متقنها',
           icon: Icons.check_circle_rounded,
           color: AppColors.success,
         );
+
       case 'new':
       default:
         return (
@@ -833,34 +845,37 @@ class _VocabularyCard extends StatelessWidget {
                   style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
                 ),
                 const SizedBox(height: 12),
+
                 _ProgressOption(
                   label: 'جديدة',
                   icon: Icons.fiber_new_rounded,
                   color: AppColors.mutedForeground,
                   selected: current == 'new',
                   onTap: () {
-                    Navigator.pop(sheetContext);
                     onProgressChanged('new');
+                    Navigator.pop(sheetContext);
                   },
                 ),
+
                 _ProgressOption(
                   label: 'بتتعلمها',
                   icon: Icons.school_rounded,
                   color: AppColors.warning,
                   selected: current == 'learning',
                   onTap: () {
-                    Navigator.pop(sheetContext);
                     onProgressChanged('learning');
+                    Navigator.pop(sheetContext);
                   },
                 ),
+
                 _ProgressOption(
-                  label: 'محفوظة',
+                  label: 'متقنها',
                   icon: Icons.check_circle_rounded,
                   color: AppColors.success,
                   selected: current == 'mastered',
                   onTap: () {
-                    Navigator.pop(sheetContext);
                     onProgressChanged('mastered');
+                    Navigator.pop(sheetContext);
                   },
                 ),
               ],
@@ -871,10 +886,6 @@ class _VocabularyCard extends StatelessWidget {
     );
   }
 }
-
-// ============================================================
-// SMALL COMPONENTS
-// ============================================================
 
 class _WordNumber extends StatelessWidget {
   const _WordNumber({required this.number});
@@ -908,11 +919,13 @@ class _CircleActionButton extends StatelessWidget {
     required this.icon,
     required this.onTap,
     this.active = false,
+    this.loading = false,
   });
 
   final IconData icon;
   final VoidCallback onTap;
   final bool active;
+  final bool loading;
 
   @override
   Widget build(BuildContext context) {
@@ -922,18 +935,26 @@ class _CircleActionButton extends StatelessWidget {
           : AppColors.muted.withValues(alpha: 0.60),
       borderRadius: BorderRadius.circular(13),
       child: InkWell(
-        onTap: onTap,
+        onTap: loading ? null : onTap,
         borderRadius: BorderRadius.circular(13),
         child: SizedBox(
           width: 42,
           height: 42,
-          child: Icon(
-            icon,
-            size: 21,
-            color: active
-                ? AppColors.primary
-                : AppColors.subtitleColor(context),
-          ),
+          child: loading
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: Center(
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                )
+              : Icon(
+                  icon,
+                  size: 21,
+                  color: active
+                      ? AppColors.primary
+                      : AppColors.subtitleColor(context),
+                ),
         ),
       ),
     );
@@ -979,12 +1000,14 @@ class _ProgressBadge extends StatelessWidget {
     required this.icon,
     required this.color,
     required this.onTap,
+    this.loading = false,
   });
 
   final String label;
   final IconData icon;
   final Color color;
   final VoidCallback onTap;
+  final bool loading;
 
   @override
   Widget build(BuildContext context) {
@@ -992,14 +1015,23 @@ class _ProgressBadge extends StatelessWidget {
       color: color.withValues(alpha: 0.10),
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
-        onTap: onTap,
+        onTap: loading ? null : onTap,
         borderRadius: BorderRadius.circular(12),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(icon, size: 14, color: color),
+              loading
+                  ? SizedBox(
+                      width: 14,
+                      height: 14,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: color,
+                      ),
+                    )
+                  : Icon(icon, size: 14, color: color),
               const SizedBox(width: 5),
               Text(
                 label,
@@ -1047,10 +1079,6 @@ class _ProgressOption extends StatelessWidget {
     );
   }
 }
-
-// ============================================================
-// STATES
-// ============================================================
 
 class _LoadingView extends StatelessWidget {
   const _LoadingView();
@@ -1165,7 +1193,7 @@ class _ErrorView extends StatelessWidget {
   const _ErrorView({required this.error, required this.onRetry});
 
   final Object? error;
-  final VoidCallback onRetry;
+  final Future<void> Function() onRetry;
 
   @override
   Widget build(BuildContext context) {
@@ -1215,10 +1243,6 @@ class _ErrorView extends StatelessWidget {
     );
   }
 }
-
-// ============================================================
-// HELPERS
-// ============================================================
 
 String _categoryLabel(String category) {
   switch (category.toLowerCase()) {

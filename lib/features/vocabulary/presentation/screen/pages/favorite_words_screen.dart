@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hollandkompas/core/router/route_paths.dart';
 
 import '../../providers/vocabulary_user_providers.dart';
 import '../widgets/word_card.dart';
@@ -20,7 +21,9 @@ class FavoriteWordsScreen extends ConsumerWidget {
             return const Padding(
               padding: EdgeInsets.all(32),
               child: Center(
-                child: Text('لسه معملتش حفظ لأي كلمة. دوس على أيقونة الحفظ جنب أي كلمة.'),
+                child: Text(
+                  'لسه معملتش حفظ لأي كلمة. دوس على أيقونة الحفظ جنب أي كلمة.',
+                ),
               ),
             );
           }
@@ -33,7 +36,7 @@ class FavoriteWordsScreen extends ConsumerWidget {
                   child: WordCard(
                     word: word,
                     onTap: () =>
-                        context.push('/vocabulary/word/${word.id}', extra: word),
+                        context.push(RoutePaths.vocabularyWord, extra: word),
                   ),
                 ),
             ],

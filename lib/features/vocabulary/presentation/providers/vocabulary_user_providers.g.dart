@@ -91,21 +91,11 @@ final class VocabularyProgressStatsProvider
 String _$vocabularyProgressStatsHash() =>
     r'0886e60ca8096b6261958f114a436ca682b49da7';
 
-/// Action-only notifier: toggling a favorite or updating progress status
-/// both mutate Supabase and then invalidate whichever read providers
-/// depend on that state, so every screen watching them refreshes.
-
 @ProviderFor(VocabularyActions)
 final vocabularyActionsProvider = VocabularyActionsProvider._();
 
-/// Action-only notifier: toggling a favorite or updating progress status
-/// both mutate Supabase and then invalidate whichever read providers
-/// depend on that state, so every screen watching them refreshes.
 final class VocabularyActionsProvider
     extends $NotifierProvider<VocabularyActions, void> {
-  /// Action-only notifier: toggling a favorite or updating progress status
-  /// both mutate Supabase and then invalidate whichever read providers
-  /// depend on that state, so every screen watching them refreshes.
   VocabularyActionsProvider._()
     : super(
         from: null,
@@ -133,11 +123,7 @@ final class VocabularyActionsProvider
   }
 }
 
-String _$vocabularyActionsHash() => r'd46f9271835fadcf91e845e6b80fcf6b4cceb0cb';
-
-/// Action-only notifier: toggling a favorite or updating progress status
-/// both mutate Supabase and then invalidate whichever read providers
-/// depend on that state, so every screen watching them refreshes.
+String _$vocabularyActionsHash() => r'6e42f3d5e61ffd3d0bb817203249d597e82ba869';
 
 abstract class _$VocabularyActions extends $Notifier<void> {
   void build();
