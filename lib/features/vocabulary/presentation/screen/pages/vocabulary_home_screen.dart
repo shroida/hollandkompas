@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hollandkompas/core/router/route_paths.dart';
 import 'package:hollandkompas/core/theme/app_colors.dart';
 
 import '../../providers/vocabulary_list_providers.dart';
@@ -35,14 +36,14 @@ class VocabularyHomeScreen extends ConsumerWidget {
           IconButton(
             tooltip: 'المفضلة',
             onPressed: () {
-              context.push('/vocabulary/favorites');
+              context.push(RoutePaths.vocabularyFavorites);
             },
             icon: const Icon(Icons.bookmark_border),
           ),
           IconButton(
             tooltip: 'التقدم',
             onPressed: () {
-              context.push('/vocabulary/progress');
+              context.push(RoutePaths.vocabularyProgress);
             },
             icon: const Icon(Icons.insights_outlined),
           ),
@@ -50,7 +51,7 @@ class VocabularyHomeScreen extends ConsumerWidget {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          context.push('/vocabulary/search');
+          context.push(RoutePaths.vocabularySearch);
         },
         backgroundColor: AppColors.primary,
         child: const Icon(Icons.search, color: Colors.white),
@@ -87,7 +88,7 @@ class VocabularyHomeScreen extends ConsumerWidget {
                   return DailyWordCard(
                     word: word,
                     onTap: () {
-                      context.push('/vocabulary/word/${word.id}', extra: word);
+                      context.push(RoutePaths.vocabularyWord, extra: word);
                     },
                   );
                 },

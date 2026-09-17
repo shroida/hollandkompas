@@ -462,10 +462,15 @@ class _LessonViewerScreenState extends ConsumerState<LessonViewerScreen>
     return Column(
       children: [
         const ContinueLearningCard(),
+
         const SizedBox(height: 16),
+
         LessonVocabularyButton(lesson: widget.lesson),
+
         const SizedBox(height: 16),
+
         _buildCompletionButton(),
+
         _buildNextLessonPanel(),
       ],
     );
