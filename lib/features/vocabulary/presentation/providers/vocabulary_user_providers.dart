@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../domain/entities/vocabulary_stats.dart';
@@ -13,40 +14,84 @@ part 'vocabulary_user_providers.g.dart';
 
 @riverpod
 Future<List<VocabularyWord>> favoriteVocabularyWords(Ref ref) {
-  final usecase = GetFavoriteWordsUseCase(ref.watch(vocabularyRepositoryProvider));
+  final usecase = GetFavoriteWordsUseCase(
+    ref.watch(vocabularyRepositoryProvider),
+  );
+
   return usecase();
 }
 
 @riverpod
 Future<VocabularyStats> vocabularyProgressStats(Ref ref) {
-  final usecase = GetVocabularyStatsUseCase(ref.watch(vocabularyRepositoryProvider));
+  final usecase = GetVocabularyStatsUseCase(
+    ref.watch(vocabularyRepositoryProvider),
+  );
+
   return usecase();
 }
 
-/// Action-only notifier: toggling a favorite or updating progress status
-/// both mutate Supabase and then invalidate whichever read providers
-/// depend on that state, so every screen watching them refreshes.
 @riverpod
 class VocabularyActions extends _$VocabularyActions {
   @override
   void build() {}
 
   Future<void> toggleFavorite(String wordId, bool isFavorite) async {
-    final usecase = ToggleFavoriteWordUseCase(ref.read(vocabularyRepositoryProvider));
-    await usecase(wordId, isFavorite);
-    ref.invalidate(favoriteVocabularyWordsProvider);
-    ref.invalidate(vocabularyWordsProvider);
-    ref.invalidate(vocabularyWordByIdProvider(wordId));
+    try {
+      final usecase = ToggleFavoriteWordUseCase(
+        ref.read(vocabularyRepositoryProvider),
+      );
+
+      await usecase(wordId, isFavorite);
+
+      ref.invalidate(favoriteVocabularyWordsProvider);
+      ref.invalidate(vocabularyWordsProvider);
+      ref.invalidate(vocabularyWordByIdProvider(wordId));
+    } catch (error, stackTrace) {
+      debugPrint('[VOCAB-ACTION] toggleFavorite ERROR: $error');
+
+      debugPrintStack(stackTrace: stackTrace);
+
+      rethrow;
+    }
   }
 
   Future<void> updateProgress(
     String wordId,
     VocabularyProgressStatus status,
   ) async {
-    final usecase = UpdateVocabularyProgressUseCase(ref.read(vocabularyRepositoryProvider));
-    await usecase(wordId, status);
-    ref.invalidate(vocabularyProgressStatsProvider);
-    ref.invalidate(vocabularyWordsProvider);
-    ref.invalidate(vocabularyWordByIdProvider(wordId));
+    debugPrint(
+      '[VOCAB-PROGRESS] START '
+      'wordId=$wordId '
+      'status=$status',
+    );
+
+    try {
+      final usecase = UpdateVocabularyProgressUseCase(
+        ref.read(vocabularyRepositoryProvider),
+      );
+
+      await usecase(wordId, status);
+
+      debugPrint(
+        '[VOCAB-PROGRESS] SUCCESS '
+        'wordId=$wordId '
+        'status=$status',
+      );
+
+      ref.invalidate(vocabularyProgressStatsProvider);
+      ref.invalidate(vocabularyWordsProvider);
+      ref.invalidate(vocabularyWordByIdProvider(wordId));
+    } catch (error, stackTrace) {
+      debugPrint(
+        '[VOCAB-PROGRESS] ERROR '
+        'wordId=$wordId '
+        'status=$status '
+        'error=$error',
+      );
+
+      debugPrintStack(stackTrace: stackTrace);
+
+      rethrow;
+    }
   }
 }

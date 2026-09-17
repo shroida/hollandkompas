@@ -20,6 +20,15 @@ abstract final class RoutePaths {
   static const lessonViewer = '/lesson-viewer';
   static const payment = '/payment';
 
+  // Vocabulary
+  static const vocabulary = '/vocabulary';
+  static const vocabularySearch = '/vocabulary/search';
+  static const vocabularyFavorites = '/vocabulary/favorites';
+  static const vocabularyProgress = '/vocabulary/progress';
+  static const lessonVocabulary = '/lesson-vocabulary';
+
+  static const vocabularyWord = '/vocabulary/word/:id';
+
   // Admin
   static const admin = '/admin';
   static const totalStudents = 'total-students';
