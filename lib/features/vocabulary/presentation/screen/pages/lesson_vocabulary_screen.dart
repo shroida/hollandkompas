@@ -125,8 +125,6 @@ class _LessonVocabularyScreenState extends State<LessonVocabularyScreen> {
 
       _showSnackBar('حصل خطأ أثناء تحديث المفضلة.');
     } finally {
-      if (!mounted) return;
-
       setState(() {
         _favoritePendingIds.remove(word.id);
       });
@@ -174,8 +172,6 @@ class _LessonVocabularyScreenState extends State<LessonVocabularyScreen> {
 
       _showSnackBar('حصل خطأ أثناء حفظ التقدم.');
     } finally {
-      if (!mounted) return;
-
       setState(() {
         _progressPendingIds.remove(word.id);
       });
@@ -220,23 +216,6 @@ class _LessonVocabularyScreenState extends State<LessonVocabularyScreen> {
 
       _showSnackBar('تعذر تشغيل النطق.');
     }
-  }
-
-  List<LessonVocabularyWord> _filterWords(List<LessonVocabularyWord> words) {
-    final query = _searchQuery.trim().toLowerCase();
-
-    if (query.isEmpty) {
-      return words;
-    }
-
-    return words
-        .where((word) {
-          return word.dutchWord.toLowerCase().contains(query) ||
-              word.arabicMeaning.toLowerCase().contains(query) ||
-              word.englishMeaning.toLowerCase().contains(query) ||
-              word.category.toLowerCase().contains(query);
-        })
-        .toList(growable: false);
   }
 
   @override
