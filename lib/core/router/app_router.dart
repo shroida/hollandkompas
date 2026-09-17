@@ -180,23 +180,23 @@ final GoRouter appRouter = GoRouter(
       },
     ),
     GoRoute(
-      path: '/vocabulary',
+      path: RoutePaths.vocabulary,
       builder: (context, state) => const VocabularyHomeScreen(),
     ),
     GoRoute(
-      path: '/vocabulary/search',
+      path: RoutePaths.vocabularySearch,
       builder: (context, state) => const VocabularySearchScreen(),
     ),
     GoRoute(
-      path: '/vocabulary/favorites',
+      path: RoutePaths.vocabularyFavorites,
       builder: (context, state) => const FavoriteWordsScreen(),
     ),
     GoRoute(
-      path: '/vocabulary/progress',
+      path: RoutePaths.vocabularyProgress,
       builder: (context, state) => const VocabularyProgressScreen(),
     ),
     GoRoute(
-      path: '/vocabulary/word/:id',
+      path: RoutePaths.vocabularyWord,
       builder: (context, state) => WordDetailsScreen(
         wordId: state.pathParameters['id']!,
         initialWord: state.extra as VocabularyWord?,
