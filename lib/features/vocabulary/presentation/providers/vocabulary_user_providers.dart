@@ -5,6 +5,7 @@ import '../../domain/entities/vocabulary_stats.dart';
 import '../../domain/entities/vocabulary_word.dart';
 import '../../domain/usecases/get_favorite_words_usecase.dart';
 import '../../domain/usecases/get_vocabulary_stats_usecase.dart';
+import '../../domain/usecases/refresh_vocabulary_usecase.dart';
 import '../../domain/usecases/toggle_favorite_word_usecase.dart';
 import '../../domain/usecases/update_vocabulary_progress_usecase.dart';
 import 'vocabulary_list_providers.dart';
@@ -52,6 +53,7 @@ class VocabularyActions extends _$VocabularyActions {
       if (!ref.mounted) return;
 
       debugPrint('[VOCAB-ACTION] toggleFavorite ERROR: $error');
+
       debugPrintStack(stackTrace: stackTrace);
 
       rethrow;
@@ -62,12 +64,6 @@ class VocabularyActions extends _$VocabularyActions {
     String wordId,
     VocabularyProgressStatus status,
   ) async {
-    debugPrint(
-      '[VOCAB-PROGRESS] START '
-      'wordId=$wordId '
-      'status=$status',
-    );
-
     try {
       final usecase = UpdateVocabularyProgressUseCase(
         ref.read(vocabularyRepositoryProvider),
@@ -77,12 +73,6 @@ class VocabularyActions extends _$VocabularyActions {
 
       if (!ref.mounted) return;
 
-      debugPrint(
-        '[VOCAB-PROGRESS] SUCCESS '
-        'wordId=$wordId '
-        'status=$status',
-      );
-
       ref.invalidate(vocabularyProgressStatsProvider);
       ref.invalidate(vocabularyWordsProvider);
       ref.invalidate(vocabularyWordByIdProvider(wordId));
@@ -90,11 +80,36 @@ class VocabularyActions extends _$VocabularyActions {
       if (!ref.mounted) return;
 
       debugPrint(
-        '[VOCAB-PROGRESS] ERROR '
+        '[VOCAB-ACTION] updateProgress ERROR '
         'wordId=$wordId '
         'status=$status '
         'error=$error',
       );
+
+      debugPrintStack(stackTrace: stackTrace);
+
+      rethrow;
+    }
+  }
+
+  Future<void> refreshVocabulary() async {
+    try {
+      final usecase = RefreshVocabularyUseCase(
+        ref.read(vocabularyRepositoryProvider),
+      );
+
+      await usecase();
+
+      if (!ref.mounted) return;
+
+      ref.invalidate(vocabularyWordsProvider);
+      ref.invalidate(dailyVocabularyWordProvider);
+      ref.invalidate(favoriteVocabularyWordsProvider);
+      ref.invalidate(vocabularyProgressStatsProvider);
+    } catch (error, stackTrace) {
+      if (!ref.mounted) return;
+
+      debugPrint('[VOCAB-ACTION] refreshVocabulary ERROR: $error');
 
       debugPrintStack(stackTrace: stackTrace);
 

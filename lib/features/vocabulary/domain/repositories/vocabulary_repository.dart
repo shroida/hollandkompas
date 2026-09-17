@@ -3,6 +3,7 @@ import '../entities/vocabulary_word.dart';
 
 abstract class VocabularyRepository {
   Future<List<VocabularyWord>> getWords({String? level, String? category});
+
   Future<List<VocabularyWord>> searchWords(String query);
 
   Future<VocabularyWord> getWordById(String id);
@@ -16,4 +17,6 @@ abstract class VocabularyRepository {
   Future<void> updateProgress(String wordId, VocabularyProgressStatus status);
 
   Future<VocabularyStats> getProgressStats();
+
+  Future<void> refresh();
 }

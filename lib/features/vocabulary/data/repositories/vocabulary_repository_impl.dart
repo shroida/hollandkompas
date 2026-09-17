@@ -17,104 +17,124 @@ class VocabularyRepositoryImpl implements VocabularyRepository {
   final VocabularyLocalCache _cache;
   final SupabaseClient _client;
 
+  static const Duration _wordsCacheMaxAge = Duration(minutes: 30);
+  static const Duration _userStateCacheMaxAge = Duration(minutes: 30);
+
+  List<VocabularyWordModel>? _memoryWords;
+  DateTime? _memoryWordsUpdatedAt;
+
+  Future<List<VocabularyWordModel>>? _refreshWordsFuture;
+
+  final Map<String, Future<void>> _userStateRefreshes =
+      <String, Future<void>>{};
+
   String? get _userId => _client.auth.currentUser?.id;
 
-  Future<List<VocabularyWord>> _attachUserState(
-    List<VocabularyWordModel> models,
-  ) async {
-    if (models.isEmpty) {
-      return const [];
-    }
+  Future<List<VocabularyWordModel>> _getAllModels() async {
+    _debug('CACHE CHECK');
 
-    final userId = _userId;
+    final memoryWords = _memoryWords;
 
-    // No signed-in user => return plain vocabulary.
-    if (userId == null) {
-      return models.map((model) => model.toEntity()).toList();
-    }
+    if (memoryWords != null && memoryWords.isNotEmpty) {
+      final updatedAt = _memoryWordsUpdatedAt;
 
-    Set<String> favoriteIds = <String>{};
-    Map<String, String> progressMap = <String, String>{};
-
-    // Favorites are optional. A missing table must NOT break
-    // the vocabulary screen.
-    try {
-      favoriteIds = await _remote.getFavoriteWordIds(userId);
-    } catch (error) {
       _debug(
-        'Could not load favorites. '
-        'Continuing without favorites: $error',
-      );
-    }
-
-    // Progress is optional as well.
-    try {
-      progressMap = await _remote.getProgressMap(userId);
-    } catch (error) {
-      _debug(
-        'Could not load vocabulary progress. '
-        'Continuing without progress: $error',
-      );
-    }
-
-    return models.map((model) {
-      final merged = model.copyWith(
-        isFavorite: favoriteIds.contains(model.id),
-        progressStatus: progressMap[model.id] ?? model.progressStatus,
+        'MEMORY CACHE HIT | '
+        'count=${memoryWords.length} | '
+        'updatedAt=$updatedAt',
       );
 
-      return merged.toEntity();
-    }).toList();
-  }
+      if (updatedAt != null &&
+          DateTime.now().difference(updatedAt).abs() <= _wordsCacheMaxAge) {
+        _debug('MEMORY CACHE FRESH');
 
-  @override
-  Future<List<VocabularyWord>> getWords({
-    String? level,
-    String? category,
-  }) async {
-    _debug('getWords | level=$level | category=$category');
-
-    if (level == null && category == null) {
-      try {
-        final models = await _remote.getWords();
-
-        _debug('Remote returned ${models.length} vocabulary models');
-
-        unawaited(_cache.saveWords(models));
-
-        return _attachUserState(models);
-      } catch (error) {
-        _debug('Remote vocabulary load failed: $error');
-
-        final cached = await _cache.loadWords();
-
-        if (cached.isNotEmpty) {
-          _debug('Using ${cached.length} cached vocabulary models');
-
-          return _attachUserState(cached);
-        }
-
-        rethrow;
+        return memoryWords;
       }
+
+      _debug('MEMORY CACHE EXPIRED');
+
+      unawaited(_backgroundRefresh());
+
+      return memoryWords;
     }
 
-    final models = await _remote.getWords(level: level, category: category);
+    _debug('MEMORY CACHE MISS');
 
-    _debug('Filtered remote returned ${models.length} models');
+    final cached = await _cache.loadWords();
 
-    return _attachUserState(models);
+    _debug(
+      'HIVE CACHE RESULT | '
+      'count=${cached.length}',
+    );
+
+    if (cached.isNotEmpty) {
+      final updatedAt = await _cache.loadWordsUpdatedAt();
+
+      _memoryWords = cached;
+      _memoryWordsUpdatedAt = updatedAt;
+
+      _debug(
+        'HIVE CACHE HIT | '
+        'count=${cached.length} | '
+        'updatedAt=$updatedAt',
+      );
+
+      if (updatedAt != null &&
+          DateTime.now().difference(updatedAt).abs() <= _wordsCacheMaxAge) {
+        _debug('HIVE CACHE FRESH');
+
+        return cached;
+      }
+
+      _debug('HIVE CACHE EXPIRED');
+
+      unawaited(_backgroundRefresh());
+
+      return cached;
+    }
+
+    _debug('HIVE CACHE MISS | fetching Supabase');
+
+    return _refreshAllModels();
   }
 
   @override
   Future<List<VocabularyWord>> searchWords(String query) async {
-    final models = await _remote.searchWords(query);
+    final safeQuery = query.trim().toLowerCase();
 
-    return _attachUserState(models);
+    if (safeQuery.isEmpty) {
+      return const [];
+    }
+
+    final models = await _getAllModels();
+
+    final filtered = models
+        .where((model) {
+          return model.dutchWord.toLowerCase().contains(safeQuery) ||
+              model.arabicMeaning.toLowerCase().contains(safeQuery) ||
+              (model.englishMeaning ?? '').toLowerCase().contains(safeQuery) ||
+              model.category.toLowerCase().contains(safeQuery) ||
+              model.level.toLowerCase().contains(safeQuery);
+        })
+        .toList(growable: false);
+
+    return _attachUserState(filtered);
   }
 
   @override
   Future<VocabularyWord> getWordById(String id) async {
-    final model = await _remote.getWordById(id);
+    final models = await _getAllModels();
+
+    VocabularyWordModel? model;
+
+    for (final item in models) {
+      if (item.id == id) {
+        model = item;
+        break;
+      }
+    }
+
+    model ??= await _remote.getWordById(id);
 
     final entities = await _attachUserState([model]);
 
@@ -123,9 +143,25 @@ class VocabularyRepositoryImpl implements VocabularyRepository {
 
   @override
   Future<VocabularyWord> getDailyWord() async {
-    final model = await _remote.getDailyWord();
+    final models = await _getAllModels();
 
-    final entities = await _attachUserState([model]);
+    if (models.isEmpty) {
+      throw StateError('No vocabulary words available.');
+    }
+
+    VocabularyWordModel latest = models.first;
+
+    for (final model in models.skip(1)) {
+      final modelDate = model.createdAt;
+      final latestDate = latest.createdAt;
+
+      if (modelDate != null &&
+          (latestDate == null || modelDate.isAfter(latestDate))) {
+        latest = model;
+      }
+    }
+
+    final entities = await _attachUserState([latest]);
 
     return entities.first;
   }
@@ -138,25 +174,9 @@ class VocabularyRepositoryImpl implements VocabularyRepository {
       return const [];
     }
 
-    try {
-      final ids = await _remote.getFavoriteWordIds(userId);
+    final words = await getWords();
 
-      if (ids.isEmpty) {
-        return const [];
-      }
-
-      final all = await _remote.getWords();
-
-      final favoriteModels = all
-          .where((model) => ids.contains(model.id))
-          .toList();
-
-      return _attachUserState(favoriteModels);
-    } catch (error) {
-      _debug('getFavoriteWords failed: $error');
-
-      return const [];
-    }
+    return words.where((word) => word.isFavorite).toList(growable: false);
   }
 
   @override
@@ -172,6 +192,12 @@ class VocabularyRepositoryImpl implements VocabularyRepository {
     } else {
       await _remote.removeFavorite(userId, wordId);
     }
+
+    await _cache.updateFavorite(
+      userId: userId,
+      wordId: wordId,
+      isFavorite: isFavorite,
+    );
   }
 
   @override
@@ -186,55 +212,224 @@ class VocabularyRepositoryImpl implements VocabularyRepository {
     }
 
     await _remote.upsertProgress(userId, wordId, status.dbValue);
+
+    await _cache.updateProgress(
+      userId: userId,
+      wordId: wordId,
+      status: status.dbValue,
+    );
   }
 
   @override
   Future<VocabularyStats> getProgressStats() async {
-    final all = await _remote.getWords();
+    final words = await getWords();
+
+    var mastered = 0;
+    var learning = 0;
+    var newWords = 0;
+
+    for (final word in words) {
+      switch (word.progressStatus) {
+        case VocabularyProgressStatus.mastered:
+          mastered++;
+          break;
+
+        case VocabularyProgressStatus.learning:
+          learning++;
+          break;
+
+        case VocabularyProgressStatus.newWord:
+          newWords++;
+          break;
+      }
+    }
+
+    return VocabularyStats(
+      totalWords: words.length,
+      masteredWords: mastered,
+      learningWords: learning,
+      newWords: newWords,
+    );
+  }
+
+  @override
+  Future<void> refresh() async {
+    await _refreshAllModels();
+  }
+
+  Future<void> _backgroundRefresh() async {
+    try {
+      await _refreshAllModels();
+    } catch (error, stackTrace) {
+      _debug('Background vocabulary refresh failed: $error');
+      debugPrintStack(stackTrace: stackTrace);
+    }
+  }
+
+  Future<List<VocabularyWordModel>> _refreshAllModels() {
+    final existingFuture = _refreshWordsFuture;
+
+    if (existingFuture != null) {
+      return existingFuture;
+    }
+
+    late final Future<List<VocabularyWordModel>> future;
+
+    future = _performRefresh();
+
+    _refreshWordsFuture = future;
+
+    return future.whenComplete(() {
+      if (identical(_refreshWordsFuture, future)) {
+        _refreshWordsFuture = null;
+      }
+    });
+  }
+
+  Future<List<VocabularyWordModel>> _performRefresh() async {
+    final models = await _remote.getWords();
+
+    final now = DateTime.now();
+
+    await _cache.saveWords(models, updatedAt: now);
+
+    _memoryWords = models;
+    _memoryWordsUpdatedAt = now;
+
+    final userId = _userId;
+
+    if (userId != null) {
+      await _refreshUserState(userId);
+    }
+
+    return models;
+  }
+
+  Future<List<VocabularyWord>> _attachUserState(
+    List<VocabularyWordModel> models,
+  ) async {
+    if (models.isEmpty) {
+      return const [];
+    }
 
     final userId = _userId;
 
     if (userId == null) {
-      return VocabularyStats(
-        totalWords: all.length,
-        masteredWords: 0,
-        learningWords: 0,
-        newWords: all.length,
-      );
+      return models.map((model) => model.toEntity()).toList(growable: false);
     }
 
-    Map<String, String> progressMap = <String, String>{};
+    final userState = await _getUserState(userId);
+
+    return models
+        .map((model) {
+          final merged = model.copyWith(
+            isFavorite: userState.favoriteIds.contains(model.id),
+            progressStatus:
+                userState.progressMap[model.id] ?? model.progressStatus,
+          );
+
+          return merged.toEntity();
+        })
+        .toList(growable: false);
+  }
+
+  Future<VocabularyCachedUserState> _getUserState(String userId) async {
+    final cached = await _cache.loadUserState(userId);
+
+    if (cached != null && cached.isFresh(_userStateCacheMaxAge)) {
+      return cached;
+    }
+
+    await _refreshUserState(userId);
+
+    final refreshed = await _cache.loadUserState(userId);
+
+    return refreshed ??
+        const VocabularyCachedUserState(
+          favoriteIds: <String>{},
+          progressMap: <String, String>{},
+          favoriteUpdatedAt: null,
+          progressUpdatedAt: null,
+        );
+  }
+
+  Future<void> _refreshUserState(String userId) async {
+    final existing = _userStateRefreshes[userId];
+
+    if (existing != null) {
+      await existing;
+      return;
+    }
+
+    late final Future<void> future;
+
+    future = _performUserStateRefresh(userId);
+
+    _userStateRefreshes[userId] = future;
 
     try {
-      progressMap = await _remote.getProgressMap(userId);
-    } catch (error) {
-      _debug('Could not load progress stats: $error');
-    }
-
-    var mastered = 0;
-    var learning = 0;
-
-    for (final status in progressMap.values) {
-      if (status == 'mastered') {
-        mastered++;
-      } else if (status == 'learning') {
-        learning++;
+      await future;
+    } finally {
+      if (identical(_userStateRefreshes[userId], future)) {
+        _userStateRefreshes.remove(userId);
       }
     }
+  }
 
-    final known = mastered + learning;
+  Future<void> _performUserStateRefresh(String userId) async {
+    try {
+      final favoriteIds = await _remote.getFavoriteWordIds(userId);
 
-    return VocabularyStats(
-      totalWords: all.length,
-      masteredWords: mastered,
-      learningWords: learning,
-      newWords: all.length - known,
-    );
+      await _cache.saveFavoriteIds(userId, favoriteIds);
+    } catch (error, stackTrace) {
+      _debug('Could not refresh favorite cache: $error');
+
+      debugPrintStack(stackTrace: stackTrace);
+    }
+
+    try {
+      final progressMap = await _remote.getProgressMap(userId);
+
+      await _cache.saveProgressMap(userId, progressMap);
+    } catch (error, stackTrace) {
+      _debug('Could not refresh progress cache: $error');
+
+      debugPrintStack(stackTrace: stackTrace);
+    }
   }
 
   void _debug(String message) {
     if (kDebugMode) {
       debugPrint('[VOCAB-REPOSITORY] $message');
     }
+  }
+
+  @override
+  Future<List<VocabularyWord>> getWords({
+    String? level,
+    String? category,
+  }) async {
+    final models = await _getAllModels();
+
+    final normalizedLevel = level?.trim().toLowerCase();
+    final normalizedCategory = category?.trim().toLowerCase();
+
+    final filtered = models
+        .where((model) {
+          final levelMatches =
+              normalizedLevel == null ||
+              normalizedLevel.isEmpty ||
+              model.level.trim().toLowerCase() == normalizedLevel;
+
+          final categoryMatches =
+              normalizedCategory == null ||
+              normalizedCategory.isEmpty ||
+              model.category.trim().toLowerCase() == normalizedCategory;
+
+          return levelMatches && categoryMatches;
+        })
+        .toList(growable: false);
+
+    return _attachUserState(filtered);
   }
 }
