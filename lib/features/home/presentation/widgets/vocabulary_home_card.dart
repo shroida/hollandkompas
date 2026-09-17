@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+
+import 'package:hollandkompas/core/router/route_paths.dart';
 import 'package:hollandkompas/core/theme/app_colors.dart';
 
 class VocabularyHomeCard extends StatelessWidget {
@@ -13,7 +15,7 @@ class VocabularyHomeCard extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: () {
-          context.push('/vocabulary');
+          context.push(RoutePaths.vocabulary);
         },
         borderRadius: BorderRadius.circular(22),
         child: Ink(
@@ -46,34 +48,42 @@ class VocabularyHomeCard extends StatelessWidget {
                   size: 27,
                 ),
               ),
+
               const SizedBox(width: 14),
-              const Expanded(
+
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       'Vocabulary',
-                      style: TextStyle(
-                        fontSize: 17,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.w800,
                       ),
                     ),
-                    SizedBox(height: 3),
+                    const SizedBox(height: 3),
                     Text(
                       'Learn and review Dutch words',
-                      style: TextStyle(fontSize: 12),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppColors.subtitleColor(context),
+                      ),
                     ),
                   ],
                 ),
               ),
+
               Container(
                 width: 38,
                 height: 38,
                 decoration: BoxDecoration(
-                  color: AppColors.card.withValues(alpha: 0.7),
+                  color: AppColors.cardColor(context),
                   borderRadius: BorderRadius.circular(13),
                 ),
-                child: const Icon(Icons.arrow_forward_ios_rounded, size: 15),
+                child: Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  size: 15,
+                  color: AppColors.subtitleColor(context),
+                ),
               ),
             ],
           ),
