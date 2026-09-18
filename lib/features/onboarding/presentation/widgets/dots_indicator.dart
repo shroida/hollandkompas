@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hollandkompas/core/theme/app_colors.dart';
 
 class DotsIndicator extends StatelessWidget {
   const DotsIndicator({
@@ -13,34 +14,22 @@ class DotsIndicator extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
-      mainAxisAlignment:
-          MainAxisAlignment.center,
-      children: List.generate(
-        count,
-        (index) => AnimatedContainer(
-          duration:
-              const Duration(milliseconds: 300),
-          margin:
-              const EdgeInsets.symmetric(
-            horizontal: 4,
-          ),
-          width:
-              currentIndex == index
-                  ? 24
-                  : 8,
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: List.generate(count, (index) {
+        final isSelected = index == currentIndex;
+
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+          width: isSelected ? 24 : 8,
           height: 8,
+          margin: const EdgeInsets.symmetric(horizontal: 4),
           decoration: BoxDecoration(
-            color:
-                currentIndex == index
-                    ? const Color(
-                      0xFFFF6B00,
-                    )
-                    : Colors.grey,
-            borderRadius:
-                BorderRadius.circular(20),
+            color: isSelected ? AppColors.primary : AppColors.mutedForeground,
+            borderRadius: BorderRadius.circular(20),
           ),
-        ),
-      ),
+        );
+      }),
     );
   }
 }
