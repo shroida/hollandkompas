@@ -1,17 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hollandkompas/core/localization/app_locale.dart';
 import 'package:hollandkompas/core/theme/app_colors.dart';
 
 class ProfileMenu extends ConsumerWidget {
-  final String firstName;
-  final String level;
-
-  final VoidCallback? onMyCourses;
-  final VoidCallback? onProfile;
-  final VoidCallback? onSettings;
-  final VoidCallback? onLogout;
-
   const ProfileMenu({
     super.key,
     required this.firstName,
@@ -22,92 +15,97 @@ class ProfileMenu extends ConsumerWidget {
     this.onLogout,
   });
 
+  final String firstName;
+  final String level;
+  final VoidCallback? onMyCourses;
+  final VoidCallback? onProfile;
+  final VoidCallback? onSettings;
+  final VoidCallback? onLogout;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final locale = ref.watch(appLocaleProvider);
-    final language = locale.languageCode.toLowerCase();
-
-    final t = ProfileTranslations(language);
+    final language = ref.watch(
+      appLocaleProvider.select((locale) => locale.languageCode.toLowerCase()),
+    );
+    final translations = ProfileTranslations(language);
 
     return PopupMenuButton<ProfileMenuAction>(
-      tooltip: t.accountMenu,
-
+      tooltip: translations.accountMenu,
       offset: const Offset(0, 58),
-
       elevation: 10,
-
       color: Theme.of(context).colorScheme.surface,
-
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-
-      onSelected: (action) {
-        switch (action) {
-          case ProfileMenuAction.myCourses:
-            onMyCourses?.call();
-            break;
-
-          case ProfileMenuAction.profile:
-            onProfile?.call();
-            break;
-
-          case ProfileMenuAction.settings:
-            onSettings?.call();
-            break;
-
-          case ProfileMenuAction.logout:
-            _showLogoutDialog(context, t);
-            break;
-        }
-      },
-
+      onSelected: (action) => _handleAction(context, action, translations),
       itemBuilder: (context) => [
-        PopupMenuItem(
+        PopupMenuItem<ProfileMenuAction>(
           enabled: false,
           padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
           child: ProfileMenuHeader(
             firstName: firstName,
             level: level,
-            translations: t,
+            translations: translations,
           ),
         ),
-
         const PopupMenuDivider(),
-
         PopupMenuItem(
           value: ProfileMenuAction.myCourses,
-          child: _MenuItem(icon: Icons.menu_book_rounded, title: t.myCourses),
+          child: _MenuItem(
+            icon: Icons.menu_book_rounded,
+            title: translations.myCourses,
+          ),
         ),
-
         PopupMenuItem(
           value: ProfileMenuAction.profile,
           child: _MenuItem(
             icon: Icons.person_outline_rounded,
-            title: t.profile,
+            title: translations.profile,
           ),
         ),
-
         PopupMenuItem(
           value: ProfileMenuAction.settings,
-          child: _MenuItem(icon: Icons.settings_outlined, title: t.settings),
+          child: _MenuItem(
+            icon: Icons.settings_outlined,
+            title: translations.settings,
+          ),
         ),
-
         const PopupMenuDivider(),
-
         PopupMenuItem(
           value: ProfileMenuAction.logout,
           child: _MenuItem(
             icon: Icons.logout_rounded,
-            title: t.logout,
+            title: translations.logout,
             destructive: true,
           ),
         ),
       ],
-
-      child: _ProfileAvatar(firstName: firstName, tooltip: t.account),
+      child: _ProfileAvatar(
+        firstName: firstName,
+        tooltip: translations.account,
+      ),
     );
   }
 
-  void _showLogoutDialog(BuildContext context, ProfileTranslations t) {
+  void _handleAction(
+    BuildContext context,
+    ProfileMenuAction action,
+    ProfileTranslations translations,
+  ) {
+    switch (action) {
+      case ProfileMenuAction.myCourses:
+        onMyCourses?.call();
+      case ProfileMenuAction.profile:
+        onProfile?.call();
+      case ProfileMenuAction.settings:
+        onSettings?.call();
+      case ProfileMenuAction.logout:
+        _showLogoutDialog(context, translations);
+    }
+  }
+
+  void _showLogoutDialog(
+    BuildContext context,
+    ProfileTranslations translations,
+  ) {
     showDialog<void>(
       context: context,
       builder: (dialogContext) {
@@ -115,34 +113,28 @@ class ProfileMenu extends ConsumerWidget {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24),
           ),
-
           title: Text(
-            t.logout,
-            style: const TextStyle(fontWeight: FontWeight.w700),
+            translations.logout,
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
           ),
-
           content: Text(
-            t.logoutConfirmation,
+            translations.logoutConfirmation,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
               color: AppColors.subtitleColor(context),
             ),
           ),
-
           actionsPadding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-
           actions: [
             TextButton(
-              onPressed: () {
-                Navigator.of(dialogContext).pop();
-              },
-              child: Text(t.cancel),
+              onPressed: dialogContext.pop,
+              child: Text(translations.cancel),
             ),
-
             const SizedBox(width: 8),
-
             FilledButton(
               onPressed: () {
-                Navigator.of(dialogContext).pop();
+                dialogContext.pop();
                 onLogout?.call();
               },
               style: FilledButton.styleFrom(
@@ -151,7 +143,7 @@ class ProfileMenu extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              child: Text(t.logout),
+              child: Text(translations.logout),
             ),
           ],
         );
@@ -163,15 +155,15 @@ class ProfileMenu extends ConsumerWidget {
 enum ProfileMenuAction { myCourses, profile, settings, logout }
 
 class _MenuItem extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final bool destructive;
-
   const _MenuItem({
     required this.icon,
     required this.title,
     this.destructive = false,
   });
+
+  final IconData icon;
+  final String title;
+  final bool destructive;
 
   @override
   Widget build(BuildContext context) {
@@ -179,28 +171,28 @@ class _MenuItem extends StatelessWidget {
         ? AppColors.destructive
         : Theme.of(context).colorScheme.onSurface;
 
+    final backgroundColor = destructive
+        ? AppColors.destructive.withValues(alpha: 0.08)
+        : AppColors.muted;
+
     return Row(
       children: [
         Container(
           width: 34,
           height: 34,
           decoration: BoxDecoration(
-            color: destructive
-                ? AppColors.destructive.withValues(alpha: 0.08)
-                : AppColors.muted,
+            color: backgroundColor,
             borderRadius: BorderRadius.circular(10),
           ),
           child: Icon(icon, size: 18, color: color),
         ),
-
         const SizedBox(width: 12),
-
         Text(
           title,
-          style: TextStyle(
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
             color: color,
-            fontWeight: FontWeight.w600,
             fontSize: 14,
+            fontWeight: FontWeight.w600,
           ),
         ),
       ],
@@ -209,32 +201,30 @@ class _MenuItem extends StatelessWidget {
 }
 
 class _ProfileAvatar extends StatelessWidget {
+  const _ProfileAvatar({required this.firstName, required this.tooltip});
+
   final String firstName;
   final String tooltip;
 
-  const _ProfileAvatar({required this.firstName, required this.tooltip});
-
   @override
   Widget build(BuildContext context) {
-    final initial = firstName.trim().isNotEmpty
-        ? firstName.trim()[0].toUpperCase()
-        : '?';
+    final trimmedName = firstName.trim();
+    final initial = trimmedName.isEmpty
+        ? '?'
+        : trimmedName.characters.first.toUpperCase();
 
     return Tooltip(
       message: tooltip,
-
       child: Container(
         width: 46,
         height: 46,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-
           gradient: const LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [AppColors.primary, Color(0xFFFF8A3D)],
           ),
-
           boxShadow: [
             BoxShadow(
               color: AppColors.primary.withValues(alpha: 0.28),
@@ -243,15 +233,12 @@ class _ProfileAvatar extends StatelessWidget {
             ),
           ],
         ),
-
-        child: Center(
-          child: Text(
-            initial,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 19,
-              fontWeight: FontWeight.w800,
-            ),
+        alignment: Alignment.center,
+        child: Text(
+          initial,
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            color: Colors.white,
+            fontWeight: FontWeight.w800,
           ),
         ),
       ),
@@ -260,10 +247,6 @@ class _ProfileAvatar extends StatelessWidget {
 }
 
 class ProfileMenuHeader extends StatelessWidget {
-  final String firstName;
-  final String level;
-  final ProfileTranslations translations;
-
   const ProfileMenuHeader({
     super.key,
     required this.firstName,
@@ -271,14 +254,18 @@ class ProfileMenuHeader extends StatelessWidget {
     required this.translations,
   });
 
+  final String firstName;
+  final String level;
+  final ProfileTranslations translations;
+
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
     return Row(
       children: [
         _ProfileAvatar(firstName: firstName, tooltip: translations.account),
-
         const SizedBox(width: 12),
-
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -287,13 +274,11 @@ class ProfileMenuHeader extends StatelessWidget {
                 firstName,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+                style: textTheme.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
               ),
-
               const SizedBox(height: 3),
-
               Row(
                 children: [
                   const Icon(
@@ -301,14 +286,16 @@ class ProfileMenuHeader extends StatelessWidget {
                     size: 13,
                     color: AppColors.primary,
                   ),
-
                   const SizedBox(width: 4),
-
-                  Text(
-                    '${translations.student} • ${level.toUpperCase()}',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppColors.subtitleColor(context),
-                      fontSize: 11,
+                  Expanded(
+                    child: Text(
+                      '${translations.student} • ${level.toUpperCase()}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: textTheme.bodySmall?.copyWith(
+                        color: AppColors.subtitleColor(context),
+                        fontSize: 11,
+                      ),
                     ),
                   ),
                 ],
@@ -322,44 +309,46 @@ class ProfileMenuHeader extends StatelessWidget {
 }
 
 class ProfileTranslations {
-  final String language;
-
   const ProfileTranslations(this.language);
 
-  String get account => _tr(en: 'Account', nl: 'Account', ar: 'الحساب');
+  final String language;
+
+  String get account => _translate(en: 'Account', nl: 'Account', ar: 'الحساب');
 
   String get accountMenu =>
-      _tr(en: 'Account menu', nl: 'Accountmenu', ar: 'قائمة الحساب');
+      _translate(en: 'Account menu', nl: 'Accountmenu', ar: 'قائمة الحساب');
 
   String get myCourses =>
-      _tr(en: 'My Courses', nl: 'Mijn cursussen', ar: 'كورساتي');
+      _translate(en: 'My Courses', nl: 'Mijn cursussen', ar: 'كورساتي');
 
-  String get profile => _tr(en: 'Profile', nl: 'Profiel', ar: 'الملف الشخصي');
+  String get profile =>
+      _translate(en: 'Profile', nl: 'Profiel', ar: 'الملف الشخصي');
 
   String get settings =>
-      _tr(en: 'Settings', nl: 'Instellingen', ar: 'الإعدادات');
+      _translate(en: 'Settings', nl: 'Instellingen', ar: 'الإعدادات');
 
-  String get logout => _tr(en: 'Logout', nl: 'Uitloggen', ar: 'تسجيل الخروج');
+  String get logout =>
+      _translate(en: 'Logout', nl: 'Uitloggen', ar: 'تسجيل الخروج');
 
-  String get cancel => _tr(en: 'Cancel', nl: 'Annuleren', ar: 'إلغاء');
+  String get cancel => _translate(en: 'Cancel', nl: 'Annuleren', ar: 'إلغاء');
 
-  String get logoutConfirmation => _tr(
+  String get logoutConfirmation => _translate(
     en: 'Are you sure you want to logout?',
     nl: 'Weet je zeker dat je wilt uitloggen?',
     ar: 'هل أنت متأكد أنك تريد تسجيل الخروج؟',
   );
 
-  String get student => _tr(en: 'Student', nl: 'Student', ar: 'طالب');
+  String get student => _translate(en: 'Student', nl: 'Student', ar: 'طالب');
 
-  String _tr({required String en, required String nl, required String ar}) {
-    switch (language) {
-      case 'nl':
-        return nl;
-      case 'ar':
-        return ar;
-      case 'en':
-      default:
-        return en;
-    }
+  String _translate({
+    required String en,
+    required String nl,
+    required String ar,
+  }) {
+    return switch (language) {
+      'nl' => nl,
+      'ar' => ar,
+      _ => en,
+    };
   }
 }

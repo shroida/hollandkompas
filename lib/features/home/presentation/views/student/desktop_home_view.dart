@@ -9,6 +9,11 @@ import 'package:hollandkompas/features/home/presentation/views/student/student_c
 class DesktopHomeView extends StudentCoursesView {
   const DesktopHomeView({super.key});
 
+  static const _horizontalPadding = 32.0;
+  static const _maxContentWidth = 1400.0;
+  static const _gridSpacing = 20.0;
+  static const _courseHeight = 460.0;
+
   @override
   Widget buildContent(
     BuildContext context,
@@ -17,48 +22,33 @@ class DesktopHomeView extends StudentCoursesView {
   ) {
     return Center(
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 1400),
+        constraints: const BoxConstraints(maxWidth: _maxContentWidth),
         child: CustomScrollView(
           physics: const BouncingScrollPhysics(),
           slivers: [
             const SliverToBoxAdapter(child: SizedBox(height: 32)),
-
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 32),
-                child: Row(
-                  children: [
-                    const Expanded(
-                      child: SectionHeader(
-                        title: 'Your learning journey',
-                        subtitle:
-                            'Choose a course and continue learning Dutch.',
-                      ),
-                    ),
-
-                    TextButton.icon(
-                      onPressed: () {
-                        context.push('/courses');
-                      },
-                      icon: const Icon(Icons.grid_view_rounded, size: 18),
-                      label: const Text('View all'),
-                    ),
-                  ],
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: _horizontalPadding,
+              ),
+              sliver: SliverToBoxAdapter(
+                child: _DesktopSectionHeader(
+                  onViewAll: () => context.push('/courses'),
                 ),
               ),
             ),
-
             const SliverToBoxAdapter(child: SizedBox(height: 18)),
-
             SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 32),
+              padding: const EdgeInsets.symmetric(
+                horizontal: _horizontalPadding,
+              ),
               sliver: SliverGrid.builder(
                 itemCount: courses.length,
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 3,
-                  crossAxisSpacing: 20,
-                  mainAxisSpacing: 20,
-                  mainAxisExtent: 460,
+                  crossAxisSpacing: _gridSpacing,
+                  mainAxisSpacing: _gridSpacing,
+                  mainAxisExtent: _courseHeight,
                 ),
                 itemBuilder: (context, index) {
                   final course = courses[index];
@@ -71,7 +61,6 @@ class DesktopHomeView extends StudentCoursesView {
                 },
               ),
             ),
-
             const SliverToBoxAdapter(child: SizedBox(height: 40)),
           ],
         ),
@@ -83,6 +72,31 @@ class DesktopHomeView extends StudentCoursesView {
     context.push(
       '/course-lessons',
       extra: {'course': course, 'isEnrolled': false},
+    );
+  }
+}
+
+class _DesktopSectionHeader extends StatelessWidget {
+  const _DesktopSectionHeader({required this.onViewAll});
+
+  final VoidCallback onViewAll;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        const Expanded(
+          child: SectionHeader(
+            title: 'Your learning journey',
+            subtitle: 'Choose a course and continue learning Dutch.',
+          ),
+        ),
+        TextButton.icon(
+          onPressed: onViewAll,
+          icon: const Icon(Icons.grid_view_rounded, size: 18),
+          label: const Text('View all'),
+        ),
+      ],
     );
   }
 }

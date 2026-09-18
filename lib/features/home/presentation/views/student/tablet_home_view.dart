@@ -9,6 +9,10 @@ import 'package:hollandkompas/features/home/presentation/views/student/student_c
 class TabletHomeView extends StudentCoursesView {
   const TabletHomeView({super.key});
 
+  static const _horizontalPadding = 28.0;
+  static const _gridSpacing = 18.0;
+  static const _courseHeight = 410.0;
+
   @override
   Widget buildContent(
     BuildContext context,
@@ -19,28 +23,25 @@ class TabletHomeView extends StudentCoursesView {
       physics: const BouncingScrollPhysics(),
       slivers: [
         const SliverToBoxAdapter(child: SizedBox(height: 24)),
-
         const SliverToBoxAdapter(
           child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: 28),
+            padding: EdgeInsets.symmetric(horizontal: _horizontalPadding),
             child: SectionHeader(
               title: 'Your courses',
               subtitle: 'Continue your Dutch learning journey.',
             ),
           ),
         ),
-
         const SliverToBoxAdapter(child: SizedBox(height: 16)),
-
         SliverPadding(
-          padding: const EdgeInsets.symmetric(horizontal: 28),
+          padding: const EdgeInsets.symmetric(horizontal: _horizontalPadding),
           sliver: SliverGrid.builder(
             itemCount: courses.length,
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
-              crossAxisSpacing: 18,
-              mainAxisSpacing: 18,
-              mainAxisExtent: 410,
+              crossAxisSpacing: _gridSpacing,
+              mainAxisSpacing: _gridSpacing,
+              mainAxisExtent: _courseHeight,
             ),
             itemBuilder: (context, index) {
               final course = courses[index];
@@ -53,7 +54,6 @@ class TabletHomeView extends StudentCoursesView {
             },
           ),
         ),
-
         const SliverToBoxAdapter(child: SizedBox(height: 32)),
       ],
     );

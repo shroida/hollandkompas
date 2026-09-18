@@ -21,16 +21,10 @@ abstract class StudentCoursesView extends ConsumerWidget {
 
     return coursesAsync.when(
       loading: () => const CoursesLoading(),
-
-      error: (error, _) {
-        return CoursesError(
-          message: error.toString(),
-          onRetry: () {
-            ref.invalidate(publishedCoursesProvider);
-          },
-        );
-      },
-
+      error: (error, _) => CoursesError(
+        message: error.toString(),
+        onRetry: () => ref.invalidate(publishedCoursesProvider),
+      ),
       data: (courses) {
         if (courses.isEmpty) {
           return const EmptyCourses();

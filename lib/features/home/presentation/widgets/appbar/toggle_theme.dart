@@ -2,10 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:hollandkompas/core/theme/app_colors.dart';
 
 class ThemeToggle extends StatelessWidget {
+  const ThemeToggle({super.key, required this.isDark, required this.onPressed});
+
   final bool isDark;
   final VoidCallback onPressed;
 
-  const ThemeToggle({super.key, required this.isDark, required this.onPressed});
+  static const _size = 42.0;
+  static const _radius = 14.0;
+  static const _animationDuration = Duration(milliseconds: 220);
 
   @override
   Widget build(BuildContext context) {
@@ -15,19 +19,19 @@ class ThemeToggle extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: onPressed,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(_radius),
           child: AnimatedContainer(
-            duration: const Duration(milliseconds: 220),
+            duration: _animationDuration,
             curve: Curves.easeOutCubic,
-            width: 42,
-            height: 42,
+            width: _size,
+            height: _size,
             decoration: BoxDecoration(
               color: isDark ? AppColors.darkMuted : AppColors.muted,
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(_radius),
               border: Border.all(color: AppColors.borderColor(context)),
             ),
             child: AnimatedSwitcher(
-              duration: const Duration(milliseconds: 220),
+              duration: _animationDuration,
               transitionBuilder: (child, animation) {
                 return RotationTransition(
                   turns: Tween<double>(begin: 0.75, end: 1).animate(animation),

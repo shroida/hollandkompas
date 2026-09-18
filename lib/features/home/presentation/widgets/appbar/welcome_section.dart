@@ -5,16 +5,15 @@ import 'package:hollandkompas/core/localization/app_strings.dart';
 import 'package:hollandkompas/core/theme/app_colors.dart';
 
 class WelcomeSection extends ConsumerWidget {
-  final String firstName;
-
   const WelcomeSection({super.key, required this.firstName});
+
+  final String firstName;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final theme = Theme.of(context);
-
-    final locale = ref.watch(appLocaleProvider);
+    final locale = ref.watch(appLocaleProvider.select((locale) => locale));
     final strings = AppStrings(locale);
+    final textTheme = Theme.of(context).textTheme;
 
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -24,20 +23,18 @@ class WelcomeSection extends ConsumerWidget {
           strings.welcomeBack,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: theme.textTheme.bodySmall?.copyWith(
+          style: textTheme.bodySmall?.copyWith(
             color: AppColors.subtitleColor(context),
             fontSize: 12,
             fontWeight: FontWeight.w500,
           ),
         ),
-
         const SizedBox(height: 2),
-
         Text(
           firstName,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: theme.textTheme.titleLarge?.copyWith(
+          style: textTheme.titleLarge?.copyWith(
             fontSize: 21,
             fontWeight: FontWeight.w700,
             letterSpacing: -0.3,

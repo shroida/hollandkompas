@@ -30,26 +30,13 @@ class HomeScreen extends ConsumerWidget {
     }
 
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBarHomeScreen(
         firstName: user.firstName,
         level: user.level.name.toUpperCase(),
-
-        onMyCourses: () {
-          context.push('/my-courses');
-        },
-
-        onProfile: () {
-          context.push(RoutePaths.profile);
-        },
-
-        onSettings: () {
-          context.pushNamed('settings');
-        },
-
-        onLogout: () {
-          _logout(context, ref);
-        },
+        onMyCourses: () => context.push('/my-courses'),
+        onProfile: () => context.push(RoutePaths.profile),
+        onSettings: () => context.pushNamed('settings'),
+        onLogout: () => _logout(context, ref),
       ),
       body: _HomeBody(userRole: user.role),
     );
@@ -59,11 +46,15 @@ class HomeScreen extends ConsumerWidget {
     try {
       await ref.read(authControllerProvider.notifier).logout();
 
-      if (!context.mounted) return;
+      if (!context.mounted) {
+        return;
+      }
 
       context.go(RoutePaths.login);
     } catch (error) {
-      if (!context.mounted) return;
+      if (!context.mounted) {
+        return;
+      }
 
       ScaffoldMessenger.of(
         context,
@@ -79,15 +70,13 @@ class _HomeBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (userRole == UserRole.admin) {
-      return const AdminShell(child: AdminDashboard());
-    }
-
-    return const ResponsiveBuilder(
-      mobile: MobileHomeView(),
-      tablet: TabletHomeView(),
-      desktop: DesktopHomeView(),
-    );
+    return userRole == UserRole.admin
+        ? const AdminShell(child: AdminDashboard())
+        : const ResponsiveBuilder(
+            mobile: MobileHomeView(),
+            tablet: TabletHomeView(),
+            desktop: DesktopHomeView(),
+          );
   }
 }
 
