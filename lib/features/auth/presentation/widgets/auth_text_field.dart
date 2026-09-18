@@ -2,15 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:hollandkompas/core/theme/app_colors.dart';
 
 class AuthTextField extends StatelessWidget {
-  final String label;
-  final String hint;
-  final IconData? icon;
-  final Widget? suffix;
-  final bool obscureText;
-  final TextEditingController? controller;
-  final TextInputType keyboardType;
-  final ValueChanged<String>? onChanged;
-
   const AuthTextField({
     super.key,
     required this.label,
@@ -23,108 +14,82 @@ class AuthTextField extends StatelessWidget {
     this.onChanged,
   });
 
+  final String label;
+  final String hint;
+  final IconData? icon;
+  final Widget? suffix;
+  final bool obscureText;
+  final TextEditingController? controller;
+  final TextInputType keyboardType;
+  final ValueChanged<String>? onChanged;
+
+  bool get _usesLtrText =>
+      keyboardType == TextInputType.emailAddress ||
+      keyboardType == TextInputType.phone ||
+      obscureText;
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    final textColor = AppColors.textColor(context);
-    final subtitleColor = AppColors.subtitleColor(context);
-    final borderColor = AppColors.borderColor(context);
-    final cardColor = AppColors.cardColor(context);
+    final textTheme = theme.textTheme;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // =========================
-        // Label
-        // =========================
         Text(
           label,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: textColor,
-          ),
+          style: textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w700),
         ),
-
-        const SizedBox(height: 6),
-
-        // =========================
-        // Text Field
-        // =========================
+        const SizedBox(height: 7),
         TextField(
           controller: controller,
           obscureText: obscureText,
           keyboardType: keyboardType,
           onChanged: onChanged,
-
-          style: TextStyle(
-            color: textColor,
-            fontSize: 15,
-            fontWeight: FontWeight.w500,
-          ),
-
-          cursorColor: colorScheme.primary,
-
-          textDirection:
-              (keyboardType == TextInputType.emailAddress || obscureText)
-              ? TextDirection.ltr
-              : TextDirection.rtl,
-
+          textDirection: _usesLtrText ? TextDirection.ltr : TextDirection.rtl,
+          style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w500),
+          cursorColor: AppColors.primary,
           decoration: InputDecoration(
             hintText: hint,
-
-            hintStyle: TextStyle(color: subtitleColor, fontSize: 14),
-
-            prefixIcon: icon != null
-                ? Icon(icon, color: subtitleColor, size: 20)
-                : null,
-
+            hintStyle: textTheme.bodySmall?.copyWith(
+              color: AppColors.subtitleColor(context),
+            ),
+            prefixIcon: icon == null
+                ? null
+                : Icon(icon, size: 20, color: AppColors.subtitleColor(context)),
             suffixIcon: suffix,
-
-            // =========================
-            // Background
-            // =========================
             filled: true,
-            fillColor: cardColor,
-
+            fillColor: AppColors.cardColor(context),
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 16,
-              vertical: 14,
+              vertical: 15,
             ),
-
-            // =========================
-            // Normal Border
-            // =========================
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide(color: borderColor, width: 1),
-            ),
-
-            // =========================
-            // Focused Border
-            // =========================
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide(color: colorScheme.primary, width: 2),
-            ),
-
-            // =========================
-            // Error Border
-            // =========================
-            errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide(color: colorScheme.error, width: 1),
-            ),
-
-            focusedErrorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
-              borderSide: BorderSide(color: colorScheme.error, width: 2),
+            border: _border(context),
+            enabledBorder: _border(context),
+            focusedBorder: _border(context, color: AppColors.primary, width: 2),
+            errorBorder: _border(context, color: theme.colorScheme.error),
+            focusedErrorBorder: _border(
+              context,
+              color: theme.colorScheme.error,
+              width: 2,
             ),
           ),
         ),
       ],
+    );
+  }
+
+  OutlineInputBorder _border(
+    BuildContext context, {
+    Color? color,
+    double width = 1,
+  }) {
+    return OutlineInputBorder(
+      borderRadius: BorderRadius.circular(16),
+      borderSide: BorderSide(
+        color: color ?? AppColors.borderColor(context),
+        width: width,
+      ),
     );
   }
 }
