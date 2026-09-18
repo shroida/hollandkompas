@@ -11,11 +11,6 @@ import 'package:hollandkompas/features/lesson/domain/entities/lesson.dart';
 import 'package:hollandkompas/features/lesson/presentation/providers/lesson_progress_provider.dart';
 
 class CourseLessonsContent extends ConsumerWidget {
-  final Course course;
-  final List<Lesson> lessons;
-  final bool isEnrolled;
-  final VoidCallback onEnroll;
-
   const CourseLessonsContent({
     super.key,
     required this.course,
@@ -24,74 +19,67 @@ class CourseLessonsContent extends ConsumerWidget {
     required this.onEnroll,
   });
 
+  final Course course;
+  final List<Lesson> lessons;
+  final bool isEnrolled;
+  final VoidCallback onEnroll;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final strings = AppStrings(ref.watch(appLocaleProvider));
+    final padding = _horizontalPadding(MediaQuery.sizeOf(context).width);
+    final totalMinutes = _totalMinutes;
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final padding = _getHorizontalPadding(constraints.maxWidth);
-        final totalMinutes = _calculateTotalMinutes();
-
-        return Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 1200),
-            child: CustomScrollView(
-              physics: const BouncingScrollPhysics(),
-              slivers: [
-                _CourseHeaderSliver(
-                  course: course,
-                  lessonsCount: lessons.length,
-                  totalMinutes: totalMinutes,
-                  isEnrolled: isEnrolled,
-                  padding: padding,
-                ),
-                if (!isEnrolled)
-                  _EnrollmentBannerSliver(
-                    course: course,
-                    onEnroll: onEnroll,
-                    strings: strings,
-                    padding: padding,
-                  ),
-                _SectionHeaderSliver(
-                  lessonCount: lessons.length,
-                  isEnrolled: isEnrolled,
-                  strings: strings,
-                  padding: padding,
-                ),
-                _LessonsListSliver(
-                  lessons: lessons,
-                  course: course,
-                  isEnrolled: isEnrolled,
-                  onEnroll: onEnroll,
-                  padding: padding,
-                ),
-              ],
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 1200),
+        child: CustomScrollView(
+          physics: const BouncingScrollPhysics(),
+          slivers: [
+            _CourseHeaderSliver(
+              course: course,
+              lessonsCount: lessons.length,
+              totalMinutes: totalMinutes,
+              isEnrolled: isEnrolled,
+              padding: padding,
             ),
-          ),
-        );
-      },
+            if (!isEnrolled)
+              _EnrollmentBannerSliver(
+                onEnroll: onEnroll,
+                strings: strings,
+                padding: padding,
+              ),
+            _SectionHeaderSliver(
+              lessonCount: lessons.length,
+              isEnrolled: isEnrolled,
+              strings: strings,
+              padding: padding,
+            ),
+            _LessonsListSliver(
+              lessons: lessons,
+              course: course,
+              isEnrolled: isEnrolled,
+              onEnroll: onEnroll,
+              padding: padding,
+            ),
+          ],
+        ),
+      ),
     );
   }
 
-  double _getHorizontalPadding(double width) {
+  int get _totalMinutes {
+    return lessons.fold(0, (total, lesson) => total + lesson.durationMinutes);
+  }
+
+  static double _horizontalPadding(double width) {
     if (width >= 1000) return 48;
     if (width >= 650) return 32;
     return 20;
   }
-
-  int _calculateTotalMinutes() {
-    return lessons.fold(0, (total, lesson) => total + lesson.durationMinutes);
-  }
 }
 
 class _CourseHeaderSliver extends StatelessWidget {
-  final Course course;
-  final int lessonsCount;
-  final int totalMinutes;
-  final bool isEnrolled;
-  final double padding;
-
   const _CourseHeaderSliver({
     required this.course,
     required this.lessonsCount,
@@ -99,6 +87,12 @@ class _CourseHeaderSliver extends StatelessWidget {
     required this.isEnrolled,
     required this.padding,
   });
+
+  final Course course;
+  final int lessonsCount;
+  final int totalMinutes;
+  final bool isEnrolled;
+  final double padding;
 
   @override
   Widget build(BuildContext context) {
@@ -117,17 +111,15 @@ class _CourseHeaderSliver extends StatelessWidget {
 }
 
 class _EnrollmentBannerSliver extends StatelessWidget {
-  final Course course;
-  final VoidCallback onEnroll;
-  final AppStrings strings;
-  final double padding;
-
   const _EnrollmentBannerSliver({
-    required this.course,
     required this.onEnroll,
     required this.strings,
     required this.padding,
   });
+
+  final VoidCallback onEnroll;
+  final AppStrings strings;
+  final double padding;
 
   @override
   Widget build(BuildContext context) {
@@ -141,17 +133,17 @@ class _EnrollmentBannerSliver extends StatelessWidget {
 }
 
 class _SectionHeaderSliver extends StatelessWidget {
-  final int lessonCount;
-  final bool isEnrolled;
-  final AppStrings strings;
-  final double padding;
-
   const _SectionHeaderSliver({
     required this.lessonCount,
     required this.isEnrolled,
     required this.strings,
     required this.padding,
   });
+
+  final int lessonCount;
+  final bool isEnrolled;
+  final AppStrings strings;
+  final double padding;
 
   @override
   Widget build(BuildContext context) {
@@ -169,12 +161,6 @@ class _SectionHeaderSliver extends StatelessWidget {
 }
 
 class _LessonsListSliver extends StatelessWidget {
-  final List<Lesson> lessons;
-  final Course course;
-  final bool isEnrolled;
-  final VoidCallback onEnroll;
-  final double padding;
-
   const _LessonsListSliver({
     required this.lessons,
     required this.course,
@@ -182,6 +168,12 @@ class _LessonsListSliver extends StatelessWidget {
     required this.onEnroll,
     required this.padding,
   });
+
+  final List<Lesson> lessons;
+  final Course course;
+  final bool isEnrolled;
+  final VoidCallback onEnroll;
+  final double padding;
 
   @override
   Widget build(BuildContext context) {
@@ -208,13 +200,6 @@ class _LessonsListSliver extends StatelessWidget {
 }
 
 class LessonListItem extends ConsumerWidget {
-  final Lesson lesson;
-  final Course course;
-  final List<Lesson> lessons;
-  final int index;
-  final bool isEnrolled;
-  final VoidCallback onEnroll;
-
   const LessonListItem({
     super.key,
     required this.lesson,
@@ -225,15 +210,23 @@ class LessonListItem extends ConsumerWidget {
     required this.onEnroll,
   });
 
+  final Lesson lesson;
+  final Course course;
+  final List<Lesson> lessons;
+  final int index;
+  final bool isEnrolled;
+  final VoidCallback onEnroll;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isFree = index == 0;
-    final isLocked = !isEnrolled && !isFree;
+    final isFirst = index == 0;
+    final isLocked = !isEnrolled && !isFirst;
     final completion = ref.watch(lessonCompletionProvider(lesson.id));
     final isCompleted = completion.asData?.value ?? false;
+
     return LessonCard(
       lesson: lesson,
-      isFirst: isFree,
+      isFirst: isFirst,
       isLocked: isLocked,
       isEnrolled: isEnrolled,
       isCompleted: isCompleted,
@@ -270,18 +263,19 @@ class LessonListItem extends ConsumerWidget {
 }
 
 class EnrollmentBanner extends StatelessWidget {
-  final VoidCallback onEnroll;
-  final AppStrings strings;
-
   const EnrollmentBanner({
     super.key,
     required this.onEnroll,
     required this.strings,
   });
 
+  final VoidCallback onEnroll;
+  final AppStrings strings;
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final subtitleColor = AppColors.subtitleColor(context);
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -292,15 +286,7 @@ class EnrollmentBanner extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(15),
-            ),
-            child: const Icon(Icons.school_rounded, color: AppColors.primary),
-          ),
+          const _EnrollmentBannerIcon(),
           const SizedBox(width: 14),
           Expanded(
             child: Column(
@@ -316,7 +302,7 @@ class EnrollmentBanner extends StatelessWidget {
                 Text(
                   strings.lessonFreeDescription,
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: AppColors.subtitleColor(context),
+                    color: subtitleColor,
                     height: 1.4,
                   ),
                 ),
@@ -331,17 +317,34 @@ class EnrollmentBanner extends StatelessWidget {
   }
 }
 
-class SectionHeader extends StatelessWidget {
-  final int lessonCount;
-  final bool isEnrolled;
-  final AppStrings strings;
+class _EnrollmentBannerIcon extends StatelessWidget {
+  const _EnrollmentBannerIcon();
 
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 48,
+      height: 48,
+      decoration: BoxDecoration(
+        color: AppColors.cardColor(context),
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: const Icon(Icons.school_rounded, color: AppColors.primary),
+    );
+  }
+}
+
+class SectionHeader extends StatelessWidget {
   const SectionHeader({
     super.key,
     required this.lessonCount,
     required this.isEnrolled,
     required this.strings,
   });
+
+  final int lessonCount;
+  final bool isEnrolled;
+  final AppStrings strings;
 
   @override
   Widget build(BuildContext context) {

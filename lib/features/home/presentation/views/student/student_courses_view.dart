@@ -20,9 +20,10 @@ abstract class StudentCoursesView extends ConsumerWidget {
     final coursesAsync = ref.watch(publishedCoursesProvider);
 
     return coursesAsync.when(
-      loading: () => const CoursesLoading(),
-      error: (error, _) => CoursesError(
-        message: error.toString(),
+      loading: () => const LoadingState(),
+      error: (error, _) => ErrorState(
+        title: 'Error',
+        error: error,
         onRetry: () => ref.invalidate(publishedCoursesProvider),
       ),
       data: (courses) {

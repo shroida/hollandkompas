@@ -14,126 +14,115 @@ import 'package:hollandkompas/features/courses/presentation/widgets/enrollment_d
 import 'package:hollandkompas/features/home/presentation/providers/course_lessons_provider.dart';
 
 class CourseLessonsScreen extends ConsumerWidget {
-  final Course course;
-
   const CourseLessonsScreen({super.key, required this.course});
+
+  final Course course;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final strings = AppStrings(ref.watch(appLocaleProvider));
-
+    final locale = ref.watch(appLocaleProvider);
+    final strings = AppStrings(locale);
     final lessonsAsync = ref.watch(courseLessonsProvider(course.id));
-
     final enrollmentAsync = ref.watch(courseEnrollmentProvider(course.id));
 
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
-      appBar: _buildAppBar(
-        context: context,
-        strings: strings,
-        enrollmentAsync: enrollmentAsync,
+      backgroundColor: AppColors.backgroundColor(context),
+      appBar: AppBar(
+        title: Text(strings.courseLessons),
+        actions: [
+          _EnrollmentAction(
+            enrollmentAsync: enrollmentAsync,
+            enrollLabel: strings.enroll,
+            onEnroll: () => _showEnrollmentDialog(context),
+          ),
+        ],
       ),
-      body: _buildBody(
-        context: context,
-        ref: ref,
+      body: _CourseLessonsBody(
+        course: course,
         strings: strings,
         lessonsAsync: lessonsAsync,
         enrollmentAsync: enrollmentAsync,
+        onRetryLessons: () {
+          ref.invalidate(courseLessonsProvider(course.id));
+        },
+        onRetryEnrollment: () {
+          ref.invalidate(courseEnrollmentProvider(course.id));
+        },
+        onEnroll: () => _showEnrollmentDialog(context),
       ),
-    );
-  }
-
-  PreferredSizeWidget _buildAppBar({
-    required BuildContext context,
-    required AppStrings strings,
-    required AsyncValue<bool> enrollmentAsync,
-  }) {
-    return AppBar(
-      title: Text(strings.courseLessons),
-      actions: [
-        _EnrollmentAction(
-          enrollmentAsync: enrollmentAsync,
-          enrollLabel: strings.enroll,
-          onEnroll: () => _showEnrollmentDialog(context),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildBody({
-    required BuildContext context,
-    required WidgetRef ref,
-    required AppStrings strings,
-    required AsyncValue lessonsAsync,
-    required AsyncValue<bool> enrollmentAsync,
-  }) {
-    return lessonsAsync.when(
-      loading: () => const LoadingState(),
-
-      error: (error, stackTrace) {
-        return ErrorState(
-          title: strings.unableToLoadLessons,
-          error: error,
-          onRetry: () {
-            ref.invalidate(courseLessonsProvider(course.id));
-          },
-        );
-      },
-
-      data: (lessons) {
-        return enrollmentAsync.when(
-          loading: () => const LoadingState(),
-
-          error: (error, stackTrace) {
-            return ErrorState(
-              title: strings.unableToCheckEnrollment,
-              error: error,
-              onRetry: () {
-                ref.invalidate(courseEnrollmentProvider(course.id));
-              },
-            );
-          },
-
-          data: (isEnrolled) {
-            return CourseLessonsContent(
-              course: course,
-              lessons: lessons,
-              isEnrolled: isEnrolled,
-              onEnroll: () => _showEnrollmentDialog(context),
-            );
-          },
-        );
-      },
     );
   }
 
   Future<void> _showEnrollmentDialog(BuildContext context) async {
     await showDialog<void>(
       context: context,
-      builder: (_) {
-        return EnrollmentDialog(
-          course: course,
-          onEnroll: () async {
-            Navigator.of(context).pop();
+      builder: (_) => EnrollmentDialog(
+        course: course,
+        onEnroll: () async {
+          Navigator.of(context).pop();
+          await context.push(RoutePaths.payment, extra: course);
+        },
+      ),
+    );
+  }
+}
 
-            await context.push(RoutePaths.payment, extra: course);
-          },
-        );
-      },
+class _CourseLessonsBody extends StatelessWidget {
+  const _CourseLessonsBody({
+    required this.course,
+    required this.strings,
+    required this.lessonsAsync,
+    required this.enrollmentAsync,
+    required this.onRetryLessons,
+    required this.onRetryEnrollment,
+    required this.onEnroll,
+  });
+
+  final Course course;
+  final AppStrings strings;
+  final AsyncValue lessonsAsync;
+  final AsyncValue<bool> enrollmentAsync;
+  final VoidCallback onRetryLessons;
+  final VoidCallback onRetryEnrollment;
+  final VoidCallback onEnroll;
+
+  @override
+  Widget build(BuildContext context) {
+    return lessonsAsync.when(
+      loading: () => const LoadingState(),
+      error: (error, _) => ErrorState(
+        title: strings.unableToLoadLessons,
+        error: error,
+        onRetry: onRetryLessons,
+      ),
+      data: (lessons) => enrollmentAsync.when(
+        loading: () => const LoadingState(),
+        error: (error, _) => ErrorState(
+          title: strings.unableToCheckEnrollment,
+          error: error,
+          onRetry: onRetryEnrollment,
+        ),
+        data: (isEnrolled) => CourseLessonsContent(
+          course: course,
+          lessons: lessons,
+          isEnrolled: isEnrolled,
+          onEnroll: onEnroll,
+        ),
+      ),
     );
   }
 }
 
 class _EnrollmentAction extends StatelessWidget {
-  final AsyncValue<bool> enrollmentAsync;
-  final String enrollLabel;
-  final VoidCallback onEnroll;
-
   const _EnrollmentAction({
     required this.enrollmentAsync,
     required this.enrollLabel,
     required this.onEnroll,
   });
+
+  final AsyncValue<bool> enrollmentAsync;
+  final String enrollLabel;
+  final VoidCallback onEnroll;
 
   @override
   Widget build(BuildContext context) {
@@ -146,26 +135,20 @@ class _EnrollmentAction extends StatelessWidget {
           child: CircularProgressIndicator(strokeWidth: 2),
         ),
       ),
-
       error: (_, _) => const SizedBox.shrink(),
-
-      data: (isEnrolled) {
-        if (isEnrolled) {
-          return const Padding(
-            padding: EdgeInsets.only(right: 16),
-            child: Icon(Icons.check_circle_rounded, color: AppColors.primary),
-          );
-        }
-
-        return Padding(
-          padding: const EdgeInsets.only(right: 12),
-          child: TextButton.icon(
-            onPressed: onEnroll,
-            icon: const Icon(Icons.school_rounded, size: 18),
-            label: Text(enrollLabel),
-          ),
-        );
-      },
+      data: (isEnrolled) => isEnrolled
+          ? const Padding(
+              padding: EdgeInsets.only(right: 16),
+              child: Icon(Icons.check_circle_rounded, color: AppColors.primary),
+            )
+          : Padding(
+              padding: const EdgeInsets.only(right: 12),
+              child: TextButton.icon(
+                onPressed: onEnroll,
+                icon: const Icon(Icons.school_rounded, size: 18),
+                label: Text(enrollLabel),
+              ),
+            ),
     );
   }
 }

@@ -6,20 +6,20 @@ import 'package:hollandkompas/core/theme/app_colors.dart';
 import 'package:hollandkompas/features/courses/domain/entities/course.dart';
 
 class EnrollmentDialog extends ConsumerWidget {
-  final Course course;
-  final Future<void> Function() onEnroll;
-
   const EnrollmentDialog({
     super.key,
     required this.course,
     required this.onEnroll,
   });
 
+  final Course course;
+  final Future<void> Function() onEnroll;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final locale = ref.watch(appLocaleProvider);
-    final strings = AppStrings(locale);
+    final strings = AppStrings(ref.watch(appLocaleProvider));
     final theme = Theme.of(context);
+    final subtitleColor = AppColors.subtitleColor(context);
 
     return Dialog(
       insetPadding: const EdgeInsets.symmetric(horizontal: 24),
@@ -30,9 +30,7 @@ class EnrollmentDialog extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             const _EnrollmentIcon(),
-
             const SizedBox(height: 20),
-
             Text(
               strings.unlockCourse(course.title),
               textAlign: TextAlign.center,
@@ -40,37 +38,29 @@ class EnrollmentDialog extends ConsumerWidget {
                 fontWeight: FontWeight.w800,
               ),
             ),
-
             const SizedBox(height: 10),
-
             Text(
               strings.previewFirstLessonDescription,
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: AppColors.subtitleColor(context),
+                color: subtitleColor,
                 height: 1.5,
               ),
             ),
-
             const SizedBox(height: 22),
-
             _DialogFeature(
               icon: Icons.lock_open_rounded,
               text: strings.unlockAllLessons,
             ),
-
             _DialogFeature(
               icon: Icons.trending_up_rounded,
               text: strings.trackLearningProgress,
             ),
-
             _DialogFeature(
               icon: Icons.school_rounded,
               text: strings.continueDutchJourney,
             ),
-
             const SizedBox(height: 22),
-
             SizedBox(
               width: double.infinity,
               child: FilledButton.icon(
@@ -82,15 +72,11 @@ class EnrollmentDialog extends ConsumerWidget {
                 ),
               ),
             ),
-
             const SizedBox(height: 5),
-
             SizedBox(
               width: double.infinity,
               child: TextButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
+                onPressed: () => Navigator.of(context).pop(),
                 child: Text(strings.maybeLater),
               ),
             ),
@@ -121,10 +107,10 @@ class _EnrollmentIcon extends StatelessWidget {
 }
 
 class _DialogFeature extends StatelessWidget {
+  const _DialogFeature({required this.icon, required this.text});
+
   final IconData icon;
   final String text;
-
-  const _DialogFeature({required this.icon, required this.text});
 
   @override
   Widget build(BuildContext context) {
@@ -143,9 +129,7 @@ class _DialogFeature extends StatelessWidget {
             ),
             child: Icon(icon, size: 17, color: AppColors.primary),
           ),
-
           const SizedBox(width: 10),
-
           Expanded(
             child: Text(
               text,
@@ -154,7 +138,6 @@ class _DialogFeature extends StatelessWidget {
               ),
             ),
           ),
-
           const Icon(Icons.check_rounded, size: 18, color: AppColors.primary),
         ],
       ),

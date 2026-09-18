@@ -6,10 +6,6 @@ import 'package:hollandkompas/features/courses/domain/entities/course.dart';
 import 'package:hollandkompas/features/courses/presentation/widgets/course_image.dart';
 
 class CourseCard extends ConsumerWidget {
-  final Course course;
-  final bool isEnrolled;
-  final VoidCallback? onTap;
-
   const CourseCard({
     super.key,
     required this.course,
@@ -17,13 +13,20 @@ class CourseCard extends ConsumerWidget {
     this.onTap,
   });
 
+  final Course course;
+  final bool isEnrolled;
+  final VoidCallback? onTap;
+
+  static const _radius = 14.0;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final locale = ref.watch(appLocaleProvider);
-
+    final languageCode = ref.watch(
+      appLocaleProvider.select((locale) => locale.languageCode),
+    );
     final theme = Theme.of(context);
-
-    final description = course.getDescription(locale.languageCode);
+    final subtitleColor = AppColors.subtitleColor(context);
+    final description = course.getDescription(languageCode);
 
     return Card(
       margin: EdgeInsets.zero,
@@ -31,26 +34,23 @@ class CourseCard extends ConsumerWidget {
       elevation: 3,
       shadowColor: Colors.black.withValues(alpha: 0.12),
       surfaceTintColor: Colors.transparent,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(_radius),
+      ),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(_radius),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
           children: [
             CourseImage(course: course),
-
             Padding(
               padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
                 children: [
                   LevelBadge(level: course.level),
-
                   const SizedBox(height: 10),
-
                   Text(
                     course.title,
                     maxLines: 1,
@@ -59,20 +59,16 @@ class CourseCard extends ConsumerWidget {
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-
                   const SizedBox(height: 6),
-
                   Text(
                     description,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      color: AppColors.subtitleColor(context),
+                      color: subtitleColor,
                     ),
                   ),
-
                   const SizedBox(height: 14),
-
                   Row(
                     children: [
                       const Icon(
@@ -80,22 +76,18 @@ class CourseCard extends ConsumerWidget {
                         size: 18,
                         color: AppColors.primary,
                       ),
-
                       const SizedBox(width: 7),
-
                       Expanded(
                         child: Text(
                           isEnrolled ? 'Continue learning' : 'Dutch course',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: theme.textTheme.bodySmall?.copyWith(
-                            color: AppColors.subtitleColor(context),
+                            color: subtitleColor,
                           ),
                         ),
                       ),
-
                       const SizedBox(width: 8),
-
                       Text(
                         '${course.price} EGP',
                         style: theme.textTheme.titleMedium?.copyWith(
@@ -103,31 +95,67 @@ class CourseCard extends ConsumerWidget {
                           color: AppColors.primary,
                         ),
                       ),
-
                       const SizedBox(width: 8),
-
-                      GestureDetector(
-                        onTap: onTap,
-                        child: Container(
-                          width: 38,
-                          height: 38,
-                          decoration: BoxDecoration(
-                            color: AppColors.primary,
-                            borderRadius: BorderRadius.circular(11),
-                          ),
-                          child: const Icon(
-                            Icons.arrow_forward_rounded,
-                            color: Colors.white,
-                            size: 20,
-                          ),
-                        ),
-                      ),
+                      _CourseCardAction(onTap: onTap),
                     ],
                   ),
                 ],
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CourseCardAction extends StatelessWidget {
+  const _CourseCardAction({required this.onTap});
+
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppColors.primary,
+      borderRadius: BorderRadius.circular(11),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(11),
+        child: const SizedBox(
+          width: 38,
+          height: 38,
+          child: Icon(
+            Icons.arrow_forward_rounded,
+            color: Colors.white,
+            size: 20,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class LevelBadge extends StatelessWidget {
+  const LevelBadge({super.key, required this.level});
+
+  final String level;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: AppColors.accent,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        level.toUpperCase(),
+        style: const TextStyle(
+          color: AppColors.primary,
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.5,
         ),
       ),
     );

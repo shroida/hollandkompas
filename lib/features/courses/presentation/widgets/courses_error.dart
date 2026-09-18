@@ -1,14 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:hollandkompas/core/theme/app_colors.dart';
 
-class CoursesError extends StatelessWidget {
-  final String message;
-  final VoidCallback onRetry;
+class ErrorState extends StatelessWidget {
+  const ErrorState({
+    super.key,
+    required this.title,
+    required this.error,
+    required this.onRetry,
+  });
 
-  const CoursesError({super.key, required this.message, required this.onRetry});
+  final String title;
+  final Object error;
+  final VoidCallback onRetry;
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.all(24),
@@ -16,38 +24,33 @@ class CoursesError extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             const Icon(
-              Icons.cloud_off_rounded,
-              size: 48,
+              Icons.error_outline_rounded,
+              size: 56,
               color: AppColors.destructive,
             ),
-
             const SizedBox(height: 16),
-
             Text(
-              'Couldn’t load your courses',
-              style: Theme.of(
-                context,
-              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+              title,
+              textAlign: TextAlign.center,
+              style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.w700,
+              ),
             ),
-
             const SizedBox(height: 8),
-
             Text(
-              message,
+              error.toString(),
+              textAlign: TextAlign.center,
               maxLines: 3,
               overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              style: theme.textTheme.bodyMedium?.copyWith(
                 color: AppColors.subtitleColor(context),
               ),
             ),
-
-            const SizedBox(height: 18),
-
+            const SizedBox(height: 20),
             FilledButton.icon(
               onPressed: onRetry,
               icon: const Icon(Icons.refresh_rounded),
-              label: const Text('Try again'),
+              label: const Text('Retry'),
             ),
           ],
         ),
