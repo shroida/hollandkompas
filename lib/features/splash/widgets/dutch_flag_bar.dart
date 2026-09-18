@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
 class DutchFlagBar extends StatelessWidget {
-  final Alignment alignment;
-
   const DutchFlagBar({super.key, required this.alignment});
+
+  final Alignment alignment;
 
   @override
   Widget build(BuildContext context) {

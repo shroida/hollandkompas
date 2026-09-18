@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:hollandkompas/core/theme/app_colors.dart';
 
 class CenterContent extends StatelessWidget {
-  final AnimationController logoController;
-  final AnimationController pulseController;
-  final double progress;
-
   const CenterContent({
     super.key,
     required this.logoController,
@@ -12,8 +9,14 @@ class CenterContent extends StatelessWidget {
     required this.progress,
   });
 
+  final AnimationController logoController;
+  final AnimationController pulseController;
+  final double progress;
+
   @override
   Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+
     return Center(
       child: FadeTransition(
         opacity: logoController,
@@ -26,38 +29,32 @@ class CenterContent extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               _Logo(pulseController: pulseController),
-
               const SizedBox(height: 28),
-
-              const Text(
+              Text(
                 'HollandKompas',
-                style: TextStyle(
+                style: textTheme.headlineLarge?.copyWith(
                   color: Colors.white,
                   fontSize: 36,
                   fontWeight: FontWeight.bold,
                   letterSpacing: -0.5,
                 ),
               ),
-
               const SizedBox(height: 8),
-
               _AnimatedText(
                 visible: progress > 10,
                 text: 'بوصلتك نحو اللغة الهولندية',
-                fontSize: 18,
-                fontWeight: FontWeight.w500,
+                style: textTheme.bodyLarge?.copyWith(
+                  color: Colors.white70,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
-
               const SizedBox(height: 4),
-
               _AnimatedText(
                 visible: progress > 20,
                 text: 'تعلم الهولندية بطريقة ذكية وممتعة',
-                fontSize: 13,
+                style: textTheme.bodySmall?.copyWith(color: Colors.white70),
               ),
-
               const SizedBox(height: 36),
-
               _ProgressIndicator(progress: progress),
             ],
           ),
@@ -68,15 +65,15 @@ class CenterContent extends StatelessWidget {
 }
 
 class _Logo extends StatelessWidget {
-  final AnimationController pulseController;
-
   const _Logo({required this.pulseController});
+
+  final AnimationController pulseController;
 
   @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: pulseController,
-      builder: (context, _) {
+      builder: (context, child) {
         final pulse = Curves.easeInOut.transform(pulseController.value);
 
         return Stack(
@@ -86,45 +83,32 @@ class _Logo extends StatelessWidget {
               width: 96,
               height: 96,
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: .95),
+                color: Colors.white.withValues(alpha: 0.95),
                 borderRadius: BorderRadius.circular(24),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.white.withValues(alpha: .12 + pulse * .18),
+                    color: Colors.white.withValues(alpha: 0.12 + pulse * 0.18),
                     blurRadius: 30 + pulse * 20,
                     spreadRadius: 2 + pulse * 3,
                   ),
                   const BoxShadow(color: Colors.black26, blurRadius: 30),
                 ],
               ),
-              child: const Center(
-                child: Text('🇳🇱', style: TextStyle(fontSize: 48)),
+              clipBehavior: Clip.antiAlias,
+              child: Image.asset(
+                'assets/logo.jpeg',
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return const SizedBox.shrink();
+                },
               ),
             ),
-
             Positioned(
               top: -4,
               right: -4,
               child: Transform.scale(
-                scale: 1 + pulse * .15,
-                child: Container(
-                  width: 28,
-                  height: 28,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFFFF6B00),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Center(
-                    child: Text(
-                      'HK',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 10,
-                      ),
-                    ),
-                  ),
-                ),
+                scale: 1 + pulse * 0.15,
+                child: const _LogoBadge(),
               ),
             ),
           ],
@@ -134,45 +118,63 @@ class _Logo extends StatelessWidget {
   }
 }
 
-class _AnimatedText extends StatelessWidget {
-  final bool visible;
-  final String text;
-  final double fontSize;
-  final FontWeight? fontWeight;
-
-  const _AnimatedText({
-    required this.visible,
-    required this.text,
-    required this.fontSize,
-    this.fontWeight,
-  });
+class _LogoBadge extends StatelessWidget {
+  const _LogoBadge();
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedOpacity(
-      opacity: visible ? 1 : 0,
-      duration: const Duration(milliseconds: 600),
-      child: Text(
-        text,
-        textDirection: TextDirection.rtl,
-        style: TextStyle(
-          color: Colors.white70,
-          fontSize: fontSize,
-          fontWeight: fontWeight,
+    return SizedBox.square(
+      dimension: 28,
+      child: DecoratedBox(
+        decoration: const BoxDecoration(
+          color: AppColors.primary,
+          shape: BoxShape.circle,
+        ),
+        child: Center(
+          child: Text(
+            'HK',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: Colors.white,
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ),
       ),
     );
   }
 }
 
-class _ProgressIndicator extends StatelessWidget {
-  final double progress;
+class _AnimatedText extends StatelessWidget {
+  const _AnimatedText({
+    required this.visible,
+    required this.text,
+    required this.style,
+  });
 
+  final bool visible;
+  final String text;
+  final TextStyle? style;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedOpacity(
+      opacity: visible ? 1 : 0,
+      duration: const Duration(milliseconds: 600),
+      child: Text(text, textDirection: TextDirection.rtl, style: style),
+    );
+  }
+}
+
+class _ProgressIndicator extends StatelessWidget {
   const _ProgressIndicator({required this.progress});
+
+  final double progress;
 
   @override
   Widget build(BuildContext context) {
     final value = (progress / 100).clamp(0.0, 1.0);
+    final textTheme = Theme.of(context).textTheme;
 
     return SizedBox(
       width: 260,
@@ -186,43 +188,49 @@ class _ProgressIndicator extends StatelessWidget {
                 alignment: Alignment.centerLeft,
                 child: FractionallySizedBox(
                   widthFactor: value,
-                  child: Container(
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Colors.white, Color(0xFFFFF3E8)],
-                      ),
-                      boxShadow: [
-                        BoxShadow(color: Colors.white54, blurRadius: 12),
-                      ],
-                    ),
-                  ),
+                  child: const _ProgressFill(),
                 ),
               ),
             ),
           ),
-
           const SizedBox(height: 12),
-
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
                 '${progress.toInt()}%',
-                style: const TextStyle(
+                style: textTheme.bodySmall?.copyWith(
                   color: Colors.white70,
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
                 ),
               ),
-
-              const Text(
+              Text(
                 'جاري التحميل...',
                 textDirection: TextDirection.rtl,
-                style: TextStyle(color: Colors.white54, fontSize: 12),
+                style: textTheme.bodySmall?.copyWith(
+                  color: Colors.white54,
+                  fontSize: 12,
+                ),
               ),
             ],
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _ProgressFill extends StatelessWidget {
+  const _ProgressFill();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 8,
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(colors: [Colors.white, Color(0xFFFFF3E8)]),
+        boxShadow: [BoxShadow(color: Colors.white54, blurRadius: 12)],
       ),
     );
   }
