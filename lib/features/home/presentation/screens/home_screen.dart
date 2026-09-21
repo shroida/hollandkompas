@@ -33,9 +33,9 @@ class HomeScreen extends ConsumerWidget {
       appBar: AppBarHomeScreen(
         firstName: user.firstName,
         level: user.level.name.toUpperCase(),
-        onMyCourses: () => context.push('/my-courses'),
+        onMyCourses: () => context.push(RoutePaths.myCourses),
         onProfile: () => context.push(RoutePaths.profile),
-        onSettings: () => context.pushNamed('settings'),
+        onSettings: () => context.push(RoutePaths.settings),
         onLogout: () => _logout(context, ref),
       ),
       body: _HomeBody(userRole: user.role),

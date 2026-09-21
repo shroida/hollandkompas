@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hollandkompas/core/router/route_paths.dart';
 import 'package:hollandkompas/core/theme/app_colors.dart';
 
 class LevelSelectionScreen extends StatefulWidget {
@@ -30,7 +31,7 @@ class _LevelSelectionScreenState extends State<LevelSelectionScreen> {
   }
 
   void _startJourney() {
-    context.go('/register');
+    context.go(RoutePaths.register);
   }
 
   @override

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hollandkompas/core/router/route_paths.dart';
 import 'package:hollandkompas/core/theme/app_colors.dart';
 import 'package:hollandkompas/features/courses/domain/entities/course.dart';
 import 'package:hollandkompas/features/courses/presentation/widgets/enrollment_dialog.dart';
@@ -275,7 +276,7 @@ class _LessonViewerScreenState extends ConsumerState<LessonViewerScreen>
           onEnroll: () async {
             Navigator.of(dialogContext).pop();
 
-            await context.push('/payment', extra: {'course': widget.course});
+            await context.push(RoutePaths.payment, extra: widget.course);
           },
         );
       },

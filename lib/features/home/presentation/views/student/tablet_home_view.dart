@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hollandkompas/core/router/route_paths.dart';
 import 'package:hollandkompas/features/courses/domain/entities/course.dart';
 import 'package:hollandkompas/features/courses/presentation/widgets/course_card.dart';
 import 'package:hollandkompas/features/courses/presentation/widgets/section_header.dart';
@@ -60,9 +61,6 @@ class TabletHomeView extends StudentCoursesView {
   }
 
   void _openCourse(BuildContext context, Course course) {
-    context.push(
-      '/course-lessons',
-      extra: {'course': course, 'isEnrolled': false},
-    );
+    context.push(RoutePaths.courseLessons, extra: course);
   }
 }

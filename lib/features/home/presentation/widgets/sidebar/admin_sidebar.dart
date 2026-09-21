@@ -62,7 +62,7 @@ class AdminSidebar extends StatelessWidget {
                     collapsed: collapsed,
                     selected: _isCurrentRoute(context, '/admin/students'),
                     onTap: () {
-                      context.go('/admin/students');
+                      context.go(RoutePaths.totalStudents);
                       onItemSelected?.call();
                     },
                   ),
