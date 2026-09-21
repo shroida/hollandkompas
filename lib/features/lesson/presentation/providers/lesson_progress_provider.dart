@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:hollandkompas/features/lesson/presentation/providers/lesson_providers.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 final lessonCompletionProvider = FutureProvider.autoDispose
@@ -9,12 +10,7 @@ final lessonCompletionProvider = FutureProvider.autoDispose
         return false;
       }
 
-      final response = await Supabase.instance.client
-          .from('lesson_progress')
-          .select('completed')
-          .eq('student_id', user.id)
-          .eq('lesson_id', lessonId)
-          .maybeSingle();
+      final getLessonCompletion = ref.read(getLessonCompletionProvider);
 
-      return response?['completed'] == true;
+      return getLessonCompletion(studentId: user.id, lessonId: lessonId);
     });

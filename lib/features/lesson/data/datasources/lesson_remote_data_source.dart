@@ -3,6 +3,11 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 abstract class LessonRemoteDataSource {
   Future<List<LessonModel>> getCourseLessons(String courseId);
+
+  Future<bool> getLessonCompletion({
+    required String studentId,
+    required String lessonId,
+  });
 }
 
 class LessonRemoteDataSourceImpl implements LessonRemoteDataSource {
@@ -23,5 +28,20 @@ class LessonRemoteDataSourceImpl implements LessonRemoteDataSource {
           (json) => LessonModel.fromJson(Map<String, dynamic>.from(json)),
         )
         .toList();
+  }
+
+  @override
+  Future<bool> getLessonCompletion({
+    required String studentId,
+    required String lessonId,
+  }) async {
+    final response = await supabase
+        .from('lesson_progress')
+        .select('completed')
+        .eq('student_id', studentId)
+        .eq('lesson_id', lessonId)
+        .maybeSingle();
+
+    return response?['completed'] == true;
   }
 }

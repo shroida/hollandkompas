@@ -3,12 +3,23 @@ import 'package:hollandkompas/features/lesson/data/datasources/lesson_remote_dat
 import 'package:hollandkompas/features/lesson/domain/entities/lesson.dart';
 
 class LessonRepositoryImpl implements LessonRepository {
-  final LessonRemoteDataSource remoteDataSource;
-
   LessonRepositoryImpl(this.remoteDataSource);
+
+  final LessonRemoteDataSource remoteDataSource;
 
   @override
   Future<List<Lesson>> getCourseLessons(String courseId) {
     return remoteDataSource.getCourseLessons(courseId);
+  }
+
+  @override
+  Future<bool> getLessonCompletion({
+    required String studentId,
+    required String lessonId,
+  }) {
+    return remoteDataSource.getLessonCompletion(
+      studentId: studentId,
+      lessonId: lessonId,
+    );
   }
 }
