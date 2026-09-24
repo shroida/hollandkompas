@@ -18,9 +18,7 @@ class LessonInformation extends StatelessWidget {
             label: 'Course lesson',
           ),
         ),
-
         const SizedBox(width: 12),
-
         Expanded(
           child: InfoTile(
             icon: Icons.schedule_rounded,

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:hollandkompas/core/theme/app_colors.dart';
 
 class LessonStatusBanner extends StatelessWidget {
   final int lessonOrder;
@@ -19,12 +18,14 @@ class LessonStatusBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     if (isEnrolled) {
       return _StatusContainer(
         icon: Icons.check_circle_rounded,
         title: 'You are enrolled',
         subtitle: 'All lessons are available to you.',
-        trailing: const Icon(Icons.verified_rounded, color: AppColors.primary),
+        trailing: Icon(Icons.verified_rounded, color: colorScheme.primary),
       );
     }
 
@@ -36,15 +37,15 @@ class LessonStatusBanner extends StatelessWidget {
         trailing: Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           decoration: BoxDecoration(
-            color: AppColors.accent,
+            color: colorScheme.primary.withValues(alpha: 0.10),
             borderRadius: BorderRadius.circular(20),
           ),
-          child: const Text(
+          child: Text(
             'FREE',
-            style: TextStyle(
-              color: AppColors.primary,
-              fontSize: 11,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: colorScheme.primary,
               fontWeight: FontWeight.w800,
+              letterSpacing: 0.4,
             ),
           ),
         ),
@@ -75,12 +76,15 @@ class _StatusContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.muted,
+        color: colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: AppColors.primary.withValues(alpha: 0.08)),
+        border: Border.all(color: colorScheme.primary.withValues(alpha: 0.08)),
       ),
       child: Row(
         children: [
@@ -88,37 +92,33 @@ class _StatusContainer extends StatelessWidget {
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.1),
+              color: colorScheme.primary.withValues(alpha: 0.10),
               borderRadius: BorderRadius.circular(13),
             ),
-            child: Icon(icon, color: AppColors.primary),
+            child: Icon(icon, color: colorScheme.primary),
           ),
-
           const SizedBox(width: 14),
-
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   title,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+                  style: theme.textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
                 const SizedBox(height: 3),
                 Text(
                   subtitle,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppColors.subtitleColor(context),
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
                   ),
                 ),
               ],
             ),
           ),
-
           const SizedBox(width: 8),
-
           trailing,
         ],
       ),
