@@ -4,7 +4,6 @@ import 'package:hollandkompas/features/auth/domain/providers/login_usecase_provi
 import 'package:hollandkompas/features/enrollment/presentation/providers/enrolled_courses_provider.dart';
 import 'package:hollandkompas/features/home/presentation/providers/current_user_provider.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
-import 'package:supabase_flutter/supabase_flutter.dart' show Supabase;
 
 import '../../domain/enums/dutch_level.dart';
 import '../../domain/providers/register_usecase_provider.dart';
@@ -77,13 +76,13 @@ class AuthController extends _$AuthController {
   }
 
   Future<void> logout() async {
-    final supabaseUser = Supabase.instance.client.auth.currentUser;
-    final oldUserId = supabaseUser?.id;
+    final repository = ref.read(authRepositoryProvider);
+    final oldUserId = (await repository.getCurrentUser())?.id;
 
     state = state.copyWith(isLoading: true, error: null);
 
     try {
-      await ref.read(authRepositoryProvider).logout();
+      await repository.logout();
 
       if (!ref.mounted) return;
 

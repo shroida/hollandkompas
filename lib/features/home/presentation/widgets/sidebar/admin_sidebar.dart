@@ -235,9 +235,12 @@ class AdminSidebar extends StatelessWidget {
   }
 
   bool _isCurrentRoute(BuildContext context, String route) {
-    final location = GoRouterState.of(context).uri.toString();
-
-    return location == route;
+    try {
+      final location = GoRouterState.of(context).uri.toString();
+      return location == route;
+    } catch (_) {
+      return false;
+    }
   }
 }
 

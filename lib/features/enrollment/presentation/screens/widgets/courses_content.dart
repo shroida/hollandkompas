@@ -31,7 +31,7 @@ class CoursesContent extends ConsumerWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final isDesktop = constraints.maxWidth >= 900;
+        final isDesktop = MediaQuery.sizeOf(context).width >= 900;
         final horizontalPadding = isDesktop ? 40.0 : 20.0;
 
         return Center(

@@ -38,7 +38,6 @@ class CourseModel extends Course {
       price: (json['price'] as num?)?.toDouble() ?? 0.0,
     );
   }
-
   static Map<String, String> _parseDescriptions(dynamic value) {
     if (value == null) {
       return {};
@@ -67,10 +66,11 @@ class CourseModel extends Course {
                 MapEntry(key.toString().toLowerCase(), value?.toString() ?? ''),
           );
         }
-      } catch (_) {
-        // Not valid JSON.
-        // Treat it as a normal English description.
-      }
+
+        if (decoded is List) {
+          return {};
+        }
+      } catch (_) {}
 
       return {'en': text};
     }
