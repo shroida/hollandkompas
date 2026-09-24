@@ -9,7 +9,9 @@ import 'package:hollandkompas/features/courses/domain/entities/course.dart';
 import 'package:hollandkompas/features/courses/presentation/widgets/enrollment_dialog.dart';
 import 'package:hollandkompas/features/enrollment/presentation/providers/enrolled_courses_provider.dart';
 import 'package:hollandkompas/features/lesson/domain/entities/lesson.dart';
-import 'package:hollandkompas/features/lesson/presentation/providers/lesson_progress_provider.dart';
+import 'package:hollandkompas/features/lesson/presentation/providers/controllers/lesson_viewer_controller.dart';
+import 'package:hollandkompas/features/lesson/presentation/providers/lesson_completion_provider.dart';
+import 'package:hollandkompas/features/lesson/presentation/providers/lesson_viewer_provider.dart';
 import 'package:hollandkompas/features/lesson/presentation/widgets/lessons%20viewers/continue_learning_card.dart';
 import 'package:hollandkompas/features/lesson/presentation/widgets/lessons%20viewers/free_lesson_card.dart';
 import 'package:hollandkompas/features/lesson/presentation/widgets/lessons%20viewers/lesson_description.dart';
@@ -46,11 +48,7 @@ class LessonViewerScreen extends ConsumerStatefulWidget {
 
 class _LessonViewerScreenState extends ConsumerState<LessonViewerScreen>
     with SingleTickerProviderStateMixin {
-  bool _isSavingProgress = false;
-  bool _isLessonCompleted = false;
   bool _showNextLessonPanel = false;
-  bool _isOpeningNextLesson = false;
-
   int _countdown = 3;
 
   Timer? _nextLessonTimer;
@@ -67,6 +65,9 @@ class _LessonViewerScreenState extends ConsumerState<LessonViewerScreen>
 
   Lesson? get nextLesson =>
       hasNextLesson ? widget.lessons[widget.currentIndex + 1] : null;
+
+  LessonViewerState get viewerState =>
+      ref.watch(lessonViewerControllerProvider);
 
   @override
   void initState() {
@@ -86,52 +87,28 @@ class _LessonViewerScreenState extends ConsumerState<LessonViewerScreen>
     if (user == null) return;
 
     try {
-      final response = await Supabase.instance.client
-          .from('lesson_progress')
-          .select('completed')
-          .eq('student_id', user.id)
-          .eq('lesson_id', widget.lesson.id)
-          .maybeSingle();
-
-      if (!mounted) return;
-
-      setState(() {
-        _isLessonCompleted = response?['completed'] == true;
-      });
+      await ref
+          .read(lessonViewerControllerProvider.notifier)
+          .loadProgress(studentId: user.id, lessonId: widget.lesson.id);
     } catch (e) {
-      debugPrint('Failed to load lesson progress: $e');
+      _showErrorSnackBar('Failed to load lesson progress: $e');
     }
   }
 
   Future<void> _markLessonCompleted() async {
-    if (_isSavingProgress || _isLessonCompleted || _isOpeningNextLesson) {
-      return;
-    }
-
     final user = Supabase.instance.client.auth.currentUser;
 
     if (user == null) return;
 
-    setState(() {
-      _isSavingProgress = true;
-    });
-
     try {
-      await Supabase.instance.client.from('lesson_progress').upsert({
-        'student_id': user.id,
-        'lesson_id': widget.lesson.id,
-        'completed': true,
-        'completed_at': DateTime.now().toIso8601String(),
-      }, onConflict: 'student_id,lesson_id');
+      final completed = await ref
+          .read(lessonViewerControllerProvider.notifier)
+          .completeLesson(studentId: user.id, lessonId: widget.lesson.id);
 
-      if (!mounted) return;
-
-      setState(() {
-        _isLessonCompleted = true;
-        _isSavingProgress = false;
-      });
+      if (!completed || !mounted) return;
 
       ref.invalidate(enrolledCoursesProvider(user.id));
+
       ref.invalidate(lessonCompletionProvider(widget.lesson.id));
 
       if (nextLesson != null) {
@@ -143,10 +120,6 @@ class _LessonViewerScreenState extends ConsumerState<LessonViewerScreen>
       }
     } catch (e) {
       if (!mounted) return;
-
-      setState(() {
-        _isSavingProgress = false;
-      });
 
       _showErrorSnackBar('Failed to save progress: $e');
     }
@@ -192,6 +165,7 @@ class _LessonViewerScreenState extends ConsumerState<LessonViewerScreen>
       setState(() {
         _showNextLessonPanel = true;
       });
+
       return;
     }
 
@@ -241,12 +215,15 @@ class _LessonViewerScreenState extends ConsumerState<LessonViewerScreen>
       return;
     }
 
-    if (_isOpeningNextLesson) return;
+    final controller = ref.read(lessonViewerControllerProvider.notifier);
+
+    if (viewerState.isOpeningNextLesson) return;
 
     _nextLessonTimer?.cancel();
 
+    controller.setOpeningNextLesson(true);
+
     setState(() {
-      _isOpeningNextLesson = true;
       _showNextLessonPanel = false;
     });
 
@@ -287,7 +264,7 @@ class _LessonViewerScreenState extends ConsumerState<LessonViewerScreen>
     _nextLessonTimer?.cancel();
 
     if (context.canPop()) {
-      context.pop(_isLessonCompleted);
+      context.pop(viewerState.isLessonCompleted);
     }
   }
 
@@ -324,6 +301,8 @@ class _LessonViewerScreenState extends ConsumerState<LessonViewerScreen>
 
   @override
   Widget build(BuildContext context) {
+    final state = ref.watch(lessonViewerControllerProvider);
+
     return PopScope(
       canPop: false,
       onPopInvokedWithResult: (didPop, result) {
@@ -331,11 +310,11 @@ class _LessonViewerScreenState extends ConsumerState<LessonViewerScreen>
           _goBack();
         }
       },
-      child: Scaffold(appBar: _buildAppBar(), body: _buildBody()),
+      child: Scaffold(appBar: _buildAppBar(state), body: _buildBody(state)),
     );
   }
 
-  PreferredSizeWidget _buildAppBar() {
+  PreferredSizeWidget _buildAppBar(LessonViewerState state) {
     return AppBar(
       leading: IconButton(
         tooltip: 'Back',
@@ -388,7 +367,7 @@ class _LessonViewerScreenState extends ConsumerState<LessonViewerScreen>
     );
   }
 
-  Widget _buildBody() {
+  Widget _buildBody(LessonViewerState state) {
     return SafeArea(
       child: LayoutBuilder(
         builder: (context, constraints) {
@@ -406,7 +385,7 @@ class _LessonViewerScreenState extends ConsumerState<LessonViewerScreen>
                   horizontalPadding,
                   48,
                 ),
-                child: _buildContent(),
+                child: _buildContent(state),
               ),
             ),
           );
@@ -415,7 +394,7 @@ class _LessonViewerScreenState extends ConsumerState<LessonViewerScreen>
     );
   }
 
-  Widget _buildContent() {
+  Widget _buildContent(LessonViewerState state) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -439,7 +418,7 @@ class _LessonViewerScreenState extends ConsumerState<LessonViewerScreen>
         const SizedBox(height: 28),
         LessonInformation(lesson: widget.lesson),
         const SizedBox(height: 28),
-        _buildLearningSection(),
+        _buildLearningSection(state),
       ],
     );
   }
@@ -455,7 +434,7 @@ class _LessonViewerScreenState extends ConsumerState<LessonViewerScreen>
     );
   }
 
-  Widget _buildLearningSection() {
+  Widget _buildLearningSection(LessonViewerState state) {
     if (!widget.isEnrolled) {
       return FreeLessonCard(onEnroll: _showEnrollmentDialog);
     }
@@ -463,21 +442,16 @@ class _LessonViewerScreenState extends ConsumerState<LessonViewerScreen>
     return Column(
       children: [
         const ContinueLearningCard(),
-
         const SizedBox(height: 16),
-
         LessonVocabularyButton(lesson: widget.lesson),
-
         const SizedBox(height: 16),
-
-        _buildCompletionButton(),
-
+        _buildCompletionButton(state),
         _buildNextLessonPanel(),
       ],
     );
   }
 
-  Widget _buildCompletionButton() {
+  Widget _buildCompletionButton(LessonViewerState state) {
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 250),
       transitionBuilder: (child, animation) {
@@ -487,19 +461,19 @@ class _LessonViewerScreenState extends ConsumerState<LessonViewerScreen>
         );
       },
       child: SizedBox(
-        key: ValueKey(_isLessonCompleted),
+        key: ValueKey(state.isLessonCompleted),
         width: double.infinity,
         child: FilledButton.icon(
-          onPressed: _canCompleteLesson ? _markLessonCompleted : null,
-          icon: _buildCompletionIcon(),
-          label: Text(_completionButtonText),
+          onPressed: _canCompleteLesson(state) ? _markLessonCompleted : null,
+          icon: _buildCompletionIcon(state),
+          label: Text(_completionButtonText(state)),
         ),
       ),
     );
   }
 
-  Widget _buildCompletionIcon() {
-    if (_isSavingProgress) {
+  Widget _buildCompletionIcon(LessonViewerState state) {
+    if (state.isSavingProgress) {
       return const SizedBox(
         width: 18,
         height: 18,
@@ -508,17 +482,20 @@ class _LessonViewerScreenState extends ConsumerState<LessonViewerScreen>
     }
 
     return Icon(
-      _isLessonCompleted
+      state.isLessonCompleted
           ? Icons.check_circle_rounded
           : Icons.check_circle_outline_rounded,
     );
   }
 
-  bool get _canCompleteLesson =>
-      !_isSavingProgress && !_isLessonCompleted && !_isOpeningNextLesson;
+  bool _canCompleteLesson(LessonViewerState state) {
+    return !state.isSavingProgress &&
+        !state.isLessonCompleted &&
+        !state.isOpeningNextLesson;
+  }
 
-  String get _completionButtonText {
-    if (_isLessonCompleted) {
+  String _completionButtonText(LessonViewerState state) {
+    if (state.isLessonCompleted) {
       return hasNextLesson ? 'Lesson completed' : 'Course completed';
     }
 
@@ -546,7 +523,7 @@ class _LessonViewerScreenState extends ConsumerState<LessonViewerScreen>
                 hasNextLesson: hasNextLesson,
                 animationController: _countdownAnimationController,
                 onSkip: _openNextLesson,
-                isOpening: _isOpeningNextLesson,
+                isOpening: viewerState.isOpeningNextLesson,
               ),
             )
           : const SizedBox.shrink(key: ValueKey('empty_next_lesson')),

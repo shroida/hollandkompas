@@ -1,9 +1,9 @@
-import 'package:hollandkompas/features/home/domain/repositories/lesson_repository.dart';
+import 'package:hollandkompas/features/lesson/domain/repositories/lesson_progress_repository.dart';
 
 class GetLessonCompletion {
-  GetLessonCompletion(this.repository);
+  final LessonProgressRepository repository;
 
-  final LessonRepository repository;
+  GetLessonCompletion(this.repository);
 
   Future<bool> call({required String studentId, required String lessonId}) {
     return repository.getLessonCompletion(

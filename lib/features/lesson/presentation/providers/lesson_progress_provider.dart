@@ -1,16 +1,14 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:hollandkompas/features/lesson/presentation/providers/lesson_providers.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:hollandkompas/features/lesson/data/repositories/lesson_progress_repository_impl.dart';
+import 'package:hollandkompas/features/lesson/domain/repositories/lesson_progress_repository.dart';
+import 'package:hollandkompas/features/lesson/domain/usecases/get_lesson_completion.dart';
 
-final lessonCompletionProvider = FutureProvider.autoDispose
-    .family<bool, String>((ref, lessonId) async {
-      final user = Supabase.instance.client.auth.currentUser;
+final lessonProgressRepositoryProvider = Provider<LessonProgressRepository>((
+  ref,
+) {
+  return LessonProgressRepositoryImpl();
+});
 
-      if (user == null) {
-        return false;
-      }
-
-      final getLessonCompletion = ref.read(getLessonCompletionProvider);
-
-      return getLessonCompletion(studentId: user.id, lessonId: lessonId);
-    });
+final getLessonCompletionProvider = Provider<GetLessonCompletion>((ref) {
+  return GetLessonCompletion(ref.watch(lessonProgressRepositoryProvider));
+});

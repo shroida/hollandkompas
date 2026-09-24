@@ -8,7 +8,7 @@ import 'package:hollandkompas/features/courses/domain/entities/course.dart';
 import 'package:hollandkompas/features/courses/presentation/widgets/course_header.dart';
 import 'package:hollandkompas/features/courses/presentation/widgets/lesson_card.dart';
 import 'package:hollandkompas/features/lesson/domain/entities/lesson.dart';
-import 'package:hollandkompas/features/lesson/presentation/providers/lesson_progress_provider.dart';
+import 'package:hollandkompas/features/lesson/presentation/providers/lesson_completion_provider.dart';
 
 class CourseLessonsContent extends ConsumerWidget {
   const CourseLessonsContent({
