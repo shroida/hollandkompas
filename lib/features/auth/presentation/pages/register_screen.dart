@@ -1,6 +1,8 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hollandkompas/core/responsive/responsive_extension.dart';
+import 'package:hollandkompas/core/shared/widget/course_terms_dialog.dart';
 import 'package:hollandkompas/core/shared/widget/theme_toggle_button.dart';
 import 'package:hollandkompas/core/theme/app_colors.dart';
 import 'package:hollandkompas/features/auth/domain/enums/dutch_level.dart';
@@ -274,6 +276,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   }
 
   Widget _buildTermsAgreement(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final subtitleColor = AppColors.subtitleColor(context);
 
     return InkWell(
@@ -295,13 +299,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               height: 21,
               margin: const EdgeInsets.only(top: 1),
               decoration: BoxDecoration(
-                color: _agreed
-                    ? AppColors.primary
-                    : AppColors.cardColor(context),
+                color: _agreed ? colorScheme.primary : colorScheme.surface,
                 borderRadius: BorderRadius.circular(6),
                 border: Border.all(
                   color: _agreed
-                      ? AppColors.primary
+                      ? colorScheme.primary
                       : AppColors.borderColor(context),
                   width: _agreed ? 0 : 1.5,
                 ),
@@ -309,11 +311,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               child: AnimatedSwitcher(
                 duration: const Duration(milliseconds: 150),
                 child: _agreed
-                    ? const Icon(
+                    ? Icon(
                         Icons.check_rounded,
-                        key: ValueKey(true),
+                        key: const ValueKey(true),
                         size: 15,
-                        color: Colors.white,
+                        color: colorScheme.onPrimary,
                       )
                     : const SizedBox(key: ValueKey(false)),
               ),
@@ -331,12 +333,21 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   children: [
                     TextSpan(
                       text: 'شروط الاستخدام',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontFamily: 'Cairo',
-                        color: AppColors.primary,
+                        color: colorScheme.primary,
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
+                        decoration: TextDecoration.underline,
+                        decorationColor: colorScheme.primary,
                       ),
+                      recognizer: TapGestureRecognizer()
+                        ..onTap = () {
+                          showDialog<void>(
+                            context: context,
+                            builder: (_) => const CourseTermsDialog(),
+                          );
+                        },
                     ),
                     TextSpan(
                       text: ' و ',
@@ -346,13 +357,15 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                         fontSize: 13,
                       ),
                     ),
-                    const TextSpan(
+                    TextSpan(
                       text: 'سياسة الخصوصية',
                       style: TextStyle(
                         fontFamily: 'Cairo',
-                        color: AppColors.primary,
+                        color: colorScheme.primary,
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
+                        decoration: TextDecoration.underline,
+                        decorationColor: colorScheme.primary,
                       ),
                     ),
                   ],

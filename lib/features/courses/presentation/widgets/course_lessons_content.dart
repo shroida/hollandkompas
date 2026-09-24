@@ -221,7 +221,9 @@ class LessonListItem extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final isFirst = index == 0;
     final isLocked = !isEnrolled && !isFirst;
+
     final completion = ref.watch(lessonCompletionProvider(lesson.id));
+
     final isCompleted = completion.asData?.value ?? false;
 
     return LessonCard(
@@ -275,14 +277,13 @@ class EnrollmentBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final subtitleColor = AppColors.subtitleColor(context);
 
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.accent,
+        color: AppColors.accentColor(context),
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: AppColors.primary.withValues(alpha: 0.10)),
+        border: Border.all(color: AppColors.borderColor(context)),
       ),
       child: Row(
         children: [
@@ -296,13 +297,14 @@ class EnrollmentBanner extends StatelessWidget {
                   strings.tryLearningFree,
                   style: theme.textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w800,
+                    color: AppColors.textColor(context),
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   strings.lessonFreeDescription,
                   style: theme.textTheme.bodySmall?.copyWith(
-                    color: subtitleColor,
+                    color: AppColors.subtitleColor(context),
                     height: 1.4,
                   ),
                 ),
@@ -329,7 +331,7 @@ class _EnrollmentBannerIcon extends StatelessWidget {
         color: AppColors.cardColor(context),
         borderRadius: BorderRadius.circular(15),
       ),
-      child: const Icon(Icons.school_rounded, color: AppColors.primary),
+      child: Icon(Icons.school_rounded, color: AppColors.primary),
     );
   }
 }
@@ -360,6 +362,7 @@ class SectionHeader extends StatelessWidget {
                 strings.courseLessons,
                 style: theme.textTheme.titleLarge?.copyWith(
                   fontWeight: FontWeight.w800,
+                  color: AppColors.textColor(context),
                 ),
               ),
               const SizedBox(height: 4),
@@ -377,12 +380,13 @@ class SectionHeader extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
           decoration: BoxDecoration(
-            color: AppColors.muted,
+            color: AppColors.mutedColor(context),
             borderRadius: BorderRadius.circular(20),
           ),
           child: Text(
             strings.lessonsCount(lessonCount),
             style: theme.textTheme.bodySmall?.copyWith(
+              color: AppColors.textColor(context),
               fontWeight: FontWeight.w700,
             ),
           ),

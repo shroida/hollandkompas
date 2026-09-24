@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hollandkompas/core/localization/app_locale.dart';
-import 'package:hollandkompas/core/theme/app_colors.dart';
 
 class ProfileMenu extends ConsumerWidget {
   const ProfileMenu({
@@ -109,20 +108,23 @@ class ProfileMenu extends ConsumerWidget {
     showDialog<void>(
       context: context,
       builder: (dialogContext) {
+        final theme = Theme.of(context);
+        final colorScheme = theme.colorScheme;
+
         return AlertDialog(
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24),
           ),
           title: Text(
             translations.logout,
-            style: Theme.of(
-              context,
-            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+            style: theme.textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.w700,
+            ),
           ),
           content: Text(
             translations.logoutConfirmation,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: AppColors.subtitleColor(context),
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: colorScheme.onSurfaceVariant,
             ),
           ),
           actionsPadding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
@@ -138,7 +140,8 @@ class ProfileMenu extends ConsumerWidget {
                 onLogout?.call();
               },
               style: FilledButton.styleFrom(
-                backgroundColor: AppColors.destructive,
+                backgroundColor: colorScheme.error,
+                foregroundColor: colorScheme.onError,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -167,13 +170,13 @@ class _MenuItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = destructive
-        ? AppColors.destructive
-        : Theme.of(context).colorScheme.onSurface;
+    final colorScheme = Theme.of(context).colorScheme;
+
+    final color = destructive ? colorScheme.error : colorScheme.onSurface;
 
     final backgroundColor = destructive
-        ? AppColors.destructive.withValues(alpha: 0.08)
-        : AppColors.muted;
+        ? colorScheme.error.withValues(alpha: 0.08)
+        : colorScheme.surfaceContainerHighest;
 
     return Row(
       children: [
@@ -208,6 +211,8 @@ class _ProfileAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     final trimmedName = firstName.trim();
     final initial = trimmedName.isEmpty
         ? '?'
@@ -220,14 +225,14 @@ class _ProfileAvatar extends StatelessWidget {
         height: 46,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          gradient: const LinearGradient(
+          gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [AppColors.primary, Color(0xFFFF8A3D)],
+            colors: [colorScheme.primary, colorScheme.primaryContainer],
           ),
           boxShadow: [
             BoxShadow(
-              color: AppColors.primary.withValues(alpha: 0.28),
+              color: colorScheme.primary.withValues(alpha: 0.28),
               blurRadius: 12,
               offset: const Offset(0, 5),
             ),
@@ -237,7 +242,7 @@ class _ProfileAvatar extends StatelessWidget {
         child: Text(
           initial,
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
-            color: Colors.white,
+            color: colorScheme.onPrimaryContainer,
             fontWeight: FontWeight.w800,
           ),
         ),
@@ -261,6 +266,7 @@ class ProfileMenuHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Row(
       children: [
@@ -281,10 +287,10 @@ class ProfileMenuHeader extends StatelessWidget {
               const SizedBox(height: 3),
               Row(
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.school_rounded,
                     size: 13,
-                    color: AppColors.primary,
+                    color: colorScheme.primary,
                   ),
                   const SizedBox(width: 4),
                   Expanded(
@@ -293,7 +299,7 @@ class ProfileMenuHeader extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: textTheme.bodySmall?.copyWith(
-                        color: AppColors.subtitleColor(context),
+                        color: colorScheme.onSurfaceVariant,
                         fontSize: 11,
                       ),
                     ),

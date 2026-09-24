@@ -6,7 +6,6 @@ import 'package:hollandkompas/core/localization/app_strings.dart';
 import 'package:hollandkompas/core/router/route_paths.dart';
 import 'package:hollandkompas/core/shared/widget/error_state.dart';
 import 'package:hollandkompas/core/shared/widget/loading_state.dart';
-import 'package:hollandkompas/core/theme/app_colors.dart';
 import 'package:hollandkompas/features/courses/domain/entities/course.dart';
 import 'package:hollandkompas/features/courses/presentation/providers/course_enrollment_provider.dart';
 import 'package:hollandkompas/features/courses/presentation/widgets/course_lessons_content.dart';
@@ -26,7 +25,6 @@ class CourseLessonsScreen extends ConsumerWidget {
     final enrollmentAsync = ref.watch(courseEnrollmentProvider(course.id));
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundColor(context),
       appBar: AppBar(
         title: Text(strings.courseLessons),
         actions: [
@@ -126,6 +124,8 @@ class _EnrollmentAction extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return enrollmentAsync.when(
       loading: () => const Padding(
         padding: EdgeInsets.only(right: 16),
@@ -137,9 +137,12 @@ class _EnrollmentAction extends StatelessWidget {
       ),
       error: (_, _) => const SizedBox.shrink(),
       data: (isEnrolled) => isEnrolled
-          ? const Padding(
-              padding: EdgeInsets.only(right: 16),
-              child: Icon(Icons.check_circle_rounded, color: AppColors.primary),
+          ? Padding(
+              padding: const EdgeInsets.only(right: 16),
+              child: Icon(
+                Icons.check_circle_rounded,
+                color: colorScheme.primary,
+              ),
             )
           : Padding(
               padding: const EdgeInsets.only(right: 12),
