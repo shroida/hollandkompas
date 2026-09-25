@@ -1,12 +1,3 @@
-// SCOPE NOTE: PaymentScreen's source wasn't part of this conversation, so
-// this drives the flow through FakeEnrollmentRepository directly (a real
-// repository implementation, just backed by memory instead of Supabase)
-// rather than through PaymentScreen's UI. That still exercises the actual
-// business rule this flow depends on — the duplicate-purchase guard — via
-// the exact same enrollment_guard.dart logic production uses. Wiring this
-// through the real PaymentScreen widget is a mechanical extension of the
-// same override pattern once you're looking at its source.
-
 import 'dart:typed_data';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -17,49 +8,20 @@ import 'package:integration_test/integration_test.dart';
 import '../test/helpers/fakes.dart';
 
 XFile _fakeReceipt() => XFile.fromData(
-      Uint8List.fromList(const [1, 2, 3, 4]),
-      name: 'receipt.jpg',
-      mimeType: 'image/jpeg',
-    );
+  Uint8List.fromList(const [1, 2, 3, 4]),
+  name: 'receipt.jpg',
+  mimeType: 'image/jpeg',
+);
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
-  test('a first-time purchase succeeds and creates a pending enrollment', () async {
-    final repo = FakeEnrollmentRepository(currentStudentId: 'student-1');
+  test(
+    'a first-time purchase succeeds and creates a pending enrollment',
+    () async {
+      final repo = FakeEnrollmentRepository(currentStudentId: 'student-1');
 
-    final enrollment = await repo.createPaymentRequest(
-      courseId: 'course-callcenter',
-      originalPrice: 2500,
-      discountPercentage: 0,
-      discountAmount: 0,
-      finalPrice: 2500,
-      couponCode: null,
-      receipt: _fakeReceipt(),
-      paymentReference: 'ref-001',
-    );
-
-    expect(enrollment.paymentStatus, 'pending');
-    expect(enrollment.courseId, 'course-callcenter');
-    expect(repo.createPaymentRequestCallCount, 1);
-  });
-
-  test('a second purchase attempt while the first is still pending is blocked', () async {
-    final repo = FakeEnrollmentRepository(currentStudentId: 'student-1');
-
-    await repo.createPaymentRequest(
-      courseId: 'course-callcenter',
-      originalPrice: 2500,
-      discountPercentage: 0,
-      discountAmount: 0,
-      finalPrice: 2500,
-      couponCode: null,
-      receipt: _fakeReceipt(),
-      paymentReference: 'ref-001',
-    );
-
-    expect(
-      () => repo.createPaymentRequest(
+      final enrollment = await repo.createPaymentRequest(
         courseId: 'course-callcenter',
         originalPrice: 2500,
         discountPercentage: 0,
@@ -67,11 +29,46 @@ void main() {
         finalPrice: 2500,
         couponCode: null,
         receipt: _fakeReceipt(),
-        paymentReference: 'ref-002',
-      ),
-      throwsA(predicate((e) => e.toString().contains('waiting for review'))),
-    );
-  });
+        paymentReference: 'ref-001',
+      );
+
+      expect(enrollment.paymentStatus, 'pending');
+      expect(enrollment.courseId, 'course-callcenter');
+      expect(repo.createPaymentRequestCallCount, 1);
+    },
+  );
+
+  test(
+    'a second purchase attempt while the first is still pending is blocked',
+    () async {
+      final repo = FakeEnrollmentRepository(currentStudentId: 'student-1');
+
+      await repo.createPaymentRequest(
+        courseId: 'course-callcenter',
+        originalPrice: 2500,
+        discountPercentage: 0,
+        discountAmount: 0,
+        finalPrice: 2500,
+        couponCode: null,
+        receipt: _fakeReceipt(),
+        paymentReference: 'ref-001',
+      );
+
+      expect(
+        () => repo.createPaymentRequest(
+          courseId: 'course-callcenter',
+          originalPrice: 2500,
+          discountPercentage: 0,
+          discountAmount: 0,
+          finalPrice: 2500,
+          couponCode: null,
+          receipt: _fakeReceipt(),
+          paymentReference: 'ref-002',
+        ),
+        throwsA(predicate((e) => e.toString().contains('waiting for review'))),
+      );
+    },
+  );
 
   test('re-purchasing a course already fully paid for is blocked', () async {
     final repo = FakeEnrollmentRepository(currentStudentId: 'student-1');
@@ -153,7 +150,8 @@ void main() {
   });
 
   test('a coupon that has expired or is inactive is not returned', () async {
-    final repo = FakeEnrollmentRepository(); // no coupon seeded -> nothing is active
+    final repo =
+        FakeEnrollmentRepository(); // no coupon seeded -> nothing is active
     final coupon = await repo.getCoupon('EXPIRED10');
     expect(coupon, isNull);
   });

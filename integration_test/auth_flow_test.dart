@@ -1,26 +1,3 @@
-// ASSUMPTIONS IN THIS FILE — check these against your real code first:
-//   1. LoginScreen(onLogin, onRegister, onForgot) and
-//      RegisterScreen(onLogin, onBack) take exactly these constructor
-//      callbacks — confirmed from the app_router.dart you shared earlier
-//      in this conversation, not re-verified against the current file.
-//   2. Both screens build their fields with AuthTextField (confirmed real),
-//      in the order: email, password for Login; first name, last name,
-//      email, password, phone for Register. If the real order differs,
-//      the tester.enterText(... .at(index) ...) calls below need reordering
-//      — the assertions on end state (home reached / error shown) are the
-//      part actually worth trusting.
-//   3. There's a Widget somewhere with an onPressed that calls
-//      widget.onLogin/onRegister — found here via find.byType(ElevatedButton)
-//      /find.byType(FilledButton), whichever exists. Swap the finder if
-//      your buttons use a different widget type.
-//
-// This intentionally does NOT start from the real app root (Splash ->
-// Onboarding -> ...), since this conversation hasn't seen those two
-// screens' internals. It mounts LoginScreen/RegisterScreen/HomeScreen
-// directly behind a small local router instead — same real screens, same
-// real AuthController/repository wiring, just skipping screens whose
-// "continue" button text isn't known here.
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -43,8 +20,10 @@ Future<void> _tapPrimaryButton(WidgetTester tester) async {
   } else if (filled.evaluate().isNotEmpty) {
     await tester.tap(filled.first);
   } else {
-    fail('No ElevatedButton or FilledButton found to submit the form — '
-        'update _tapPrimaryButton to match the real button widget.');
+    fail(
+      'No ElevatedButton or FilledButton found to submit the form — '
+      'update _tapPrimaryButton to match the real button widget.',
+    );
   }
   await tester.pumpAndSettle();
 }
@@ -86,7 +65,11 @@ void main() {
     );
 
     final fields = find.byType(TextField);
-    expect(fields, findsAtLeastNWidgets(2), reason: 'expected an email and a password field');
+    expect(
+      fields,
+      findsAtLeastNWidgets(2),
+      reason: 'expected an email and a password field',
+    );
 
     await tester.enterText(fields.at(0), 'mohamed@example.com');
     await tester.enterText(fields.at(1), 'correct-password');
@@ -96,26 +79,31 @@ void main() {
     expect(fakeRepo.loginCallCount, 1);
   });
 
-  testWidgets('a wrong password stays on the login screen with an error, not a crash', (tester) async {
-    fakeRepo.rejectLoginFor = {'blocked@example.com'};
+  testWidgets(
+    'a wrong password stays on the login screen with an error, not a crash',
+    (tester) async {
+      fakeRepo.rejectLoginFor = {'blocked@example.com'};
 
-    await pumpAppWithRouter(
-      tester,
-      routes,
-      initialLocation: '/login',
-      overrides: [authRepositoryProvider.overrideWithValue(fakeRepo)],
-    );
+      await pumpAppWithRouter(
+        tester,
+        routes,
+        initialLocation: '/login',
+        overrides: [authRepositoryProvider.overrideWithValue(fakeRepo)],
+      );
 
-    final fields = find.byType(TextField);
-    await tester.enterText(fields.at(0), 'blocked@example.com');
-    await tester.enterText(fields.at(1), 'wrong-password');
-    await _tapPrimaryButton(tester);
+      final fields = find.byType(TextField);
+      await tester.enterText(fields.at(0), 'blocked@example.com');
+      await tester.enterText(fields.at(1), 'wrong-password');
+      await _tapPrimaryButton(tester);
 
-    expect(find.byType(HomeScreen), findsNothing);
-    expect(find.byType(LoginScreen), findsOneWidget);
-  });
+      expect(find.byType(HomeScreen), findsNothing);
+      expect(find.byType(LoginScreen), findsOneWidget);
+    },
+  );
 
-  testWidgets('logging out from Home returns to a state with no current user', (tester) async {
+  testWidgets('logging out from Home returns to a state with no current user', (
+    tester,
+  ) async {
     // Skip the UI for login here — call the controller directly to get to
     // an authenticated Home state fast, then exercise the real logout path.
     final container = ProviderContainer(
@@ -123,10 +111,9 @@ void main() {
     );
     addTearDown(container.dispose);
 
-    await container.read(authControllerProvider.notifier).login(
-          email: 'mohamed@example.com',
-          password: 'correct-password',
-        );
+    await container
+        .read(authControllerProvider.notifier)
+        .login(email: 'mohamed@example.com', password: 'correct-password');
     expect(container.read(authControllerProvider).user, isNotNull);
 
     await container.read(authControllerProvider.notifier).logout();

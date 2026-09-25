@@ -1,8 +1,3 @@
-// This one has higher confidence than the other three integration_test
-// files: the Vocabulary feature (entities, providers, screens) was
-// designed and built earlier in this same conversation, so its structure
-// is fully known here rather than reconstructed from fragments.
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
