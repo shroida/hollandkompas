@@ -26,19 +26,15 @@ class SupabaseAuthRemoteDataSource {
       throw Exception('Registration failed.');
     }
 
-    try {
-      await client.from('profiles').insert({
-        'id': user.id,
-        'first_name': firstName,
-        'last_name': lastName,
-        'email': email,
-        'phone_number': phoneNumber,
-        'level': level.name,
-        'role': UserRole.student.name,
-      });
-    } catch (e) {
-      rethrow;
-    }
+    await client.from('profiles').insert({
+      'id': user.id,
+      'first_name': firstName,
+      'last_name': lastName,
+      'email': email,
+      'phone_number': phoneNumber,
+      'level': level.name,
+      'role': UserRole.student.name,
+    });
 
     return AppUser(
       id: user.id,
@@ -99,8 +95,6 @@ class SupabaseAuthRemoteDataSource {
         default:
           throw Exception(e.message);
       }
-    } catch (e) {
-      rethrow;
     }
   }
 
@@ -111,7 +105,9 @@ class SupabaseAuthRemoteDataSource {
   Future<AppUser?> getCurrentUser() async {
     final authUser = client.auth.currentUser;
 
-    if (authUser == null) return null;
+    if (authUser == null) {
+      return null;
+    }
 
     final profile = await client
         .from('profiles')
@@ -136,7 +132,10 @@ class SupabaseAuthRemoteDataSource {
           ? '${Uri.base.origin}/reset-password'
           : 'hollandkompas://reset-password';
 
-      await client.auth.resetPasswordForEmail(email, redirectTo: redirectUrl);
+      await client.auth.resetPasswordForEmail(
+        email.trim(),
+        redirectTo: redirectUrl,
+      );
     } on AuthException catch (e) {
       throw Exception(e.message);
     }
@@ -145,8 +144,8 @@ class SupabaseAuthRemoteDataSource {
   Future<void> updatePassword(String password) async {
     try {
       await client.auth.updateUser(UserAttributes(password: password));
-    } catch (e) {
-      rethrow;
+    } on AuthException catch (e) {
+      throw Exception(e.message);
     }
   }
 }

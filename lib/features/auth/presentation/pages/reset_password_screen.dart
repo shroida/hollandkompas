@@ -1,13 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-
-import 'package:hollandkompas/core/theme/app_colors.dart';
-import 'package:hollandkompas/core/responsive/responsive_extension.dart';
+import 'package:hollandkompas/core/router/route_paths.dart';
 import 'package:hollandkompas/features/auth/presentation/providers/auth_controller.dart';
-import 'package:hollandkompas/features/auth/presentation/providers/auth_state.dart';
-import 'package:hollandkompas/features/auth/presentation/widgets/auth_text_field.dart';
-import 'package:hollandkompas/features/auth/presentation/widgets/header_auth.dart';
 
 class ResetPasswordScreen extends ConsumerStatefulWidget {
   const ResetPasswordScreen({super.key});
@@ -19,186 +14,133 @@ class ResetPasswordScreen extends ConsumerStatefulWidget {
 
 class _ResetPasswordScreenState extends ConsumerState<ResetPasswordScreen> {
   final passwordController = TextEditingController();
-  final confirmController = TextEditingController();
+  final confirmPasswordController = TextEditingController();
 
-  bool showPassword = false;
-  bool showConfirmPassword = false;
+  String? errorMessage;
 
   @override
   void dispose() {
     passwordController.dispose();
-    confirmController.dispose();
+    confirmPasswordController.dispose();
     super.dispose();
   }
 
-  @override
-  void initState() {
-    super.initState();
+  Future<void> _updatePassword() async {
+    FocusScope.of(context).unfocus();
 
-    ref.listenManual(authControllerProvider, (previous, next) {
-      if (!mounted) return;
+    final password = passwordController.text.trim();
+    final confirmPassword = confirmPasswordController.text.trim();
 
-      if (next.error != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(next.error!), backgroundColor: Colors.red),
-        );
-      }
-
-      if (!next.isLoading &&
-          next.error == null &&
-          previous?.isLoading == true) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Password updated successfully."),
-            backgroundColor: Colors.green,
-          ),
-        );
-
-        context.go("/login");
-      }
+    setState(() {
+      errorMessage = null;
     });
+
+    if (password.isEmpty || confirmPassword.isEmpty) {
+      setState(() {
+        errorMessage = 'Please enter and confirm your new password.';
+      });
+      return;
+    }
+
+    if (password.length < 6) {
+      setState(() {
+        errorMessage = 'Password must be at least 6 characters.';
+      });
+      return;
+    }
+
+    if (password != confirmPassword) {
+      setState(() {
+        errorMessage = 'Passwords do not match.';
+      });
+      return;
+    }
+
+    await ref.read(authControllerProvider.notifier).updatePassword(password);
+
+    if (!mounted) return;
+
+    final authState = ref.read(authControllerProvider);
+
+    if (authState.error != null) {
+      setState(() {
+        errorMessage = authState.error;
+      });
+      return;
+    }
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Password updated successfully.')),
+    );
+
+    context.go(RoutePaths.login);
   }
 
   @override
   Widget build(BuildContext context) {
-    final state = ref.watch(authControllerProvider);
+    final authState = ref.watch(authControllerProvider);
 
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      appBar: AppBar(title: const Text('Reset Password')),
       body: SafeArea(
-        child: context.isMobile
-            ? _mobile(context, state)
-            : _desktop(context, state),
-      ),
-    );
-  }
-
-  Widget _mobile(BuildContext context, AuthState state) {
-    return Center(
-      child: SingleChildScrollView(
-        padding: EdgeInsets.all(context.pagePadding),
-        child: _content(state),
-      ),
-    );
-  }
-
-  Widget _desktop(BuildContext context, AuthState state) {
-    return Row(
-      children: [
-        const Expanded(flex: 5, child: HeaderAuth()),
-        Expanded(
-          flex: 6,
-          child: Center(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 480),
-              child: Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(32),
-                  child: _content(state),
-                ),
+              constraints: const BoxConstraints(maxWidth: 500),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const Text(
+                    'Set a new password',
+                    style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 12),
+                  const Text('Enter your new password below.'),
+                  const SizedBox(height: 32),
+                  TextField(
+                    controller: passwordController,
+                    obscureText: true,
+                    enabled: !authState.isLoading,
+                    decoration: const InputDecoration(
+                      labelText: 'New password',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: confirmPasswordController,
+                    obscureText: true,
+                    enabled: !authState.isLoading,
+                    decoration: const InputDecoration(
+                      labelText: 'Confirm password',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                  if (errorMessage != null) ...[
+                    const SizedBox(height: 16),
+                    Text(
+                      errorMessage!,
+                      style: const TextStyle(color: Colors.red),
+                    ),
+                  ],
+                  const SizedBox(height: 24),
+                  ElevatedButton(
+                    onPressed: authState.isLoading ? null : _updatePassword,
+                    child: authState.isLoading
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Text('Update Password'),
+                  ),
+                ],
               ),
             ),
           ),
         ),
-      ],
-    );
-  }
-
-  Widget _content(AuthState state) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        const Icon(Icons.lock_reset, color: AppColors.primary, size: 70),
-        const SizedBox(height: 20),
-
-        const Text(
-          "Reset Password",
-          style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
-        ),
-
-        const SizedBox(height: 8),
-
-        const Text(
-          "Choose a new password for your account.",
-          textAlign: TextAlign.center,
-        ),
-
-        const SizedBox(height: 30),
-
-        AuthTextField(
-          controller: passwordController,
-          label: "New Password",
-          hint: "********",
-          obscureText: !showPassword,
-          icon: Icons.lock_outline,
-          suffix: IconButton(
-            onPressed: () {
-              setState(() {
-                showPassword = !showPassword;
-              });
-            },
-            icon: Icon(showPassword ? Icons.visibility_off : Icons.visibility),
-          ),
-        ),
-
-        const SizedBox(height: 16),
-
-        AuthTextField(
-          controller: confirmController,
-          label: "Confirm Password",
-          hint: "********",
-          obscureText: !showConfirmPassword,
-          icon: Icons.lock_outline,
-          suffix: IconButton(
-            onPressed: () {
-              setState(() {
-                showConfirmPassword = !showConfirmPassword;
-              });
-            },
-            icon: Icon(
-              showConfirmPassword ? Icons.visibility_off : Icons.visibility,
-            ),
-          ),
-        ),
-
-        const SizedBox(height: 28),
-
-        SizedBox(
-          width: double.infinity,
-          height: 52,
-          child: ElevatedButton(
-            onPressed: state.isLoading
-                ? null
-                : () async {
-                    if (passwordController.text.isEmpty ||
-                        confirmController.text.isEmpty) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text("Please fill all fields."),
-                        ),
-                      );
-                      return;
-                    }
-
-                    if (passwordController.text != confirmController.text) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text("Passwords do not match."),
-                        ),
-                      );
-                      return;
-                    }
-
-                    await ref
-                        .read(authControllerProvider.notifier)
-                        .updatePassword(passwordController.text.trim());
-                  },
-            child: state.isLoading
-                ? const CircularProgressIndicator(color: Colors.white)
-                : const Text("Update Password"),
-          ),
-        ),
-      ],
+      ),
     );
   }
 }

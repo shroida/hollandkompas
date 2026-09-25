@@ -9,10 +9,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
   await _initializeApp();
   _listenToAuthChanges();
-
   runApp(const ProviderScope(child: HollandKompas()));
 }
 
@@ -30,7 +28,10 @@ void _listenToAuthChanges() {
 }
 
 void _handleAuthStateChange(AuthState state) {
-  if (state.event == AuthChangeEvent.passwordRecovery) {
-    appRouter.go(RoutePaths.resetPassword);
+  if (state.event != AuthChangeEvent.passwordRecovery) {
+    return;
   }
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    appRouter.go(RoutePaths.resetPassword);
+  });
 }
