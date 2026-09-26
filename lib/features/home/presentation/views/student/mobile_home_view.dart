@@ -5,6 +5,7 @@ import 'package:hollandkompas/core/router/route_paths.dart';
 import 'package:hollandkompas/core/theme/app_colors.dart';
 import 'package:hollandkompas/features/courses/domain/entities/course.dart';
 import 'package:hollandkompas/features/courses/presentation/widgets/course_card.dart';
+import 'package:hollandkompas/features/flashcards/presentation/widgets/flashcards_home_card.dart';
 import 'package:hollandkompas/features/home/presentation/views/student/student_courses_view.dart';
 import 'package:hollandkompas/features/home/presentation/widgets/continue_learning_card.dart';
 import 'package:hollandkompas/features/home/presentation/widgets/vocabulary_home_card.dart';
@@ -46,6 +47,14 @@ class MobileHomeView extends StudentCoursesView {
           padding: EdgeInsets.symmetric(horizontal: _horizontalPadding),
           sliver: SliverToBoxAdapter(child: VocabularyHomeCard()),
         ),
+        const SliverToBoxAdapter(child: SizedBox(height: 16)),
+
+        const SliverPadding(
+          padding: EdgeInsets.symmetric(horizontal: _horizontalPadding),
+          sliver: SliverToBoxAdapter(child: FlashcardsHomeCard()),
+        ),
+
+        const SliverToBoxAdapter(child: SizedBox(height: 28)),
         const SliverToBoxAdapter(child: SizedBox(height: 28)),
         SliverPadding(
           padding: const EdgeInsets.symmetric(horizontal: _horizontalPadding),

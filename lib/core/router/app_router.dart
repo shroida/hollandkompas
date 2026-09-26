@@ -7,6 +7,7 @@ import 'package:hollandkompas/features/auth/presentation/pages/reset_password_sc
 import 'package:hollandkompas/features/courses/domain/entities/course.dart';
 import 'package:hollandkompas/features/courses/presentation/screens/course_lessons_screen.dart';
 import 'package:hollandkompas/features/enrollment/presentation/screens/my_courses_screen.dart';
+import 'package:hollandkompas/features/flashcards/presentation/screens/flashcards_screen.dart';
 import 'package:hollandkompas/features/home/presentation/screens/admin_dashboard.dart';
 import 'package:hollandkompas/features/home/presentation/screens/home_screen.dart';
 import 'package:hollandkompas/features/home/presentation/screens/pages/settings_screen.dart';
@@ -97,6 +98,15 @@ final GoRouter appRouter = GoRouter(
       path: RoutePaths.home,
       builder: (context, state) {
         return const HomeScreen();
+      },
+    ),
+    // ---------------------------------------------------------------------------
+    // Home
+    // ---------------------------------------------------------------------------
+    GoRoute(
+      path: RoutePaths.flashcards,
+      builder: (context, state) {
+        return const FlashcardsScreen();
       },
     ),
 
