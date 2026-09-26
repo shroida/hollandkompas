@@ -43,15 +43,6 @@ class _FlashcardsScreenState extends ConsumerState<FlashcardsScreen> {
 
     debugPrint('[FLASHCARDS-SCREEN] cards=${cards.length}');
 
-    if (cards.isNotEmpty) {
-      debugPrint(
-        '[FLASHCARDS-SCREEN] '
-        'FIRST ID=${cards.first.id} | '
-        'WORD="${cards.first.dutchWord}" | '
-        'AR="${cards.first.arabicMeaning}" | '
-        'LEVEL="${cards.first.level}"',
-      );
-    }
     if (cards.isEmpty) {
       return _buildEmptyState(context, state);
     }

@@ -41,15 +41,11 @@ class DutchTtsService implements TtsService {
       _flutterTts.setCancelHandler(() => _isSpeaking = false);
       _flutterTts.setErrorHandler((message) {
         _isSpeaking = false;
-        debugPrint('DutchTtsService error: $message');
       });
 
       _isInitialized = true;
     } catch (error) {
-      // Don't crash the app if a platform has no TTS engine installed —
-      // speak()/pause()/resume() below all degrade to safe no-ops.
       _isInitialized = false;
-      debugPrint('DutchTtsService failed to initialize: $error');
     }
   }
 
@@ -75,7 +71,6 @@ class DutchTtsService implements TtsService {
       await _flutterTts.speak(trimmed);
     } catch (error) {
       _isSpeaking = false;
-      debugPrint('DutchTtsService.speak failed: $error');
     }
   }
 
@@ -84,7 +79,7 @@ class DutchTtsService implements TtsService {
     try {
       await _flutterTts.stop();
     } catch (error) {
-      debugPrint('DutchTtsService.stop failed: $error');
+      throw error.toString();
     } finally {
       _isSpeaking = false;
     }
@@ -98,9 +93,7 @@ class DutchTtsService implements TtsService {
     // silently fails instead of throwing into the caller.
     try {
       await _flutterTts.pause();
-    } catch (error) {
-      debugPrint('DutchTtsService.pause not available here: $error');
-    }
+    } catch (error) {}
   }
 
   @override

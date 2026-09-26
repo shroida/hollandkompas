@@ -60,23 +60,14 @@ class FlashcardsController extends Notifier<FlashcardsState> {
   }
 
   Future<void> load({FlashcardsMode mode = FlashcardsMode.all}) async {
-    debugPrint('[FLASHCARDS-CONTROLLER] LOAD START | mode=$mode');
-
     state = state.copyWith(isLoading: true, mode: mode, clearError: true);
 
     try {
       final repository = ref.read(flashcardsRepositoryProvider);
 
-      debugPrint('[FLASHCARDS-CONTROLLER] Loading cards...');
-
       final cards = await repository.getFlashcards(
         dueOnly: mode == FlashcardsMode.daily,
         weakOnly: mode == FlashcardsMode.weak,
-      );
-
-      debugPrint(
-        '[FLASHCARDS-CONTROLLER] '
-        'CARDS LOADED: ${cards.length}',
       );
 
       // IMPORTANT:
@@ -85,18 +76,7 @@ class FlashcardsController extends Notifier<FlashcardsState> {
 
       // Load statistics separately.
       try {
-        debugPrint('[FLASHCARDS-CONTROLLER] Loading stats...');
-
         final stats = await repository.getReviewStats();
-
-        debugPrint(
-          '[FLASHCARDS-CONTROLLER] '
-          'STATS LOADED | '
-          'total=${stats.total} | '
-          'due=${stats.dueToday} | '
-          'weak=${stats.weakWords} | '
-          'mastered=${stats.mastered}',
-        );
 
         if (!ref.mounted) {
           return;
@@ -104,22 +84,12 @@ class FlashcardsController extends Notifier<FlashcardsState> {
 
         state = state.copyWith(stats: stats);
       } catch (error, stackTrace) {
-        debugPrint(
-          '[FLASHCARDS-CONTROLLER] '
-          'STATS FAILED: $error',
-        );
-
         debugPrintStack(stackTrace: stackTrace);
 
         // Stats are optional.
         // Cards should remain visible.
       }
     } catch (error, stackTrace) {
-      debugPrint(
-        '[FLASHCARDS-CONTROLLER] '
-        'LOAD FAILED: $error',
-      );
-
       debugPrintStack(stackTrace: stackTrace);
 
       if (!ref.mounted) {
@@ -164,22 +134,9 @@ class FlashcardsController extends Notifier<FlashcardsState> {
 
         state = state.copyWith(stats: stats);
       } catch (error, stackTrace) {
-        debugPrint(
-          '[FLASHCARDS-CONTROLLER] '
-          'REFRESH STATS FAILED: $error',
-        );
-
         debugPrintStack(stackTrace: stackTrace);
       }
     } catch (error, stackTrace) {
-      debugPrint(
-        '[FLASHCARDS-CONTROLLER] '
-        'REVIEW FAILED | '
-        'word=${card.id} | '
-        'remembered=$remembered | '
-        '$error',
-      );
-
       debugPrintStack(stackTrace: stackTrace);
 
       if (!ref.mounted) {

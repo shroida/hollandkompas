@@ -52,8 +52,6 @@ class VocabularyActions extends _$VocabularyActions {
     } catch (error, stackTrace) {
       if (!ref.mounted) return;
 
-      debugPrint('[VOCAB-ACTION] toggleFavorite ERROR: $error');
-
       debugPrintStack(stackTrace: stackTrace);
 
       rethrow;
@@ -78,13 +76,6 @@ class VocabularyActions extends _$VocabularyActions {
       ref.invalidate(vocabularyWordByIdProvider(wordId));
     } catch (error, stackTrace) {
       if (!ref.mounted) return;
-
-      debugPrint(
-        '[VOCAB-ACTION] updateProgress ERROR '
-        'wordId=$wordId '
-        'status=$status '
-        'error=$error',
-      );
 
       debugPrintStack(stackTrace: stackTrace);
 

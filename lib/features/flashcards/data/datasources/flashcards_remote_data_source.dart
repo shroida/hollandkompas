@@ -18,10 +18,6 @@ class FlashcardsRemoteDataSource {
   static const String _favoritesTable = 'user_favorite_words';
   static const String _progressTable = 'user_vocabulary_progress';
 
-  void _log(String message) {
-    debugPrint('[FLASHCARDS] $message');
-  }
-
   Future<void> initialize() async {
     try {
       await _tts.setLanguage('nl-NL');
@@ -29,9 +25,8 @@ class FlashcardsRemoteDataSource {
       await _tts.setVolume(1.0);
       await _tts.setPitch(1.0);
       await _tts.awaitSpeakCompletion(true);
-    } catch (error, stackTrace) {
-      _log('TTS INITIALIZE FAILED: $error');
-      debugPrintStack(stackTrace: stackTrace);
+    } catch (error) {
+      throw error.toString();
     }
   }
 
@@ -41,20 +36,7 @@ class FlashcardsRemoteDataSource {
   }) async {
     final stopwatch = Stopwatch()..start();
 
-    _log(
-      'getFlashcards START | '
-      'dueOnly=$dueOnly | '
-      'weakOnly=$weakOnly | '
-      'user=${_client.auth.currentUser?.id}',
-    );
-
     try {
-      // ------------------------------------------------------------
-      // 1. Fetch vocabulary words
-      // ------------------------------------------------------------
-
-      _log('STEP 1: querying $_wordsTable...');
-
       final response = await _client
           .from(_wordsTable)
           .select('''
@@ -70,16 +52,8 @@ class FlashcardsRemoteDataSource {
 
       final rows = List<Map<String, dynamic>>.from(response);
 
-      _log('STEP 1 SUCCESS: ${rows.length} vocabulary rows');
-
       if (rows.isEmpty) {
         stopwatch.stop();
-
-        _log(
-          'getFlashcards END | '
-          '${stopwatch.elapsedMilliseconds}ms | '
-          '0 cards',
-        );
 
         return const [];
       }
@@ -95,8 +69,6 @@ class FlashcardsRemoteDataSource {
           .toSet()
           .toList();
 
-      _log('STEP 2: ${lessonIds.length} lesson IDs');
-
       // ------------------------------------------------------------
       // 3. Fetch lessons
       // ------------------------------------------------------------
@@ -105,16 +77,12 @@ class FlashcardsRemoteDataSource {
       final courseIds = <String>{};
 
       if (lessonIds.isNotEmpty) {
-        _log('STEP 3: querying $_lessonsTable...');
-
         final lessonsResponse = await _client
             .from(_lessonsTable)
             .select('id, course_id')
             .inFilter('id', lessonIds);
 
         final lessons = List<Map<String, dynamic>>.from(lessonsResponse);
-
-        _log('STEP 3 SUCCESS: ${lessons.length} lessons');
 
         for (final lesson in lessons) {
           final lessonId = lesson['id']?.toString();
@@ -139,16 +107,12 @@ class FlashcardsRemoteDataSource {
       final courseToLevel = <String, String>{};
 
       if (courseIds.isNotEmpty) {
-        _log('STEP 4: querying $_coursesTable...');
-
         final coursesResponse = await _client
             .from(_coursesTable)
             .select('id, level')
             .inFilter('id', courseIds.toList());
 
         final courses = List<Map<String, dynamic>>.from(coursesResponse);
-
-        _log('STEP 4 SUCCESS: ${courses.length} courses');
 
         for (final course in courses) {
           final courseId = course['id']?.toString();
@@ -203,7 +167,6 @@ class FlashcardsRemoteDataSource {
             }
           }
         } catch (error, stackTrace) {
-          _log('LOAD FAVORITES FAILED: $error');
           debugPrintStack(stackTrace: stackTrace);
         }
       }
@@ -238,7 +201,6 @@ class FlashcardsRemoteDataSource {
             }
           }
         } catch (error, stackTrace) {
-          _log('LOAD PROGRESS FAILED: $error');
           debugPrintStack(stackTrace: stackTrace);
         }
       }
@@ -302,21 +264,9 @@ class FlashcardsRemoteDataSource {
 
       stopwatch.stop();
 
-      _log(
-        'getFlashcards SUCCESS | '
-        '${stopwatch.elapsedMilliseconds}ms | '
-        '${cards.length} cards',
-      );
-
       return cards;
     } catch (error, stackTrace) {
       stopwatch.stop();
-
-      _log(
-        'getFlashcards FAILED | '
-        '${stopwatch.elapsedMilliseconds}ms | '
-        '$error',
-      );
 
       debugPrintStack(stackTrace: stackTrace);
 
@@ -448,7 +398,6 @@ class FlashcardsRemoteDataSource {
         mastered: mastered,
       );
     } catch (error, stackTrace) {
-      _log('GET REVIEW STATS FAILED: $error');
       debugPrintStack(stackTrace: stackTrace);
 
       return const ReviewStats(
@@ -469,7 +418,6 @@ class FlashcardsRemoteDataSource {
       await _tts.stop();
       await _tts.speak(text);
     } catch (error, stackTrace) {
-      _log('TTS FAILED: $error');
       debugPrintStack(stackTrace: stackTrace);
       rethrow;
     }
@@ -479,7 +427,7 @@ class FlashcardsRemoteDataSource {
     try {
       await _tts.stop();
     } catch (error) {
-      _log('TTS STOP FAILED: $error');
+      throw error.toString();
     }
   }
 
@@ -487,7 +435,7 @@ class FlashcardsRemoteDataSource {
     try {
       await _tts.stop();
     } catch (error) {
-      _log('TTS DISPOSE FAILED: $error');
+      throw error.toString();
     }
   }
 
