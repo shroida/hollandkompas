@@ -5,7 +5,10 @@ import 'package:hollandkompas/core/router/route_paths.dart';
 import 'package:hollandkompas/features/courses/domain/entities/course.dart';
 import 'package:hollandkompas/features/courses/presentation/widgets/course_card.dart';
 import 'package:hollandkompas/features/courses/presentation/widgets/section_header.dart';
+import 'package:hollandkompas/features/flashcards/presentation/widgets/flashcards_home_card.dart';
 import 'package:hollandkompas/features/home/presentation/views/student/student_courses_view.dart';
+import 'package:hollandkompas/features/home/presentation/widgets/continue_learning_card.dart';
+import 'package:hollandkompas/features/home/presentation/widgets/vocabulary_home_card.dart';
 
 class DesktopHomeView extends StudentCoursesView {
   const DesktopHomeView({super.key});
@@ -21,6 +24,8 @@ class DesktopHomeView extends StudentCoursesView {
     WidgetRef ref,
     List<Course> courses,
   ) {
+    final sortedCourses = _sortCoursesByLevel(courses);
+
     return Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: _maxContentWidth),
@@ -28,6 +33,30 @@ class DesktopHomeView extends StudentCoursesView {
           physics: const BouncingScrollPhysics(),
           slivers: [
             const SliverToBoxAdapter(child: SizedBox(height: 32)),
+
+            // Home feature cards
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: _horizontalPadding,
+              ),
+              sliver: SliverGrid(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3,
+                  crossAxisSpacing: _gridSpacing,
+                  mainAxisSpacing: _gridSpacing,
+                  childAspectRatio: 1.65,
+                ),
+                delegate: SliverChildListDelegate(const [
+                  ContinueLearningSection(),
+                  VocabularyHomeCard(),
+                  FlashcardsHomeCard(),
+                ]),
+              ),
+            ),
+
+            const SliverToBoxAdapter(child: SizedBox(height: 40)),
+
+            // Courses header
             SliverPadding(
               padding: const EdgeInsets.symmetric(
                 horizontal: _horizontalPadding,
@@ -38,13 +67,16 @@ class DesktopHomeView extends StudentCoursesView {
                 ),
               ),
             ),
+
             const SliverToBoxAdapter(child: SizedBox(height: 18)),
+
+            // Courses
             SliverPadding(
               padding: const EdgeInsets.symmetric(
                 horizontal: _horizontalPadding,
               ),
               sliver: SliverGrid.builder(
-                itemCount: courses.length,
+                itemCount: sortedCourses.length,
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 3,
                   crossAxisSpacing: _gridSpacing,
@@ -52,7 +84,7 @@ class DesktopHomeView extends StudentCoursesView {
                   mainAxisExtent: _courseHeight,
                 ),
                 itemBuilder: (context, index) {
-                  final course = courses[index];
+                  final course = sortedCourses[index];
 
                   return CourseCard(
                     course: course,
@@ -62,10 +94,20 @@ class DesktopHomeView extends StudentCoursesView {
                 },
               ),
             ),
+
             const SliverToBoxAdapter(child: SizedBox(height: 40)),
           ],
         ),
       ),
+    );
+  }
+
+  List<Course> _sortCoursesByLevel(List<Course> courses) {
+    const levelOrder = {'A1': 1, 'A2': 2, 'B1': 3, 'B2': 4, 'C1': 5, 'C2': 6};
+
+    return List<Course>.of(courses)..sort(
+      (a, b) =>
+          (levelOrder[a.level] ?? 999).compareTo(levelOrder[b.level] ?? 999),
     );
   }
 

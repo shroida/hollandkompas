@@ -123,7 +123,7 @@ final class VocabularyActionsProvider
   }
 }
 
-String _$vocabularyActionsHash() => r'b9bc537f220d79564878dd80ee624f7cd8770ece';
+String _$vocabularyActionsHash() => r'e42a44c1a86ac647bcf719752c7423f67a4f58bd';
 
 abstract class _$VocabularyActions extends $Notifier<void> {
   void build();
