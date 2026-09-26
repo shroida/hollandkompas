@@ -28,6 +28,8 @@ abstract final class RoutePaths {
   static const lessonVocabulary = '/lesson-vocabulary';
 
   static const vocabularyWord = '/vocabulary/word/:id';
+  //flashcards
+  static const flashcards = '/flashcards';
 
   // Admin
   static const admin = '/admin';

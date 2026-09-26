@@ -22,7 +22,7 @@ void _listenToAuthChanges() {
   Supabase.instance.client.auth.onAuthStateChange.listen(
     _handleAuthStateChange,
     onError: (Object error, StackTrace stackTrace) {
-      debugPrint('Auth stream error: $error');
+      throw error.toString();
     },
   );
 }
