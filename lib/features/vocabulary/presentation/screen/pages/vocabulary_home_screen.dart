@@ -13,6 +13,12 @@ import '../widgets/word_card.dart';
 class VocabularyHomeScreen extends ConsumerWidget {
   const VocabularyHomeScreen({super.key});
 
+  static const double _mobileBreakpoint = 600;
+  static const double _tabletBreakpoint = 1024;
+
+  static const double _tabletMaxWidth = 900;
+  static const double _desktopMaxWidth = 1400;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final wordsAsync = ref.watch(vocabularyWordsProvider);
@@ -20,48 +26,7 @@ class VocabularyHomeScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.backgroundColor(context),
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        titleSpacing: 16,
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'قاعدة كلمات',
-              style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                fontSize: 22,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            Text(
-              'طوّر مفرداتك الهولندية',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: AppColors.subtitleColor(context),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          _HeaderAction(
-            icon: Icons.bookmark_border_rounded,
-            tooltip: 'المفضلة',
-            onTap: () {
-              context.push(RoutePaths.vocabularyFavorites);
-            },
-          ),
-          const SizedBox(width: 4),
-          _HeaderAction(
-            icon: Icons.insights_outlined,
-            tooltip: 'التقدم',
-            onTap: () {
-              context.push(RoutePaths.vocabularyProgress);
-            },
-          ),
-          const SizedBox(width: 10),
-        ],
-      ),
+      appBar: _buildAppBar(context),
       floatingActionButton: _SearchButton(
         onTap: () {
           context.push(RoutePaths.vocabularySearch);
@@ -76,130 +41,339 @@ class VocabularyHomeScreen extends ConsumerWidget {
 
           await ref.read(vocabularyWordsProvider.future);
         },
-        child: CustomScrollView(
-          physics: const AlwaysScrollableScrollPhysics(
-            parent: BouncingScrollPhysics(),
-          ),
-          slivers: [
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                child: _DailyWordSection(
-                  asyncValue: dailyWordAsync,
-                  onWordTap: (word) {
-                    context.push(RoutePaths.vocabularyWord, extra: word);
-                  },
-                ),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final width = constraints.maxWidth;
+
+            final isTablet =
+                width >= _mobileBreakpoint && width < _tabletBreakpoint;
+
+            final isDesktop = width >= _tabletBreakpoint;
+
+            final horizontalPadding = isDesktop
+                ? 32.0
+                : isTablet
+                ? 28.0
+                : 16.0;
+
+            final maxContentWidth = isDesktop
+                ? _desktopMaxWidth
+                : isTablet
+                ? _tabletMaxWidth
+                : double.infinity;
+
+            return CustomScrollView(
+              physics: const AlwaysScrollableScrollPhysics(
+                parent: BouncingScrollPhysics(),
               ),
-            ),
-
-            const SliverToBoxAdapter(child: SizedBox(height: 22)),
-
-            const SliverToBoxAdapter(
-              child: _SectionHeader(
-                icon: Icons.school_rounded,
-                title: 'اختر مستواك',
-              ),
-            ),
-
-            const SliverToBoxAdapter(child: SizedBox(height: 10)),
-
-            const SliverToBoxAdapter(
-              child: LevelFilterTabs(
-                levels: ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'],
-              ),
-            ),
-
-            const SliverToBoxAdapter(child: SizedBox(height: 22)),
-
-            const SliverToBoxAdapter(
-              child: _SectionHeader(
-                icon: Icons.category_rounded,
-                title: 'التصنيفات',
-              ),
-            ),
-
-            const SliverToBoxAdapter(child: SizedBox(height: 10)),
-
-            const SliverToBoxAdapter(
-              child: CategoryFilterChips(
-                categories: [
-                  'verb',
-                  'expression',
-                  'phone',
-                  'grammar',
-                  'location',
-                  'food',
-                  'money',
-                  'drink',
-                  'question',
-                  'pronoun',
-                  'family',
-                  'weather',
-                  'time',
-                ],
-              ),
-            ),
-
-            const SliverToBoxAdapter(child: SizedBox(height: 24)),
-
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: _WordsHeader(count: wordsAsync.asData?.value.length),
-              ),
-            ),
-
-            const SliverToBoxAdapter(child: SizedBox(height: 10)),
-
-            wordsAsync.when(
-              data: (words) {
-                if (words.isEmpty) {
-                  return const SliverToBoxAdapter(child: _EmptyWordsState());
-                }
-
-                return SliverPadding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  sliver: SliverList.builder(
-                    itemCount: words.length,
-                    itemBuilder: (context, index) {
-                      final word = words[index];
-
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 8),
-                        child: WordCard(
-                          word: word,
-                          onTap: () {
+              slivers: [
+                SliverToBoxAdapter(
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(maxWidth: maxContentWidth),
+                      child: Padding(
+                        padding: EdgeInsets.fromLTRB(
+                          horizontalPadding,
+                          isDesktop ? 24 : 8,
+                          horizontalPadding,
+                          0,
+                        ),
+                        child: _DailyWordSection(
+                          asyncValue: dailyWordAsync,
+                          onWordTap: (word) {
                             context.push(
-                              '/vocabulary/word/${word.id}',
+                              RoutePaths.vocabularyWord,
                               extra: word,
                             );
                           },
                         ),
-                      );
-                    },
+                      ),
+                    ),
                   ),
-                );
-              },
-              loading: () {
-                return const SliverToBoxAdapter(child: _WordsLoadingState());
-              },
-              error: (error, stackTrace) {
-                return SliverToBoxAdapter(
-                  child: _WordsErrorState(
-                    error: error,
-                    onRetry: () {
-                      ref.invalidate(vocabularyWordsProvider);
+                ),
+
+                SliverToBoxAdapter(
+                  child: SizedBox(height: isDesktop ? 32 : 22),
+                ),
+
+                SliverToBoxAdapter(
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(maxWidth: maxContentWidth),
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: horizontalPadding,
+                        ),
+                        child: const _SectionHeader(
+                          icon: Icons.school_rounded,
+                          title: 'اختر مستواك',
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+
+                const SliverToBoxAdapter(child: SizedBox(height: 10)),
+
+                SliverToBoxAdapter(
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(maxWidth: maxContentWidth),
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: horizontalPadding,
+                        ),
+                        child: const LevelFilterTabs(
+                          levels: ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+
+                SliverToBoxAdapter(
+                  child: SizedBox(height: isDesktop ? 28 : 22),
+                ),
+
+                SliverToBoxAdapter(
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(maxWidth: maxContentWidth),
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: horizontalPadding,
+                        ),
+                        child: const _SectionHeader(
+                          icon: Icons.category_rounded,
+                          title: 'التصنيفات',
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+
+                const SliverToBoxAdapter(child: SizedBox(height: 10)),
+
+                SliverToBoxAdapter(
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(maxWidth: maxContentWidth),
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: horizontalPadding,
+                        ),
+                        child: const CategoryFilterChips(
+                          categories: [
+                            'verb',
+                            'expression',
+                            'phone',
+                            'grammar',
+                            'location',
+                            'food',
+                            'money',
+                            'drink',
+                            'question',
+                            'pronoun',
+                            'family',
+                            'weather',
+                            'time',
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+
+                SliverToBoxAdapter(
+                  child: SizedBox(height: isDesktop ? 32 : 24),
+                ),
+
+                SliverToBoxAdapter(
+                  child: Center(
+                    child: ConstrainedBox(
+                      constraints: BoxConstraints(maxWidth: maxContentWidth),
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: horizontalPadding,
+                        ),
+                        child: _WordsHeader(
+                          count: wordsAsync.asData?.value.length,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+
+                const SliverToBoxAdapter(child: SizedBox(height: 10)),
+
+                _buildWords(
+                  context: context,
+                  wordsAsync: wordsAsync,
+                  maxContentWidth: maxContentWidth,
+                  horizontalPadding: horizontalPadding,
+                  isTablet: isTablet,
+                  isDesktop: isDesktop,
+                ),
+
+                SliverToBoxAdapter(
+                  child: SizedBox(height: isDesktop ? 120 : 100),
+                ),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  PreferredSizeWidget _buildAppBar(BuildContext context) {
+    return AppBar(
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      titleSpacing: 16,
+      title: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'قاعدة كلمات',
+            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+              fontSize: 22,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          Text(
+            'طوّر مفرداتك الهولندية',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: AppColors.subtitleColor(context),
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        _HeaderAction(
+          icon: Icons.bookmark_border_rounded,
+          tooltip: 'المفضلة',
+          onTap: () {
+            context.push(RoutePaths.vocabularyFavorites);
+          },
+        ),
+        const SizedBox(width: 4),
+        _HeaderAction(
+          icon: Icons.insights_outlined,
+          tooltip: 'التقدم',
+          onTap: () {
+            context.push(RoutePaths.vocabularyProgress);
+          },
+        ),
+        const SizedBox(width: 10),
+      ],
+    );
+  }
+
+  Widget _buildWords({
+    required BuildContext context,
+    required AsyncValue<List<dynamic>> wordsAsync,
+    required double maxContentWidth,
+    required double horizontalPadding,
+    required bool isTablet,
+    required bool isDesktop,
+  }) {
+    return wordsAsync.when(
+      data: (words) {
+        if (words.isEmpty) {
+          return SliverToBoxAdapter(
+            child: Center(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: maxContentWidth),
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+                  child: const _EmptyWordsState(),
+                ),
+              ),
+            ),
+          );
+        }
+
+        final crossAxisCount = isDesktop
+            ? 3
+            : isTablet
+            ? 2
+            : 1;
+
+        if (crossAxisCount == 1) {
+          return SliverPadding(
+            padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+            sliver: SliverList.builder(
+              itemCount: words.length,
+              itemBuilder: (context, index) {
+                final word = words[index];
+
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: WordCard(
+                    word: word,
+                    onTap: () {
+                      context.push('/vocabulary/word/${word.id}', extra: word);
                     },
                   ),
                 );
               },
             ),
+          );
+        }
 
-            const SliverToBoxAdapter(child: SizedBox(height: 100)),
-          ],
-        ),
-      ),
+        return SliverPadding(
+          padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+          sliver: SliverToBoxAdapter(
+            child: Center(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: maxContentWidth),
+                child: GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: words.length,
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: crossAxisCount,
+                    crossAxisSpacing: isDesktop ? 20 : 16,
+                    mainAxisSpacing: isDesktop ? 20 : 16,
+                    childAspectRatio: isDesktop ? 1.45 : 1.6,
+                  ),
+                  itemBuilder: (context, index) {
+                    final word = words[index];
+
+                    return WordCard(
+                      word: word,
+                      onTap: () {
+                        context.push(
+                          '/vocabulary/word/${word.id}',
+                          extra: word,
+                        );
+                      },
+                    );
+                  },
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+      loading: () {
+        return const SliverToBoxAdapter(child: _WordsLoadingState());
+      },
+      error: (error, stackTrace) {
+        return SliverToBoxAdapter(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: maxContentWidth),
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+                child: _WordsErrorState(error: error, onRetry: () {}),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }

@@ -20,7 +20,6 @@ class _FlashcardsScreenState extends ConsumerState<FlashcardsScreen> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(flashcardsControllerProvider);
-
     final controller = ref.read(flashcardsControllerProvider.notifier);
 
     if (state.isLoading) {
@@ -28,15 +27,7 @@ class _FlashcardsScreenState extends ConsumerState<FlashcardsScreen> {
     }
 
     if (state.errorMessage != null) {
-      return Scaffold(
-        appBar: AppBar(title: const Text('بطاقات مراجعة')),
-        body: Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Text(state.errorMessage!, textAlign: TextAlign.center),
-          ),
-        ),
-      );
+      return _buildErrorState(context, state.errorMessage!);
     }
 
     final cards = state.cards;
@@ -80,68 +71,116 @@ class _FlashcardsScreenState extends ConsumerState<FlashcardsScreen> {
         ],
       ),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            children: [
-              ReviewProgress(current: safeIndex + 1, total: cards.length),
-              const SizedBox(height: 20),
-              Expanded(
-                child: Dismissible(
-                  key: ValueKey(card.id),
-                  direction: DismissDirection.horizontal,
-                  confirmDismiss: (direction) async {
-                    final remembered = direction == DismissDirection.endToStart
-                        ? false
-                        : true;
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            final width = constraints.maxWidth;
 
-                    await controller.review(card: card, remembered: remembered);
+            final bool isMobile = width < 600;
+            final bool isTablet = width >= 600 && width < 1024;
 
-                    if (mounted) {
-                      setState(() {
-                        _currentIndex = 0;
-                      });
-                    }
+            final double horizontalPadding = isMobile
+                ? 16
+                : isTablet
+                ? 28
+                : 32;
 
-                    return false;
-                  },
-                  background: _swipeBackground(context, isRemember: true),
-                  secondaryBackground: _swipeBackground(
-                    context,
-                    isRemember: false,
+            final double maxContentWidth = isMobile
+                ? double.infinity
+                : isTablet
+                ? 650
+                : 800;
+
+            return Center(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: maxContentWidth),
+                child: Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: horizontalPadding,
+                    vertical: isMobile ? 16 : 24,
                   ),
-                  child: FlashcardView(
-                    card: card,
-                    onSpeak: () {
-                      controller.speak(card.dutchWord);
-                    },
+                  child: Column(
+                    children: [
+                      ReviewProgress(
+                        current: safeIndex + 1,
+                        total: cards.length,
+                      ),
+
+                      SizedBox(height: isMobile ? 16 : 24),
+
+                      Expanded(
+                        child: Dismissible(
+                          key: ValueKey(card.id),
+                          direction: DismissDirection.horizontal,
+                          confirmDismiss: (direction) async {
+                            final remembered =
+                                direction == DismissDirection.endToStart
+                                ? false
+                                : true;
+
+                            await controller.review(
+                              card: card,
+                              remembered: remembered,
+                            );
+
+                            if (mounted) {
+                              setState(() {
+                                _currentIndex = 0;
+                              });
+                            }
+
+                            return false;
+                          },
+                          background: _swipeBackground(
+                            context,
+                            isRemember: true,
+                          ),
+                          secondaryBackground: _swipeBackground(
+                            context,
+                            isRemember: false,
+                          ),
+                          child: Center(
+                            child: FlashcardView(
+                              card: card,
+                              onSpeak: () {
+                                controller.speak(card.dutchWord);
+                              },
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      SizedBox(height: isMobile ? 16 : 24),
+
+                      ReviewButtons(
+                        enabled: !state.isReviewing,
+                        onRemember: () async {
+                          await controller.review(card: card, remembered: true);
+
+                          if (mounted) {
+                            setState(() {
+                              _currentIndex = 0;
+                            });
+                          }
+                        },
+                        onForget: () async {
+                          await controller.review(
+                            card: card,
+                            remembered: false,
+                          );
+
+                          if (mounted) {
+                            setState(() {
+                              _currentIndex = 0;
+                            });
+                          }
+                        },
+                      ),
+                    ],
                   ),
                 ),
               ),
-              const SizedBox(height: 20),
-              ReviewButtons(
-                enabled: !state.isReviewing,
-                onRemember: () async {
-                  await controller.review(card: card, remembered: true);
-
-                  if (mounted) {
-                    setState(() {
-                      _currentIndex = 0;
-                    });
-                  }
-                },
-                onForget: () async {
-                  await controller.review(card: card, remembered: false);
-
-                  if (mounted) {
-                    setState(() {
-                      _currentIndex = 0;
-                    });
-                  }
-                },
-              ),
-            ],
-          ),
+            );
+          },
         ),
       ),
     );
@@ -165,6 +204,21 @@ class _FlashcardsScreenState extends ConsumerState<FlashcardsScreen> {
     );
   }
 
+  Widget _buildErrorState(BuildContext context, String message) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('بطاقات مراجعة')),
+      body: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 600),
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Text(message, textAlign: TextAlign.center),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildEmptyState(BuildContext context, FlashcardsState state) {
     final modeText = switch (state.mode) {
       FlashcardsMode.all => 'لا توجد كلمات للمراجعة.',
@@ -174,28 +228,33 @@ class _FlashcardsScreenState extends ConsumerState<FlashcardsScreen> {
 
     return Scaffold(
       appBar: AppBar(title: const Text('بطاقات مراجعة')),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.style_rounded, size: 72, color: AppColors.primary),
-              const SizedBox(height: 20),
-              Text(
-                modeText,
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.headlineMedium,
+      body: SafeArea(
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 600),
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.style_rounded, size: 72, color: AppColors.primary),
+                  const SizedBox(height: 20),
+                  Text(
+                    modeText,
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.headlineMedium,
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'ارجع لاحقاً لمراجعة كلماتك.',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppColors.subtitleColor(context),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 12),
-              Text(
-                'ارجع لاحقاً لمراجعة كلماتك.',
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppColors.subtitleColor(context),
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       ),
