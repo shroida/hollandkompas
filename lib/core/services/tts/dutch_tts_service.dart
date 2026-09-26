@@ -93,7 +93,9 @@ class DutchTtsService implements TtsService {
     // silently fails instead of throwing into the caller.
     try {
       await _flutterTts.pause();
-    } catch (error) {}
+    } catch (error) {
+      throw error.toString();
+    }
   }
 
   @override

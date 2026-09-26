@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:hollandkompas/core/router/route_paths.dart';
-import 'package:hollandkompas/core/theme/app_colors.dart';
-import 'package:hollandkompas/features/flashcards/presentation/providers/flashcards_controller.dart';
+
+import '../../../../core/router/route_paths.dart';
+import '../../../../core/theme/app_colors.dart';
+import '../../presentation/providers/flashcards_controller.dart';
 
 class FlashcardsHomeCard extends ConsumerWidget {
   const FlashcardsHomeCard({super.key});
@@ -17,8 +18,8 @@ class FlashcardsHomeCard extends ConsumerWidget {
     final total = state.stats?.total ?? 0;
 
     return Card(
+      clipBehavior: Clip.antiAlias,
       child: InkWell(
-        borderRadius: BorderRadius.circular(16),
         onTap: () => context.push(RoutePaths.flashcards),
         child: Padding(
           padding: const EdgeInsets.all(20),
@@ -28,33 +29,35 @@ class FlashcardsHomeCard extends ConsumerWidget {
               Row(
                 children: [
                   Container(
-                    width: 52,
-                    height: 52,
+                    width: 54,
+                    height: 54,
                     decoration: BoxDecoration(
                       color: AppColors.accentColor(context),
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius: BorderRadius.circular(17),
                     ),
                     child: const Icon(
                       Icons.style_rounded,
                       color: AppColors.primary,
-                      size: 28,
+                      size: 29,
                     ),
                   ),
-                  const SizedBox(width: 16),
+
+                  const SizedBox(width: 15),
+
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Flashcards',
+                          'بطاقات المراجعة',
                           style: Theme.of(context).textTheme.titleMedium
                               ?.copyWith(fontWeight: FontWeight.w800),
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 5),
                         Text(
                           state.isLoading
-                              ? 'Loading your vocabulary...'
-                              : '$total words ready for review',
+                              ? 'جاري تحميل كلماتك...'
+                              : '$total كلمة جاهزة للمراجعة',
                           style: Theme.of(context).textTheme.bodySmall
                               ?.copyWith(
                                 color: AppColors.subtitleColor(context),
@@ -63,7 +66,19 @@ class FlashcardsHomeCard extends ConsumerWidget {
                       ],
                     ),
                   ),
-                  const Icon(Icons.arrow_forward_ios_rounded, size: 18),
+
+                  Container(
+                    width: 38,
+                    height: 38,
+                    decoration: BoxDecoration(
+                      color: AppColors.mutedColor(context),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      size: 15,
+                    ),
+                  ),
                 ],
               ),
 
@@ -76,7 +91,7 @@ class FlashcardsHomeCard extends ConsumerWidget {
                       child: _StatItem(
                         icon: Icons.today_rounded,
                         value: '$dueToday',
-                        label: 'Due today',
+                        label: 'مستحقة اليوم',
                         color: AppColors.primary,
                       ),
                     ),
@@ -85,7 +100,7 @@ class FlashcardsHomeCard extends ConsumerWidget {
                       child: _StatItem(
                         icon: Icons.warning_amber_rounded,
                         value: '$weakWords',
-                        label: 'Weak words',
+                        label: 'كلمات صعبة',
                         color: AppColors.destructive,
                       ),
                     ),
@@ -116,16 +131,26 @@ class _StatItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 13),
       decoration: BoxDecoration(
         color: AppColors.mutedColor(context),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(15),
         border: Border.all(color: AppColors.borderColor(context)),
       ),
       child: Row(
         children: [
-          Icon(icon, size: 20, color: color),
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.10),
+              borderRadius: BorderRadius.circular(11),
+            ),
+            child: Icon(icon, size: 19, color: color),
+          ),
+
           const SizedBox(width: 10),
+
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -136,8 +161,11 @@ class _StatItem extends StatelessWidget {
                     fontWeight: FontWeight.w800,
                   ),
                 ),
+                const SizedBox(height: 2),
                 Text(
                   label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: AppColors.subtitleColor(context),
                   ),
