@@ -4,21 +4,22 @@ import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 
-class WebSecureVideoPlayer extends StatefulWidget {
+class MobileSecureVideoPlayer extends StatefulWidget {
   final String videoUrl;
   final VoidCallback? onVideoCompleted;
 
-  const WebSecureVideoPlayer({
+  const MobileSecureVideoPlayer({
     super.key,
     required this.videoUrl,
     this.onVideoCompleted,
   });
 
   @override
-  State<WebSecureVideoPlayer> createState() => _WebSecureVideoPlayerState();
+  State<MobileSecureVideoPlayer> createState() =>
+      _MobileSecureVideoPlayerState();
 }
 
-class _WebSecureVideoPlayerState extends State<WebSecureVideoPlayer> {
+class _MobileSecureVideoPlayerState extends State<MobileSecureVideoPlayer> {
   VideoPlayerController? _controller;
 
   Timer? _controlsTimer;
@@ -28,7 +29,9 @@ class _WebSecureVideoPlayerState extends State<WebSecureVideoPlayer> {
   final ValueNotifier<bool> _isDraggingNotifier = ValueNotifier(false);
   final ValueNotifier<double> _sliderNotifier = ValueNotifier(0);
   final ValueNotifier<String?> _errorNotifier = ValueNotifier(null);
-  final ValueNotifier<String?> _seekFeedbackNotifier = ValueNotifier(null);
+  final ValueNotifier<String?> _seekFeedbackNotifier = ValueNotifier<String?>(
+    null,
+  );
   final ValueNotifier<double> _playbackRateNotifier = ValueNotifier(1.0);
 
   String? _videoId;
@@ -36,6 +39,8 @@ class _WebSecureVideoPlayerState extends State<WebSecureVideoPlayer> {
   bool _isInitializing = false;
   bool _completionSent = false;
   bool _disposed = false;
+
+  int _loadRequestId = 0;
 
   Duration _duration = Duration.zero;
   Duration _position = Duration.zero;
@@ -47,7 +52,7 @@ class _WebSecureVideoPlayerState extends State<WebSecureVideoPlayer> {
   }
 
   @override
-  void didUpdateWidget(covariant WebSecureVideoPlayer oldWidget) {
+  void didUpdateWidget(covariant MobileSecureVideoPlayer oldWidget) {
     super.didUpdateWidget(oldWidget);
 
     final oldUrl = oldWidget.videoUrl.trim();
@@ -61,12 +66,15 @@ class _WebSecureVideoPlayerState extends State<WebSecureVideoPlayer> {
   }
 
   Future<void> _reloadVideo(String url) async {
+    final requestId = ++_loadRequestId;
+
     _cancelControlsTimer();
     _cancelFeedbackTimer();
 
     _completionSent = false;
     _position = Duration.zero;
     _duration = Duration.zero;
+    _videoId = null;
 
     _sliderNotifier.value = 0;
     _showControlsNotifier.value = true;
@@ -77,6 +85,7 @@ class _WebSecureVideoPlayerState extends State<WebSecureVideoPlayer> {
 
     final oldController = _controller;
     _controller = null;
+    _isInitializing = false;
 
     if (oldController != null) {
       oldController.removeListener(_handleControllerChanged);
@@ -86,7 +95,7 @@ class _WebSecureVideoPlayerState extends State<WebSecureVideoPlayer> {
       } catch (_) {}
     }
 
-    if (!mounted || _disposed) {
+    if (!mounted || _disposed || requestId != _loadRequestId) {
       return;
     }
 
@@ -96,9 +105,11 @@ class _WebSecureVideoPlayerState extends State<WebSecureVideoPlayer> {
   }
 
   Future<void> _loadVideo(String url) async {
-    if (_isInitializing || _disposed) {
+    if (_disposed || _isInitializing) {
       return;
     }
+
+    final requestId = _loadRequestId;
 
     _isInitializing = true;
     _errorNotifier.value = null;
@@ -114,18 +125,19 @@ class _WebSecureVideoPlayerState extends State<WebSecureVideoPlayer> {
 
     _videoId = videoId;
 
-    if (mounted) {
+    if (mounted && !_disposed && requestId == _loadRequestId) {
       setState(() {});
     }
 
     YoutubeExplode? yt;
+    VideoPlayerController? controller;
 
     try {
       yt = YoutubeExplode();
 
       final manifest = await _getManifestWithFallbacks(yt, videoId);
 
-      if (_disposed) {
+      if (_disposed || requestId != _loadRequestId) {
         return;
       }
 
@@ -137,28 +149,28 @@ class _WebSecureVideoPlayerState extends State<WebSecureVideoPlayer> {
         );
       }
 
-      final streamUrl = selectedStream.url;
-
-      final controller = VideoPlayerController.networkUrl(
-        streamUrl,
+      controller = VideoPlayerController.networkUrl(
+        selectedStream.url,
         videoPlayerOptions: VideoPlayerOptions(
           mixWithOthers: false,
           allowBackgroundPlayback: false,
         ),
       );
 
-      if (_disposed) {
+      if (_disposed || requestId != _loadRequestId) {
         await controller.dispose();
+        controller = null;
         return;
       }
 
       _controller = controller;
-
       controller.addListener(_handleControllerChanged);
 
       await controller.initialize();
 
-      if (_disposed || controller != _controller) {
+      if (_disposed ||
+          requestId != _loadRequestId ||
+          controller != _controller) {
         controller.removeListener(_handleControllerChanged);
 
         try {
@@ -175,35 +187,52 @@ class _WebSecureVideoPlayerState extends State<WebSecureVideoPlayer> {
 
       _isInitializing = false;
 
-      if (mounted) {
+      if (mounted && !_disposed && requestId == _loadRequestId) {
         setState(() {});
       }
-    } on VideoUnavailableException {
-      _handleInitializationError(
-        'This YouTube video is unavailable, private, deleted, or cannot be played.',
-      );
-    } on VideoUnplayableException {
-      _handleInitializationError(
-        'This YouTube video cannot be played directly.',
-      );
     } on VideoRequiresPurchaseException {
-      _handleInitializationError(
-        'This video requires a purchase and cannot be played.',
-      );
+      if (_isCurrentRequest(requestId)) {
+        _handleInitializationError(
+          'This video requires a purchase and cannot be played.',
+        );
+      }
+    } on VideoUnavailableException {
+      if (_isCurrentRequest(requestId)) {
+        _handleInitializationError(
+          'This YouTube video is unavailable, private, deleted, or cannot be played.',
+        );
+      }
+    } on VideoUnplayableException {
+      if (_isCurrentRequest(requestId)) {
+        _handleInitializationError(
+          'This YouTube video cannot be played directly.',
+        );
+      }
     } catch (error) {
+      if (!_isCurrentRequest(requestId)) {
+        return;
+      }
+
       debugPrint(
-        'WebSecureVideoPlayer: failed to load YouTube video '
+        'MobileSecureVideoPlayer: failed to load YouTube video '
         '$_videoId: $error',
       );
 
-      _handleInitializationError(
-        'Unable to load the video stream. '
-        'If this happens only on Chrome, YouTube may be blocking '
-        'browser-side stream extraction.',
-      );
+      _handleInitializationError('Unable to load the video stream.');
     } finally {
+      _isInitializing = false;
       yt?.close();
+
+      if (controller != null &&
+          _disposed &&
+          identical(controller, _controller)) {
+        _controller = null;
+      }
     }
+  }
+
+  bool _isCurrentRequest(int requestId) {
+    return !_disposed && requestId == _loadRequestId;
   }
 
   Future<StreamManifest> _getManifestWithFallbacks(
@@ -222,8 +251,7 @@ class _WebSecureVideoPlayerState extends State<WebSecureVideoPlayer> {
     for (final client in clients) {
       try {
         debugPrint(
-          'WebSecureVideoPlayer: requesting manifest '
-          'with client: $client',
+          'MobileSecureVideoPlayer: requesting manifest with client: $client',
         );
 
         final manifest = await yt.videos.streams.getManifest(
@@ -234,7 +262,7 @@ class _WebSecureVideoPlayerState extends State<WebSecureVideoPlayer> {
 
         if (manifest.muxed.isNotEmpty) {
           debugPrint(
-            'WebSecureVideoPlayer: manifest loaded with client: $client',
+            'MobileSecureVideoPlayer: manifest loaded with client: $client',
           );
 
           return manifest;
@@ -246,12 +274,14 @@ class _WebSecureVideoPlayerState extends State<WebSecureVideoPlayer> {
       } catch (error) {
         lastError = error;
 
-        debugPrint('WebSecureVideoPlayer: client $client failed: $error');
+        debugPrint('MobileSecureVideoPlayer: client $client failed: $error');
       }
     }
 
     try {
-      debugPrint('WebSecureVideoPlayer: trying default manifest extraction.');
+      debugPrint(
+        'MobileSecureVideoPlayer: trying default manifest extraction.',
+      );
 
       final manifest = await yt.videos.streams.getManifest(
         VideoId(videoId),
@@ -267,7 +297,7 @@ class _WebSecureVideoPlayerState extends State<WebSecureVideoPlayer> {
       lastError = error;
 
       debugPrint(
-        'WebSecureVideoPlayer: default manifest extraction failed: $error',
+        'MobileSecureVideoPlayer: default manifest extraction failed: $error',
       );
     }
 
@@ -305,6 +335,8 @@ class _WebSecureVideoPlayerState extends State<WebSecureVideoPlayer> {
     _isInitializing = false;
     _controller = null;
     _errorNotifier.value = message;
+
+    _cancelControlsTimer();
 
     if (mounted && !_disposed) {
       setState(() {});
@@ -416,9 +448,12 @@ class _WebSecureVideoPlayerState extends State<WebSecureVideoPlayer> {
         return;
       }
 
-      if (value.isCompleted ||
+      final isAtEnd =
+          value.isCompleted ||
           (_duration > Duration.zero &&
-              _position >= _duration - const Duration(milliseconds: 500))) {
+              _position >= _duration - const Duration(milliseconds: 500));
+
+      if (isAtEnd) {
         _completionSent = false;
 
         await controller.seekTo(Duration.zero);
@@ -429,7 +464,7 @@ class _WebSecureVideoPlayerState extends State<WebSecureVideoPlayer> {
 
       await controller.play();
     } catch (error) {
-      debugPrint('WebSecureVideoPlayer: play/pause failed: $error');
+      debugPrint('MobileSecureVideoPlayer: play/pause failed: $error');
     }
   }
 
@@ -469,7 +504,7 @@ class _WebSecureVideoPlayerState extends State<WebSecureVideoPlayer> {
 
       _showSeekFeedback(seconds < 0 ? '-10' : '+10');
     } catch (error) {
-      debugPrint('WebSecureVideoPlayer: seek failed: $error');
+      debugPrint('MobileSecureVideoPlayer: seek failed: $error');
     }
   }
 
@@ -486,7 +521,9 @@ class _WebSecureVideoPlayerState extends State<WebSecureVideoPlayer> {
       return;
     }
 
-    final safeFraction = fraction.isFinite ? fraction.clamp(0.0, 1.0) : 0.0;
+    final safeFraction = fraction.isFinite
+        ? fraction.clamp(0.0, 1.0).toDouble()
+        : 0.0;
 
     final milliseconds = (duration.inMilliseconds * safeFraction).round();
 
@@ -504,7 +541,7 @@ class _WebSecureVideoPlayerState extends State<WebSecureVideoPlayer> {
 
       _sliderNotifier.value = safeFraction;
     } catch (error) {
-      debugPrint('WebSecureVideoPlayer: slider seek failed: $error');
+      debugPrint('MobileSecureVideoPlayer: slider seek failed: $error');
     }
   }
 
@@ -532,7 +569,7 @@ class _WebSecureVideoPlayerState extends State<WebSecureVideoPlayer> {
         _scheduleControlsHide();
       }
     } catch (error) {
-      debugPrint('WebSecureVideoPlayer: playback speed failed: $error');
+      debugPrint('MobileSecureVideoPlayer: playback speed failed: $error');
 
       _playbackRateNotifier.value = controller.value.playbackSpeed;
     }
@@ -550,10 +587,9 @@ class _WebSecureVideoPlayerState extends State<WebSecureVideoPlayer> {
       return;
     }
 
-    final positionMilliseconds = _position.inMilliseconds.clamp(
-      0,
-      duration.inMilliseconds,
-    );
+    final positionMilliseconds = _position.inMilliseconds
+        .clamp(0, duration.inMilliseconds)
+        .toInt();
 
     final fraction = positionMilliseconds / duration.inMilliseconds;
 
@@ -562,7 +598,7 @@ class _WebSecureVideoPlayerState extends State<WebSecureVideoPlayer> {
       return;
     }
 
-    _sliderNotifier.value = fraction.clamp(0.0, 1.0);
+    _sliderNotifier.value = fraction.clamp(0.0, 1.0).toDouble();
   }
 
   void _handleSliderStart(double value) {
@@ -570,7 +606,7 @@ class _WebSecureVideoPlayerState extends State<WebSecureVideoPlayer> {
 
     _isDraggingNotifier.value = true;
 
-    final safeValue = value.isFinite ? value.clamp(0.0, 1.0) : 0.0;
+    final safeValue = value.isFinite ? value.clamp(0.0, 1.0).toDouble() : 0.0;
 
     _sliderNotifier.value = safeValue;
 
@@ -582,7 +618,7 @@ class _WebSecureVideoPlayerState extends State<WebSecureVideoPlayer> {
   }
 
   void _handleSliderChanged(double value) {
-    final safeValue = value.isFinite ? value.clamp(0.0, 1.0) : 0.0;
+    final safeValue = value.isFinite ? value.clamp(0.0, 1.0).toDouble() : 0.0;
 
     _sliderNotifier.value = safeValue;
 
@@ -598,7 +634,7 @@ class _WebSecureVideoPlayerState extends State<WebSecureVideoPlayer> {
   }
 
   void _handleSliderEnd(double value) {
-    final safeValue = value.isFinite ? value.clamp(0.0, 1.0) : 0.0;
+    final safeValue = value.isFinite ? value.clamp(0.0, 1.0).toDouble() : 0.0;
 
     _isDraggingNotifier.value = false;
 
@@ -694,11 +730,13 @@ class _WebSecureVideoPlayerState extends State<WebSecureVideoPlayer> {
       );
     }
 
+    final aspectRatio = controller.value.aspectRatio > 0
+        ? controller.value.aspectRatio
+        : 16 / 9;
+
     return Center(
       child: AspectRatio(
-        aspectRatio: controller.value.aspectRatio > 0
-            ? controller.value.aspectRatio
-            : 16 / 9,
+        aspectRatio: aspectRatio,
         child: VideoPlayer(controller),
       ),
     );
@@ -961,7 +999,9 @@ class _WebSecureVideoPlayerState extends State<WebSecureVideoPlayer> {
     return ValueListenableBuilder<double>(
       valueListenable: _sliderNotifier,
       builder: (context, value, _) {
-        final safeValue = value.isFinite ? value.clamp(0.0, 1.0) : 0.0;
+        final safeValue = value.isFinite
+            ? value.clamp(0.0, 1.0).toDouble()
+            : 0.0;
 
         return SizedBox(
           height: 34,
@@ -991,8 +1031,7 @@ class _WebSecureVideoPlayerState extends State<WebSecureVideoPlayer> {
 
   Widget _buildTimeLabel() {
     return Text(
-      '${_formatDuration(_position)} / '
-      '${_formatDuration(_duration)}',
+      '${_formatDuration(_position)} / ${_formatDuration(_duration)}',
       style: const TextStyle(
         color: Colors.white,
         fontSize: 11,
@@ -1192,15 +1231,10 @@ class _WebSecureVideoPlayerState extends State<WebSecureVideoPlayer> {
                 clipBehavior: Clip.hardEdge,
                 children: [
                   _buildVideoSurface(),
-
                   if (error == null && initialized) _buildGestureLayer(),
-
                   _buildBottomGradient(),
-
                   if (error == null && initialized) _buildCenterControls(),
-
                   if (error == null && initialized) _buildBottomControls(),
-
                   _buildSeekFeedback(),
                 ],
               ),
@@ -1214,6 +1248,7 @@ class _WebSecureVideoPlayerState extends State<WebSecureVideoPlayer> {
   @override
   void dispose() {
     _disposed = true;
+    ++_loadRequestId;
 
     _cancelControlsTimer();
     _cancelFeedbackTimer();
@@ -1222,9 +1257,10 @@ class _WebSecureVideoPlayerState extends State<WebSecureVideoPlayer> {
 
     if (controller != null) {
       controller.removeListener(_handleControllerChanged);
-
       unawaited(controller.dispose());
     }
+
+    _controller = null;
 
     _showControlsNotifier.dispose();
     _isDraggingNotifier.dispose();
