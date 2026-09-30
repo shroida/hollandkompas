@@ -3,10 +3,9 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:hollandkompas/core/theme/app_colors.dart';
-
-import '../../../domain/entities/vocabulary_word.dart';
-import '../../providers/vocabulary_user_providers.dart';
-import '../widgets/pronunciation_button.dart';
+import 'package:hollandkompas/features/vocabulary/domain/entities/vocabulary_word.dart';
+import 'package:hollandkompas/features/vocabulary/presentation/providers/vocabulary_user_providers.dart';
+import 'package:hollandkompas/features/vocabulary/presentation/screen/widgets/pronunciation_button.dart';
 
 class FavoriteWordsScreen extends ConsumerStatefulWidget {
   const FavoriteWordsScreen({super.key});
@@ -78,6 +77,7 @@ class _FavoriteWordsScreenState extends ConsumerState<FavoriteWordsScreen> {
         _answerController.clear();
 
         _generateQuestion();
+
         _isInitializing = false;
       });
     });
@@ -130,12 +130,14 @@ class _FavoriteWordsScreenState extends ConsumerState<FavoriteWordsScreen> {
         break;
       }
 
-      if (word.arabicMeaning.trim().isEmpty) {
+      final answer = word.arabicMeaning.trim();
+
+      if (answer.isEmpty) {
         continue;
       }
 
-      if (!answers.contains(word.arabicMeaning)) {
-        answers.add(word.arabicMeaning);
+      if (!answers.contains(answer)) {
+        answers.add(answer);
       }
     }
 
@@ -156,12 +158,14 @@ class _FavoriteWordsScreenState extends ConsumerState<FavoriteWordsScreen> {
         break;
       }
 
-      if (word.dutchWord.trim().isEmpty) {
+      final answer = word.dutchWord.trim();
+
+      if (answer.isEmpty) {
         continue;
       }
 
-      if (!answers.contains(word.dutchWord)) {
-        answers.add(word.dutchWord);
+      if (!answers.contains(answer)) {
+        answers.add(answer);
       }
     }
 
@@ -326,7 +330,6 @@ class _FavoriteWordsScreenState extends ConsumerState<FavoriteWordsScreen> {
 
           if (_words.isEmpty) {
             _initializeReview(words);
-
             return const _PreparingReview();
           }
 
@@ -413,105 +416,130 @@ class _ReviewBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final progress = (currentIndex + 1) / total;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
 
-    return SafeArea(
-      child: SingleChildScrollView(
-        physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 720),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _ReviewHeader(
-                  current: currentIndex + 1,
-                  total: total,
-                  score: score,
-                  progress: progress,
-                ),
+        final bool isMobile = width < 600;
 
-                const SizedBox(height: 26),
+        final bool isTablet = width >= 600 && width < 1024;
 
-                _QuestionTypeBadge(type: questionType),
+        final bool isDesktop = width >= 1024;
 
-                const SizedBox(height: 14),
+        final horizontalPadding = isMobile
+            ? 16.0
+            : isTablet
+            ? 24.0
+            : 32.0;
 
-                _QuestionCard(word: word, questionType: questionType),
+        final maxWidth = isDesktop
+            ? 1100.0
+            : isTablet
+            ? 900.0
+            : double.infinity;
 
-                const SizedBox(height: 24),
+        final questionCard = _QuestionCard(
+          word: word,
+          questionType: questionType,
+          compact: isMobile,
+        );
 
-                switch (questionType) {
-                  RecapQuestionType.multipleChoice => _MultipleChoiceSection(
-                    answers: answers,
-                    selectedAnswer: selectedAnswer,
-                    correctAnswer: word.arabicMeaning,
-                    showResult: showResult,
-                    onAnswer: onArabicAnswer,
-                  ),
+        final answerSection = _AnswerSection(
+          word: word,
+          questionType: questionType,
+          answers: answers,
+          selectedAnswer: selectedAnswer,
+          showResult: showResult,
+          isCorrect: isCorrect,
+          answerController: answerController,
+          typedAnswer: typedAnswer,
+          isMobile: isMobile,
+          onArabicAnswer: onArabicAnswer,
+          onDutchAnswer: onDutchAnswer,
+          onTypedAnswer: onTypedAnswer,
+        );
 
-                  RecapQuestionType.reverseChoice => _MultipleChoiceSection(
-                    answers: answers,
-                    selectedAnswer: selectedAnswer,
-                    correctAnswer: word.dutchWord,
-                    showResult: showResult,
-                    onAnswer: onDutchAnswer,
-                    isDutch: true,
-                  ),
+        return SafeArea(
+          child: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
+            padding: EdgeInsets.fromLTRB(
+              horizontalPadding,
+              8,
+              horizontalPadding,
+              isDesktop ? 50 : 32,
+            ),
+            child: Center(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: maxWidth),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _ReviewHeader(
+                      current: currentIndex + 1,
+                      total: total,
+                      score: score,
+                      progress: (currentIndex + 1) / total,
+                      isMobile: isMobile,
+                    ),
+                    SizedBox(height: isMobile ? 20 : 28),
 
-                  RecapQuestionType.listening => _ListeningSection(
-                    word: word,
-                    answers: answers,
-                    selectedAnswer: selectedAnswer,
-                    correctAnswer: word.arabicMeaning,
-                    showResult: showResult,
-                    onAnswer: onArabicAnswer,
-                  ),
+                    _QuestionTypeBadge(type: questionType),
 
-                  RecapQuestionType.typing => _TypingSection(
-                    word: word,
-                    controller: answerController,
-                    typedAnswer: typedAnswer,
-                    showResult: showResult,
-                    onSubmit: onTypedAnswer,
-                  ),
-                },
+                    SizedBox(height: isMobile ? 12 : 16),
 
-                if (showResult) ...[
-                  const SizedBox(height: 20),
+                    if (isDesktop)
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(flex: 5, child: questionCard),
+                          const SizedBox(width: 24),
+                          Expanded(flex: 6, child: answerSection),
+                        ],
+                      )
+                    else ...[
+                      questionCard,
+                      SizedBox(height: isMobile ? 18 : 24),
+                      answerSection,
+                    ],
 
-                  _ResultBanner(
-                    isCorrect: isCorrect,
-                    correctAnswer: _correctAnswerFor(word, questionType),
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  SizedBox(
-                    height: 54,
-                    child: FilledButton.icon(
-                      onPressed: onNext,
-                      icon: const Icon(Icons.arrow_forward_rounded),
-                      label: Text(
-                        currentIndex == total - 1
-                            ? 'عرض النتيجة'
-                            : 'الكلمة التالية',
+                    if (showResult) ...[
+                      SizedBox(height: isMobile ? 18 : 22),
+                      _ResultBanner(
+                        isCorrect: isCorrect,
+                        correctAnswer: _correctAnswerFor(word, questionType),
                       ),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
+                      const SizedBox(height: 14),
+                      SizedBox(
+                        height: isMobile ? 52 : 56,
+                        child: FilledButton.icon(
+                          onPressed: onNext,
+                          icon: Icon(
+                            Icons.arrow_forward_rounded,
+                            size: isMobile ? 19 : 21,
+                          ),
+                          label: Text(
+                            currentIndex == total - 1
+                                ? 'عرض النتيجة'
+                                : 'الكلمة التالية',
+                          ),
+                          style: FilledButton.styleFrom(
+                            backgroundColor: AppColors.primary,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(
+                                isMobile ? 14 : 16,
+                              ),
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                  ),
-                ],
-              ],
+                    ],
+                  ],
+                ),
+              ),
             ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
@@ -528,34 +556,124 @@ class _ReviewBody extends StatelessWidget {
   }
 }
 
+class _AnswerSection extends StatelessWidget {
+  const _AnswerSection({
+    required this.word,
+    required this.questionType,
+    required this.answers,
+    required this.selectedAnswer,
+    required this.showResult,
+    required this.isCorrect,
+    required this.answerController,
+    required this.typedAnswer,
+    required this.isMobile,
+    required this.onArabicAnswer,
+    required this.onDutchAnswer,
+    required this.onTypedAnswer,
+  });
+
+  final VocabularyWord word;
+  final RecapQuestionType questionType;
+
+  final List<String> answers;
+  final String? selectedAnswer;
+
+  final bool showResult;
+  final bool isCorrect;
+
+  final TextEditingController answerController;
+  final String? typedAnswer;
+
+  final bool isMobile;
+
+  final ValueChanged<String> onArabicAnswer;
+  final ValueChanged<String> onDutchAnswer;
+  final VoidCallback onTypedAnswer;
+
+  @override
+  Widget build(BuildContext context) {
+    switch (questionType) {
+      case RecapQuestionType.multipleChoice:
+        return _MultipleChoiceSection(
+          answers: answers,
+          selectedAnswer: selectedAnswer,
+          correctAnswer: word.arabicMeaning,
+          showResult: showResult,
+          onAnswer: onArabicAnswer,
+          isDutch: false,
+          isMobile: isMobile,
+        );
+
+      case RecapQuestionType.reverseChoice:
+        return _MultipleChoiceSection(
+          answers: answers,
+          selectedAnswer: selectedAnswer,
+          correctAnswer: word.dutchWord,
+          showResult: showResult,
+          onAnswer: onDutchAnswer,
+          isDutch: true,
+          isMobile: isMobile,
+        );
+
+      case RecapQuestionType.listening:
+        return _ListeningAnswerSection(
+          word: word,
+          answers: answers,
+          selectedAnswer: selectedAnswer,
+          showResult: showResult,
+          onAnswer: onArabicAnswer,
+          isMobile: isMobile,
+        );
+
+      case RecapQuestionType.typing:
+        return _TypingSection(
+          word: word,
+          controller: answerController,
+          typedAnswer: typedAnswer,
+          showResult: showResult,
+          onSubmit: onTypedAnswer,
+          isMobile: isMobile,
+        );
+    }
+  }
+}
+
 class _ReviewHeader extends StatelessWidget {
   const _ReviewHeader({
     required this.current,
     required this.total,
     required this.score,
     required this.progress,
+    required this.isMobile,
   });
 
   final int current;
   final int total;
   final int score;
   final double progress;
+  final bool isMobile;
 
   @override
   Widget build(BuildContext context) {
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Row(
           children: [
-            Text(
-              'مراجعة الكلمات',
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+            Expanded(
+              child: Text(
+                'مراجعة الكلمات',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  fontSize: isMobile ? 17 : 19,
+                ),
+              ),
             ),
-            const Spacer(),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
+              padding: EdgeInsets.symmetric(
+                horizontal: isMobile ? 10 : 12,
+                vertical: isMobile ? 6 : 7,
+              ),
               decoration: BoxDecoration(
                 color: AppColors.muted,
                 borderRadius: BorderRadius.circular(12),
@@ -570,21 +688,17 @@ class _ReviewHeader extends StatelessWidget {
             ),
           ],
         ),
-
         const SizedBox(height: 12),
-
         ClipRRect(
           borderRadius: BorderRadius.circular(20),
           child: LinearProgressIndicator(
             value: progress,
-            minHeight: 8,
+            minHeight: isMobile ? 7 : 8,
             backgroundColor: AppColors.muted,
             color: AppColors.primary,
           ),
         ),
-
         const SizedBox(height: 8),
-
         Row(
           children: [
             Text(
@@ -659,216 +773,224 @@ class _QuestionTypeBadge extends StatelessWidget {
 }
 
 class _QuestionCard extends StatelessWidget {
-  const _QuestionCard({required this.word, required this.questionType});
+  const _QuestionCard({
+    required this.word,
+    required this.questionType,
+    required this.compact,
+  });
 
   final VocabularyWord word;
   final RecapQuestionType questionType;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
-    switch (questionType) {
-      case RecapQuestionType.multipleChoice:
-        return _MultipleChoiceQuestionCard(word: word);
+    final padding = compact ? 20.0 : 28.0;
 
-      case RecapQuestionType.reverseChoice:
-        return _ReverseQuestionCard(word: word);
-
-      case RecapQuestionType.listening:
-        return _ListeningQuestionCard(word: word);
-
-      case RecapQuestionType.typing:
-        return _TypingQuestionCard(word: word);
-    }
-  }
-}
-
-class _MultipleChoiceQuestionCard extends StatelessWidget {
-  const _MultipleChoiceQuestionCard({required this.word});
-
-  final VocabularyWord word;
-
-  @override
-  Widget build(BuildContext context) {
-    return _QuestionCardContainer(
-      child: Column(
-        children: [
-          const _QuestionIcon(icon: Icons.menu_book_rounded),
-          const SizedBox(height: 16),
-          Text(
-            'ما معنى الكلمة التالية؟',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: AppColors.subtitleColor(context),
-            ),
-          ),
-          const SizedBox(height: 14),
-          Text(
-            word.dutchWord,
-            textDirection: TextDirection.ltr,
-            textAlign: TextAlign.center,
-            style: Theme.of(
-              context,
-            ).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.w800),
-          ),
-          const SizedBox(height: 16),
-          PronunciationButton(text: word.dutchWord, size: 26),
-        ],
-      ),
-    );
-  }
-}
-
-class _ReverseQuestionCard extends StatelessWidget {
-  const _ReverseQuestionCard({required this.word});
-
-  final VocabularyWord word;
-
-  @override
-  Widget build(BuildContext context) {
-    return _QuestionCardContainer(
-      child: Column(
-        children: [
-          const _QuestionIcon(icon: Icons.translate_rounded),
-          const SizedBox(height: 16),
-          Text(
-            'ما هي الكلمة الهولندية؟',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: AppColors.subtitleColor(context),
-            ),
-          ),
-          const SizedBox(height: 14),
-          Text(
-            word.arabicMeaning,
-            textDirection: TextDirection.rtl,
-            textAlign: TextAlign.center,
-            style: Theme.of(
-              context,
-            ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ListeningQuestionCard extends StatelessWidget {
-  const _ListeningQuestionCard({required this.word});
-
-  final VocabularyWord word;
-
-  @override
-  Widget build(BuildContext context) {
-    return _QuestionCardContainer(
-      child: Column(
-        children: [
-          const _QuestionIcon(icon: Icons.headphones_rounded),
-          const SizedBox(height: 16),
-          Text(
-            'استمع جيدًا ثم اختر المعنى',
-            textAlign: TextAlign.center,
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'لن تظهر الكلمة حتى تختبر فهمك من الاستماع.',
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: AppColors.subtitleColor(context),
-            ),
-          ),
-          const SizedBox(height: 22),
-          PronunciationButton(text: word.dutchWord, size: 34),
-          const SizedBox(height: 8),
-          Text(
-            'اضغط للاستماع',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: AppColors.subtitleColor(context),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _TypingQuestionCard extends StatelessWidget {
-  const _TypingQuestionCard({required this.word});
-
-  final VocabularyWord word;
-
-  @override
-  Widget build(BuildContext context) {
-    return _QuestionCardContainer(
-      child: Column(
-        children: [
-          const _QuestionIcon(icon: Icons.keyboard_alt_rounded),
-          const SizedBox(height: 16),
-          Text(
-            'اكتب الكلمة الهولندية',
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
-          ),
-          const SizedBox(height: 14),
-          Text(
-            word.arabicMeaning,
-            textDirection: TextDirection.rtl,
-            textAlign: TextAlign.center,
-            style: Theme.of(
-              context,
-            ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.w800),
-          ),
-          const SizedBox(height: 18),
-          PronunciationButton(text: word.dutchWord, size: 30),
-          const SizedBox(height: 8),
-          Text(
-            'استمع للكلمة ثم اكتبها',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: AppColors.subtitleColor(context),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _QuestionCardContainer extends StatelessWidget {
-  const _QuestionCardContainer({required this.child});
-
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(26),
+      padding: EdgeInsets.all(padding),
       decoration: BoxDecoration(
         color: AppColors.cardColor(context),
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(compact ? 20 : 26),
         border: Border.all(color: AppColors.borderColor(context)),
       ),
-      child: child,
+      child: switch (questionType) {
+        RecapQuestionType.multipleChoice => _MeaningQuestion(
+          word: word,
+          compact: compact,
+        ),
+        RecapQuestionType.reverseChoice => _ReverseQuestion(
+          word: word,
+          compact: compact,
+        ),
+        RecapQuestionType.listening => _ListeningQuestion(
+          word: word,
+          compact: compact,
+        ),
+        RecapQuestionType.typing => _TypingQuestion(
+          word: word,
+          compact: compact,
+        ),
+      },
+    );
+  }
+}
+
+class _MeaningQuestion extends StatelessWidget {
+  const _MeaningQuestion({required this.word, required this.compact});
+
+  final VocabularyWord word;
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        _QuestionIcon(icon: Icons.menu_book_rounded, size: compact ? 52 : 60),
+        SizedBox(height: compact ? 14 : 18),
+        Text(
+          'ما معنى الكلمة التالية؟',
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: AppColors.subtitleColor(context),
+          ),
+        ),
+        SizedBox(height: compact ? 12 : 16),
+        Text(
+          word.dutchWord,
+          textDirection: TextDirection.ltr,
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+            fontWeight: FontWeight.w800,
+            fontSize: compact ? 28 : 34,
+          ),
+        ),
+        SizedBox(height: compact ? 14 : 18),
+        PronunciationButton(text: word.dutchWord, size: compact ? 24 : 30),
+      ],
+    );
+  }
+}
+
+class _ReverseQuestion extends StatelessWidget {
+  const _ReverseQuestion({required this.word, required this.compact});
+
+  final VocabularyWord word;
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        _QuestionIcon(icon: Icons.translate_rounded, size: compact ? 52 : 60),
+        SizedBox(height: compact ? 14 : 18),
+        Text(
+          'ما هي الكلمة الهولندية؟',
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: AppColors.subtitleColor(context),
+          ),
+        ),
+        SizedBox(height: compact ? 12 : 16),
+        Text(
+          word.arabicMeaning,
+          textDirection: TextDirection.rtl,
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+            fontWeight: FontWeight.w800,
+            fontSize: compact ? 24 : 30,
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _ListeningQuestion extends StatelessWidget {
+  const _ListeningQuestion({required this.word, required this.compact});
+
+  final VocabularyWord word;
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        _QuestionIcon(icon: Icons.headphones_rounded, size: compact ? 52 : 60),
+        SizedBox(height: compact ? 14 : 18),
+        Text(
+          'استمع جيدًا ثم اختر المعنى',
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w700,
+            fontSize: compact ? 17 : 19,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'الكلمة مخفية حتى تختبر فهمك من الاستماع.',
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: AppColors.subtitleColor(context),
+          ),
+        ),
+        SizedBox(height: compact ? 20 : 26),
+        PronunciationButton(text: word.dutchWord, size: compact ? 34 : 42),
+        const SizedBox(height: 8),
+        Text(
+          'اضغط للاستماع',
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: AppColors.subtitleColor(context),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _TypingQuestion extends StatelessWidget {
+  const _TypingQuestion({required this.word, required this.compact});
+
+  final VocabularyWord word;
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        _QuestionIcon(
+          icon: Icons.keyboard_alt_rounded,
+          size: compact ? 52 : 60,
+        ),
+        SizedBox(height: compact ? 14 : 18),
+        Text(
+          'اكتب الكلمة الهولندية',
+          textAlign: TextAlign.center,
+          style: Theme.of(
+            context,
+          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
+        ),
+        SizedBox(height: compact ? 12 : 16),
+        Text(
+          word.arabicMeaning,
+          textDirection: TextDirection.rtl,
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+            fontWeight: FontWeight.w800,
+            fontSize: compact ? 24 : 30,
+          ),
+        ),
+        SizedBox(height: compact ? 16 : 22),
+        PronunciationButton(text: word.dutchWord, size: compact ? 30 : 36),
+        const SizedBox(height: 8),
+        Text(
+          'استمع للكلمة ثم اكتبها',
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: AppColors.subtitleColor(context),
+          ),
+        ),
+      ],
     );
   }
 }
 
 class _QuestionIcon extends StatelessWidget {
-  const _QuestionIcon({required this.icon});
+  const _QuestionIcon({required this.icon, required this.size});
 
   final IconData icon;
+  final double size;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 56,
-      height: 56,
+      width: size,
+      height: size,
       decoration: BoxDecoration(
         color: AppColors.accent,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(size * .30),
       ),
-      child: Icon(icon, size: 27, color: AppColors.primary),
+      child: Icon(icon, size: size * .48, color: AppColors.primary),
     );
   }
 }
@@ -880,7 +1002,8 @@ class _MultipleChoiceSection extends StatelessWidget {
     required this.correctAnswer,
     required this.showResult,
     required this.onAnswer,
-    this.isDutch = false,
+    required this.isDutch,
+    required this.isMobile,
   });
 
   final List<String> answers;
@@ -889,6 +1012,7 @@ class _MultipleChoiceSection extends StatelessWidget {
   final bool showResult;
   final ValueChanged<String> onAnswer;
   final bool isDutch;
+  final bool isMobile;
 
   @override
   Widget build(BuildContext context) {
@@ -896,30 +1020,55 @@ class _MultipleChoiceSection extends StatelessWidget {
       return const SizedBox.shrink();
     }
 
-    return Column(
-      children: answers.asMap().entries.map((entry) {
-        final index = entry.key;
-        final answer = entry.value;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final useGrid =
+            !isMobile && constraints.maxWidth >= 560 && answers.length >= 3;
 
-        final selected = selectedAnswer == answer;
-        final correct = answer == correctAnswer;
+        if (!useGrid) {
+          return Column(
+            children: answers.asMap().entries.map((entry) {
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: _AnswerButton(
+                  number: entry.key + 1,
+                  answer: entry.value,
+                  isDutch: isDutch,
+                  selected: selectedAnswer == entry.value,
+                  correct: entry.value == correctAnswer,
+                  showResult: showResult,
+                  onTap: () => onAnswer(entry.value),
+                ),
+              );
+            }).toList(),
+          );
+        }
 
-        final isWrong = showResult && selected && !correct;
-
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 10),
-          child: _AnswerButton(
-            number: index + 1,
-            answer: answer,
-            isDutch: isDutch,
-            selected: selected,
-            correct: correct,
-            showResult: showResult,
-            isWrong: isWrong,
-            onTap: () => onAnswer(answer),
+        return GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: answers.length,
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            mainAxisSpacing: 12,
+            crossAxisSpacing: 12,
+            childAspectRatio: 2.55,
           ),
+          itemBuilder: (context, index) {
+            final answer = answers[index];
+
+            return _AnswerButton(
+              number: index + 1,
+              answer: answer,
+              isDutch: isDutch,
+              selected: selectedAnswer == answer,
+              correct: answer == correctAnswer,
+              showResult: showResult,
+              onTap: () => onAnswer(answer),
+            );
+          },
         );
-      }).toList(),
+      },
     );
   }
 }
@@ -932,7 +1081,6 @@ class _AnswerButton extends StatelessWidget {
     required this.selected,
     required this.correct,
     required this.showResult,
-    required this.isWrong,
     required this.onTap,
   });
 
@@ -942,106 +1090,114 @@ class _AnswerButton extends StatelessWidget {
   final bool selected;
   final bool correct;
   final bool showResult;
-  final bool isWrong;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
+    final isWrong = showResult && selected && !correct;
+
     Color? backgroundColor;
     Color borderColor = AppColors.borderColor(context);
     Color textColor = AppColors.textColor(context);
 
     if (showResult && correct) {
-      backgroundColor = Colors.green.withValues(alpha: 0.10);
+      backgroundColor = Colors.green.withValues(alpha: .10);
       borderColor = Colors.green;
       textColor = Colors.green;
     } else if (isWrong) {
-      backgroundColor = AppColors.destructive.withValues(alpha: 0.10);
+      backgroundColor = AppColors.destructive.withValues(alpha: .10);
       borderColor = AppColors.destructive;
       textColor = AppColors.destructive;
     }
 
-    return SizedBox(
-      width: double.infinity,
-      child: OutlinedButton(
-        onPressed: showResult ? null : onTap,
-        style: OutlinedButton.styleFrom(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 15),
-          backgroundColor: backgroundColor,
-          side: BorderSide(
-            color: borderColor,
-            width: selected && !showResult ? 1.5 : 1,
-          ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
+    return OutlinedButton(
+      onPressed: showResult ? null : onTap,
+      style: OutlinedButton.styleFrom(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        backgroundColor: backgroundColor,
+        side: BorderSide(
+          color: borderColor,
+          width: selected && !showResult ? 1.5 : 1,
         ),
-        child: Row(
-          children: [
-            Container(
-              width: 30,
-              height: 30,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                color: AppColors.muted,
-                shape: BoxShape.circle,
-              ),
-              child: Text(
-                '$number',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.secondary,
-                ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 30,
+            height: 30,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: AppColors.muted,
+              shape: BoxShape.circle,
+            ),
+            child: Text(
+              '$number',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                fontWeight: FontWeight.w800,
+                color: AppColors.secondary,
               ),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                answer,
-                textDirection: isDutch ? TextDirection.ltr : TextDirection.rtl,
-                textAlign: isDutch ? TextAlign.left : TextAlign.right,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: textColor,
-                  fontWeight: FontWeight.w600,
-                ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              answer,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              textDirection: isDutch ? TextDirection.ltr : TextDirection.rtl,
+              textAlign: isDutch ? TextAlign.left : TextAlign.right,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: textColor,
+                fontWeight: FontWeight.w600,
               ),
             ),
-            if (showResult && correct)
-              const Icon(Icons.check_circle_rounded, color: Colors.green),
-            if (isWrong)
-              const Icon(Icons.cancel_rounded, color: AppColors.destructive),
-          ],
-        ),
+          ),
+          if (showResult && correct)
+            const Icon(
+              Icons.check_circle_rounded,
+              color: Colors.green,
+              size: 21,
+            ),
+          if (isWrong)
+            const Icon(
+              Icons.cancel_rounded,
+              color: AppColors.destructive,
+              size: 21,
+            ),
+        ],
       ),
     );
   }
 }
 
-class _ListeningSection extends StatelessWidget {
-  const _ListeningSection({
+class _ListeningAnswerSection extends StatelessWidget {
+  const _ListeningAnswerSection({
     required this.word,
     required this.answers,
     required this.selectedAnswer,
-    required this.correctAnswer,
     required this.showResult,
     required this.onAnswer,
+    required this.isMobile,
   });
 
   final VocabularyWord word;
   final List<String> answers;
   final String? selectedAnswer;
-  final String correctAnswer;
   final bool showResult;
   final ValueChanged<String> onAnswer;
+  final bool isMobile;
 
   @override
   Widget build(BuildContext context) {
     return _MultipleChoiceSection(
       answers: answers,
       selectedAnswer: selectedAnswer,
-      correctAnswer: correctAnswer,
+      correctAnswer: word.arabicMeaning,
       showResult: showResult,
       onAnswer: onAnswer,
+      isDutch: false,
+      isMobile: isMobile,
     );
   }
 }
@@ -1053,6 +1209,7 @@ class _TypingSection extends StatelessWidget {
     required this.typedAnswer,
     required this.showResult,
     required this.onSubmit,
+    required this.isMobile,
   });
 
   final VocabularyWord word;
@@ -1060,6 +1217,7 @@ class _TypingSection extends StatelessWidget {
   final String? typedAnswer;
   final bool showResult;
   final VoidCallback onSubmit;
+  final bool isMobile;
 
   @override
   Widget build(BuildContext context) {
@@ -1072,22 +1230,31 @@ class _TypingSection extends StatelessWidget {
           textDirection: TextDirection.ltr,
           autofocus: true,
           keyboardType: TextInputType.text,
+          style: TextStyle(
+            fontFamily: 'Cairo',
+            fontSize: isMobile ? 16 : 18,
+            fontWeight: FontWeight.w600,
+          ),
           decoration: InputDecoration(
             hintText: 'اكتب الكلمة الهولندية',
             hintTextDirection: TextDirection.rtl,
             prefixIcon: const Icon(Icons.keyboard_rounded),
             filled: true,
             fillColor: AppColors.cardColor(context),
+            contentPadding: EdgeInsets.symmetric(
+              horizontal: isMobile ? 14 : 18,
+              vertical: isMobile ? 15 : 18,
+            ),
             border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(isMobile ? 14 : 16),
               borderSide: BorderSide(color: AppColors.borderColor(context)),
             ),
             enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(isMobile ? 14 : 16),
               borderSide: BorderSide(color: AppColors.borderColor(context)),
             ),
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(isMobile ? 14 : 16),
               borderSide: const BorderSide(
                 color: AppColors.primary,
                 width: 1.5,
@@ -1096,12 +1263,10 @@ class _TypingSection extends StatelessWidget {
           ),
           onSubmitted: (_) => onSubmit(),
         ),
-
-        const SizedBox(height: 14),
-
+        SizedBox(height: isMobile ? 12 : 14),
         SizedBox(
           width: double.infinity,
-          height: 52,
+          height: isMobile ? 50 : 54,
           child: FilledButton.icon(
             onPressed: showResult ? null : onSubmit,
             icon: const Icon(Icons.check_rounded),
@@ -1109,7 +1274,7 @@ class _TypingSection extends StatelessWidget {
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.primary,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(15),
+                borderRadius: BorderRadius.circular(isMobile ? 14 : 16),
               ),
             ),
           ),
@@ -1131,14 +1296,15 @@ class _ResultBanner extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: isCorrect
-            ? Colors.green.withValues(alpha: 0.10)
-            : AppColors.destructive.withValues(alpha: 0.10),
+            ? Colors.green.withValues(alpha: .10)
+            : AppColors.destructive.withValues(alpha: .10),
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isCorrect ? Colors.green : AppColors.destructive,
         ),
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(
             isCorrect ? Icons.check_circle_rounded : Icons.info_rounded,
@@ -1148,6 +1314,7 @@ class _ResultBanner extends StatelessWidget {
           Expanded(
             child: Text(
               isCorrect ? 'إجابة صحيحة! 🎉' : 'الإجابة الصحيحة: $correctAnswer',
+              textDirection: TextDirection.rtl,
               style: TextStyle(
                 fontFamily: 'Cairo',
                 fontWeight: FontWeight.w700,
@@ -1177,81 +1344,90 @@ class _ReviewComplete extends StatelessWidget {
     final percentage = total == 0 ? 0 : ((score / total) * 100).round();
 
     return Center(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 500),
-          child: Container(
-            padding: const EdgeInsets.all(30),
-            decoration: BoxDecoration(
-              color: AppColors.cardColor(context),
-              borderRadius: BorderRadius.circular(28),
-              border: Border.all(color: AppColors.borderColor(context)),
-            ),
-            child: Column(
-              children: [
-                Container(
-                  width: 78,
-                  height: 78,
-                  decoration: BoxDecoration(
-                    color: AppColors.accent,
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                  child: const Icon(
-                    Icons.emoji_events_rounded,
-                    size: 42,
-                    color: AppColors.primary,
-                  ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final isMobile = constraints.maxWidth < 600;
+
+          final horizontalPadding = isMobile ? 20.0 : 32.0;
+
+          return SingleChildScrollView(
+            padding: EdgeInsets.all(horizontalPadding),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 560),
+              child: Container(
+                width: double.infinity,
+                padding: EdgeInsets.all(isMobile ? 24 : 34),
+                decoration: BoxDecoration(
+                  color: AppColors.cardColor(context),
+                  borderRadius: BorderRadius.circular(isMobile ? 24 : 30),
+                  border: Border.all(color: AppColors.borderColor(context)),
                 ),
-                const SizedBox(height: 20),
-                Text(
-                  'خلصت المراجعة! 🎉',
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'نتيجتك',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.subtitleColor(context),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                Text(
-                  '$percentage%',
-                  style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  '$score من $total إجابات صحيحة',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
-                ),
-                const SizedBox(height: 26),
-                SizedBox(
-                  width: double.infinity,
-                  height: 54,
-                  child: FilledButton.icon(
-                    onPressed: onRestart,
-                    icon: const Icon(Icons.refresh_rounded),
-                    label: const Text('مراجعة مرة أخرى'),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
+                child: Column(
+                  children: [
+                    Container(
+                      width: isMobile ? 72 : 84,
+                      height: isMobile ? 72 : 84,
+                      decoration: BoxDecoration(
+                        color: AppColors.accent,
+                        borderRadius: BorderRadius.circular(isMobile ? 22 : 26),
+                      ),
+                      child: Icon(
+                        Icons.emoji_events_rounded,
+                        size: isMobile ? 38 : 44,
+                        color: AppColors.primary,
                       ),
                     ),
-                  ),
+                    const SizedBox(height: 20),
+                    Text(
+                      'خلصت المراجعة! 🎉',
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(fontWeight: FontWeight.w800),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'نتيجتك',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: AppColors.subtitleColor(context),
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+                    Text(
+                      '$percentage%',
+                      style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      '$score من $total إجابات صحيحة',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 26),
+                    SizedBox(
+                      width: double.infinity,
+                      height: isMobile ? 52 : 56,
+                      child: FilledButton.icon(
+                        onPressed: onRestart,
+                        icon: const Icon(Icons.refresh_rounded),
+                        label: const Text('مراجعة مرة أخرى'),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: AppColors.primary,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }
@@ -1263,41 +1439,51 @@ class _EmptyReviewState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 86,
-              height: 86,
-              decoration: BoxDecoration(
-                color: AppColors.muted,
-                borderRadius: BorderRadius.circular(26),
-              ),
-              child: const Icon(
-                Icons.style_outlined,
-                size: 42,
-                color: AppColors.secondary,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final isMobile = constraints.maxWidth < 600;
+
+          return SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 520),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    width: isMobile ? 78 : 88,
+                    height: isMobile ? 78 : 88,
+                    decoration: BoxDecoration(
+                      color: AppColors.muted,
+                      borderRadius: BorderRadius.circular(26),
+                    ),
+                    child: Icon(
+                      Icons.style_outlined,
+                      size: isMobile ? 38 : 44,
+                      color: AppColors.secondary,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  Text(
+                    'مفيش كلمات للمراجعة',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'احفظ بعض الكلمات أولًا، وبعدها هتقدر تراجعها هنا بطرق مختلفة.',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppColors.subtitleColor(context),
+                    ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(height: 20),
-            Text(
-              'مفيش كلمات للمراجعة',
-              style: Theme.of(
-                context,
-              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'احفظ بعض الكلمات أولًا، وبعدها هتقدر تراجعها هنا بطرق مختلفة.',
-              textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppColors.subtitleColor(context),
-              ),
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
@@ -1323,38 +1509,48 @@ class _ErrorState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(
-              Icons.error_outline_rounded,
-              size: 48,
-              color: AppColors.destructive,
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final horizontalPadding = constraints.maxWidth < 600 ? 20.0 : 32.0;
+
+          return SingleChildScrollView(
+            padding: EdgeInsets.all(horizontalPadding),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 560),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.error_outline_rounded,
+                    size: 50,
+                    color: AppColors.destructive,
+                  ),
+                  const SizedBox(height: 14),
+                  Text(
+                    'حصل خطأ في تحميل الكلمات',
+                    textAlign: TextAlign.center,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    '$error',
+                    textAlign: TextAlign.center,
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 18),
+                  OutlinedButton.icon(
+                    onPressed: onRetry,
+                    icon: const Icon(Icons.refresh_rounded),
+                    label: const Text('إعادة المحاولة'),
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 14),
-            Text(
-              'حصل خطأ في تحميل الكلمات',
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              '$error',
-              textAlign: TextAlign.center,
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 18),
-            OutlinedButton.icon(
-              onPressed: onRetry,
-              icon: const Icon(Icons.refresh_rounded),
-              label: const Text('إعادة المحاولة'),
-            ),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
