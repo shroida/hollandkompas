@@ -1,8 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:video_player/video_player.dart';
-import 'package:youtube_explode_dart/youtube_explode_dart.dart';
+import 'package:youtube_player_iframe/youtube_player_iframe.dart';
 
 class WebSecureVideoPlayer extends StatefulWidget {
   final String videoUrl;
@@ -19,7 +18,10 @@ class WebSecureVideoPlayer extends StatefulWidget {
 }
 
 class _WebSecureVideoPlayerState extends State<WebSecureVideoPlayer> {
-  VideoPlayerController? _controller;
+  YoutubePlayerController? _controller;
+
+  StreamSubscription<YoutubeVideoState>? _videoStateSubscription;
+  StreamSubscription<YoutubePlayerValue>? _playerStateSubscription;
 
   Timer? _controlsTimer;
   Timer? _feedbackTimer;
@@ -27,18 +29,25 @@ class _WebSecureVideoPlayerState extends State<WebSecureVideoPlayer> {
   final ValueNotifier<bool> _showControlsNotifier = ValueNotifier(true);
   final ValueNotifier<bool> _isDraggingNotifier = ValueNotifier(false);
   final ValueNotifier<double> _sliderNotifier = ValueNotifier(0);
-  final ValueNotifier<String?> _errorNotifier = ValueNotifier(null);
-  final ValueNotifier<String?> _seekFeedbackNotifier = ValueNotifier(null);
+  final ValueNotifier<String?> _errorNotifier = ValueNotifier<String?>(null);
+  final ValueNotifier<String?> _seekFeedbackNotifier = ValueNotifier<String?>(
+    null,
+  );
   final ValueNotifier<double> _playbackRateNotifier = ValueNotifier(1.0);
+  final ValueNotifier<Duration> _positionNotifier = ValueNotifier(
+    Duration.zero,
+  );
+  final ValueNotifier<Duration> _durationNotifier = ValueNotifier(
+    Duration.zero,
+  );
 
-  String? _videoId;
+  Duration _position = Duration.zero;
+  Duration _duration = Duration.zero;
 
-  bool _isInitializing = false;
   bool _completionSent = false;
   bool _disposed = false;
 
-  Duration _duration = Duration.zero;
-  Duration _position = Duration.zero;
+  int _loadRequestId = 0;
 
   @override
   void initState() {
@@ -61,271 +70,203 @@ class _WebSecureVideoPlayerState extends State<WebSecureVideoPlayer> {
   }
 
   Future<void> _reloadVideo(String url) async {
+    final requestId = ++_loadRequestId;
+
     _cancelControlsTimer();
     _cancelFeedbackTimer();
 
+    await _cancelSubscriptions();
+    await _closeController();
+
+    if (_disposed || requestId != _loadRequestId) {
+      return;
+    }
+
+    _resetState();
+
+    if (mounted) {
+      setState(() {});
+    }
+
+    await _loadVideo(url, requestId: requestId);
+  }
+
+  void _resetState() {
     _completionSent = false;
+
     _position = Duration.zero;
     _duration = Duration.zero;
 
+    _positionNotifier.value = Duration.zero;
+    _durationNotifier.value = Duration.zero;
     _sliderNotifier.value = 0;
     _showControlsNotifier.value = true;
     _isDraggingNotifier.value = false;
     _playbackRateNotifier.value = 1.0;
     _errorNotifier.value = null;
     _seekFeedbackNotifier.value = null;
-
-    final oldController = _controller;
-    _controller = null;
-
-    if (oldController != null) {
-      oldController.removeListener(_handleControllerChanged);
-
-      try {
-        await oldController.dispose();
-      } catch (_) {}
-    }
-
-    if (!mounted || _disposed) {
-      return;
-    }
-
-    setState(() {});
-
-    await _loadVideo(url);
   }
 
-  Future<void> _loadVideo(String url) async {
-    if (_isInitializing || _disposed) {
+  Future<void> _loadVideo(String url, {int? requestId}) async {
+    final currentRequestId = requestId ?? ++_loadRequestId;
+
+    _cancelControlsTimer();
+    _cancelFeedbackTimer();
+
+    await _cancelSubscriptions();
+    await _closeController();
+
+    if (!_isCurrentRequest(currentRequestId)) {
       return;
     }
 
-    _isInitializing = true;
-    _errorNotifier.value = null;
+    _resetState();
 
     final videoId = _extractVideoId(url);
 
     if (videoId == null) {
-      _isInitializing = false;
-      _videoId = null;
-      _handleInitializationError('Invalid YouTube video URL.');
+      _errorNotifier.value = 'Invalid YouTube video URL.';
+
+      if (mounted && !_disposed) {
+        setState(() {});
+      }
+
       return;
     }
 
-    _videoId = videoId;
-
-    if (mounted) {
-      setState(() {});
-    }
-
-    YoutubeExplode? yt;
-
-    try {
-      yt = YoutubeExplode();
-
-      final manifest = await _getManifestWithFallbacks(yt, videoId);
-
-      if (_disposed) {
-        return;
-      }
-
-      final selectedStream = _selectMuxedMp4Stream(manifest);
-
-      if (selectedStream == null) {
-        throw StateError(
-          'No playable MP4 muxed stream was found for this video.',
-        );
-      }
-
-      final streamUrl = selectedStream.url;
-
-      final controller = VideoPlayerController.networkUrl(
-        streamUrl,
-        videoPlayerOptions: VideoPlayerOptions(
-          mixWithOthers: false,
-          allowBackgroundPlayback: false,
-        ),
-      );
-
-      if (_disposed) {
-        await controller.dispose();
-        return;
-      }
-
-      _controller = controller;
-
-      controller.addListener(_handleControllerChanged);
-
-      await controller.initialize();
-
-      if (_disposed || controller != _controller) {
-        controller.removeListener(_handleControllerChanged);
-
-        try {
-          await controller.dispose();
-        } catch (_) {}
-
-        return;
-      }
-
-      _duration = controller.value.duration;
-      _position = controller.value.position;
-
-      _updateSliderFromPosition();
-
-      _isInitializing = false;
-
-      if (mounted) {
-        setState(() {});
-      }
-    } on VideoUnavailableException {
-      _handleInitializationError(
-        'This YouTube video is unavailable, private, deleted, or cannot be played.',
-      );
-    } on VideoUnplayableException {
-      _handleInitializationError(
-        'This YouTube video cannot be played directly.',
-      );
-    } on VideoRequiresPurchaseException {
-      _handleInitializationError(
-        'This video requires a purchase and cannot be played.',
-      );
-    } catch (error) {
-      debugPrint(
-        'WebSecureVideoPlayer: failed to load YouTube video '
-        '$_videoId: $error',
-      );
-
-      _handleInitializationError(
-        'Unable to load the video stream. '
-        'If this happens only on Chrome, YouTube may be blocking '
-        'browser-side stream extraction.',
-      );
-    } finally {
-      yt?.close();
-    }
-  }
-
-  Future<StreamManifest> _getManifestWithFallbacks(
-    YoutubeExplode yt,
-    String videoId,
-  ) async {
-    Object? lastError;
-
-    final clients = <YoutubeApiClient>[
-      YoutubeApiClient.ios,
-      YoutubeApiClient.androidVr,
-      YoutubeApiClient.safari,
-      YoutubeApiClient.tv,
-    ];
-
-    for (final client in clients) {
-      try {
-        debugPrint(
-          'WebSecureVideoPlayer: requesting manifest '
-          'with client: $client',
-        );
-
-        final manifest = await yt.videos.streams.getManifest(
-          VideoId(videoId),
-          ytClients: <YoutubeApiClient>[client],
-          requireWatchPage: false,
-        );
-
-        if (manifest.muxed.isNotEmpty) {
-          debugPrint(
-            'WebSecureVideoPlayer: manifest loaded with client: $client',
-          );
-
-          return manifest;
-        }
-
-        lastError = StateError(
-          'Manifest returned no muxed streams for client $client.',
-        );
-      } catch (error) {
-        lastError = error;
-
-        debugPrint('WebSecureVideoPlayer: client $client failed: $error');
-      }
-    }
-
-    try {
-      debugPrint('WebSecureVideoPlayer: trying default manifest extraction.');
-
-      final manifest = await yt.videos.streams.getManifest(
-        VideoId(videoId),
-        requireWatchPage: false,
-      );
-
-      if (manifest.muxed.isNotEmpty) {
-        return manifest;
-      }
-
-      lastError = StateError('Default manifest returned no muxed streams.');
-    } catch (error) {
-      lastError = error;
-
-      debugPrint(
-        'WebSecureVideoPlayer: default manifest extraction failed: $error',
-      );
-    }
-
-    throw StateError(
-      'Unable to extract a playable YouTube stream for '
-      '$videoId. Last error: $lastError',
+    final controller = YoutubePlayerController.fromVideoId(
+      videoId: videoId,
+      autoPlay: false,
+      credentialless: true,
+      params: const YoutubePlayerParams(
+        showControls: false,
+        showFullscreenButton: false,
+        enableKeyboard: false,
+        enableJavaScript: true,
+        mute: false,
+        enableCaption: true,
+        captionLanguage: 'en',
+        interfaceLanguage: 'en',
+        showVideoAnnotations: false,
+        loop: false,
+        playsInline: true,
+        strictRelatedVideos: true,
+        privacyEnhancedMode: true,
+        pointerEvents: PointerEvents.none,
+        videoStateUpdateInterval: 250,
+      ),
     );
-  }
 
-  MuxedStreamInfo? _selectMuxedMp4Stream(StreamManifest manifest) {
-    final streams = manifest.muxed
-        .where((stream) => stream.container == StreamContainer.mp4)
-        .toList();
-
-    if (streams.isEmpty) {
-      return null;
+    if (!_isCurrentRequest(currentRequestId)) {
+      await controller.close();
+      return;
     }
 
-    streams.sort((a, b) {
-      final heightComparison = b.videoResolution.height.compareTo(
-        a.videoResolution.height,
-      );
+    _controller = controller;
 
-      if (heightComparison != 0) {
-        return heightComparison;
+    _videoStateSubscription = controller.videoStateStream.listen((videoState) {
+      if (!_isCurrentRequest(currentRequestId)) {
+        return;
       }
 
-      return b.videoResolution.width.compareTo(a.videoResolution.width);
+      final position = videoState.position;
+
+      _position = position;
+      _positionNotifier.value = position;
+
+      if (!_isDraggingNotifier.value) {
+        _updateSliderFromPosition();
+      }
+
+      _updateDurationFromController(controller);
+      _checkCompletionFromPosition();
     });
 
-    return streams.first;
-  }
+    _playerStateSubscription = controller.stream.listen((value) {
+      if (!_isCurrentRequest(currentRequestId)) {
+        return;
+      }
 
-  void _handleInitializationError(String message) {
-    _isInitializing = false;
-    _controller = null;
-    _errorNotifier.value = message;
+      _handlePlayerValue(value);
+    });
 
     if (mounted && !_disposed) {
       setState(() {});
     }
   }
 
-  void _handleControllerChanged() {
-    if (_disposed) {
+  bool _isCurrentRequest(int requestId) {
+    return !_disposed && requestId == _loadRequestId;
+  }
+
+  Future<void> _updateDurationFromController(
+    YoutubePlayerController controller,
+  ) async {
+    if (_disposed || !identical(controller, _controller)) {
       return;
     }
 
+    try {
+      final durationSeconds = await controller.duration;
+
+      if (_disposed || !identical(controller, _controller)) {
+        return;
+      }
+
+      if (durationSeconds <= 0) {
+        return;
+      }
+
+      final duration = Duration(milliseconds: (durationSeconds * 1000).round());
+
+      if (duration == _duration) {
+        return;
+      }
+
+      _duration = duration;
+      _durationNotifier.value = duration;
+
+      _updateSliderFromPosition();
+    } catch (_) {}
+  }
+
+  Future<void> _cancelSubscriptions() async {
+    final videoStateSubscription = _videoStateSubscription;
+    final playerStateSubscription = _playerStateSubscription;
+
+    _videoStateSubscription = null;
+    _playerStateSubscription = null;
+
+    if (videoStateSubscription != null) {
+      await videoStateSubscription.cancel();
+    }
+
+    if (playerStateSubscription != null) {
+      await playerStateSubscription.cancel();
+    }
+  }
+
+  Future<void> _closeController() async {
     final controller = _controller;
+
+    _controller = null;
 
     if (controller == null) {
       return;
     }
 
-    final value = controller.value;
+    try {
+      await controller.close();
+    } catch (_) {}
+  }
+
+  void _handlePlayerValue(YoutubePlayerValue value) {
+    if (_disposed) {
+      return;
+    }
 
     if (value.hasError) {
-      _errorNotifier.value = value.errorDescription ?? 'Video playback error.';
+      _errorNotifier.value = _getErrorMessage(value.error);
 
       _cancelControlsTimer();
       _showControlsNotifier.value = true;
@@ -337,20 +278,45 @@ class _WebSecureVideoPlayerState extends State<WebSecureVideoPlayer> {
       return;
     }
 
-    _duration = value.duration;
-    _position = value.position;
+    final metadataDuration = value.metaData.duration;
 
-    if (!_isDraggingNotifier.value) {
+    if (metadataDuration > Duration.zero && metadataDuration != _duration) {
+      _duration = metadataDuration;
+      _durationNotifier.value = metadataDuration;
       _updateSliderFromPosition();
     }
 
-    _checkCompletion(value);
+    final playbackRate = value.playbackRate;
 
-    if (value.isPlaying) {
-      _scheduleControlsHide();
-    } else {
-      _cancelControlsTimer();
-      _showControlsNotifier.value = true;
+    if (playbackRate > 0 && playbackRate != _playbackRateNotifier.value) {
+      _playbackRateNotifier.value = playbackRate;
+    }
+
+    switch (value.playerState) {
+      case PlayerState.ended:
+        if (_duration > Duration.zero) {
+          _position = _duration;
+          _positionNotifier.value = _duration;
+          _sliderNotifier.value = 1.0;
+        }
+
+        _cancelControlsTimer();
+        _showControlsNotifier.value = true;
+        _emitCompletion();
+        break;
+
+      case PlayerState.playing:
+        _scheduleControlsHide();
+        break;
+
+      case PlayerState.paused:
+      case PlayerState.cued:
+      case PlayerState.buffering:
+      case PlayerState.unStarted:
+      case PlayerState.unknown:
+        _cancelControlsTimer();
+        _showControlsNotifier.value = true;
+        break;
     }
 
     if (mounted) {
@@ -358,27 +324,20 @@ class _WebSecureVideoPlayerState extends State<WebSecureVideoPlayer> {
     }
   }
 
-  void _checkCompletion(VideoPlayerValue value) {
-    if (_completionSent) {
+  void _checkCompletionFromPosition() {
+    if (_completionSent || _duration <= Duration.zero) {
       return;
     }
 
-    final duration = value.duration;
-    final position = value.position;
+    final remaining = _duration - _position;
 
-    if (duration <= Duration.zero) {
-      return;
-    }
-
-    final remaining = duration - position;
-
-    if (value.isCompleted || remaining <= const Duration(milliseconds: 500)) {
+    if (remaining <= const Duration(milliseconds: 500)) {
       _emitCompletion();
     }
   }
 
   void _emitCompletion() {
-    if (_completionSent) {
+    if (_completionSent || _disposed) {
       return;
     }
 
@@ -390,8 +349,10 @@ class _WebSecureVideoPlayerState extends State<WebSecureVideoPlayer> {
       return;
     }
 
+    final requestId = _loadRequestId;
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted || _disposed) {
+      if (!mounted || _disposed || requestId != _loadRequestId) {
         return;
       }
 
@@ -399,119 +360,140 @@ class _WebSecureVideoPlayerState extends State<WebSecureVideoPlayer> {
     });
   }
 
+  bool _isPlayerUsable(YoutubePlayerController controller) {
+    return controller.value.playerState != PlayerState.unknown;
+  }
+
   Future<void> _togglePlayPause() async {
     final controller = _controller;
 
-    if (controller == null || !controller.value.isInitialized) {
+    if (controller == null || !_isPlayerUsable(controller)) {
       return;
     }
 
     _showControlsNow();
 
     try {
-      final value = controller.value;
+      final state = controller.value.playerState;
 
-      if (value.isPlaying) {
-        await controller.pause();
+      if (state == PlayerState.playing) {
+        await controller.pauseVideo();
         return;
       }
 
-      if (value.isCompleted ||
+      final isAtEnd =
+          state == PlayerState.ended ||
           (_duration > Duration.zero &&
-              _position >= _duration - const Duration(milliseconds: 500))) {
+              _position >= _duration - const Duration(milliseconds: 500));
+
+      if (isAtEnd) {
         _completionSent = false;
 
-        await controller.seekTo(Duration.zero);
+        await controller.seekTo(seconds: 0, allowSeekAhead: true);
 
         _position = Duration.zero;
+        _positionNotifier.value = Duration.zero;
         _sliderNotifier.value = 0;
       }
 
-      await controller.play();
+      await controller.playVideo();
     } catch (error) {
-      debugPrint('WebSecureVideoPlayer: play/pause failed: $error');
+      debugPrint(
+        'WebSecureVideoPlayer: '
+        'play/pause failed: $error',
+      );
     }
   }
 
   Future<void> _seekRelative(double seconds) async {
     final controller = _controller;
 
-    if (controller == null || !controller.value.isInitialized) {
+    if (controller == null || !_isPlayerUsable(controller)) {
       return;
     }
 
     _showControlsNow();
 
     try {
-      final current = controller.value.position;
-      final duration = controller.value.duration;
+      final currentSeconds = await controller.currentTime;
+      final durationSeconds = await controller.duration;
 
-      var target = current + Duration(milliseconds: (seconds * 1000).round());
+      var targetSeconds = currentSeconds + seconds;
 
-      if (target < Duration.zero) {
-        target = Duration.zero;
+      if (targetSeconds < 0) {
+        targetSeconds = 0;
       }
 
-      if (duration > Duration.zero && target > duration) {
-        target = duration;
+      if (durationSeconds > 0 && targetSeconds > durationSeconds) {
+        targetSeconds = durationSeconds;
       }
 
-      if (target < current) {
+      if (targetSeconds < currentSeconds) {
         _completionSent = false;
       }
 
-      await controller.seekTo(target);
+      await controller.seekTo(seconds: targetSeconds, allowSeekAhead: true);
 
-      _position = target;
-      _duration = duration;
+      _position = Duration(milliseconds: (targetSeconds * 1000).round());
+
+      _positionNotifier.value = _position;
+
+      if (durationSeconds > 0) {
+        _duration = Duration(milliseconds: (durationSeconds * 1000).round());
+
+        _durationNotifier.value = _duration;
+      }
 
       _updateSliderFromPosition();
 
       _showSeekFeedback(seconds < 0 ? '-10' : '+10');
     } catch (error) {
-      debugPrint('WebSecureVideoPlayer: seek failed: $error');
+      debugPrint(
+        'WebSecureVideoPlayer: '
+        'seek failed: $error',
+      );
     }
   }
 
   Future<void> _seekToFraction(double fraction) async {
     final controller = _controller;
 
-    if (controller == null || !controller.value.isInitialized) {
+    if (controller == null || !_isPlayerUsable(controller)) {
       return;
     }
 
-    final duration = controller.value.duration;
-
-    if (duration <= Duration.zero) {
+    if (_duration <= Duration.zero) {
       return;
     }
 
-    final safeFraction = fraction.isFinite ? fraction.clamp(0.0, 1.0) : 0.0;
+    final safeFraction = _safeFraction(fraction);
 
-    final milliseconds = (duration.inMilliseconds * safeFraction).round();
+    final targetSeconds = (_duration.inMilliseconds * safeFraction) / 1000;
 
-    final target = Duration(milliseconds: milliseconds);
-
-    if (target < duration - const Duration(milliseconds: 500)) {
+    if (targetSeconds < (_duration.inMilliseconds / 1000) - 0.5) {
       _completionSent = false;
     }
 
     try {
-      await controller.seekTo(target);
+      await controller.seekTo(seconds: targetSeconds, allowSeekAhead: true);
 
-      _position = target;
-      _duration = duration;
+      _position = Duration(milliseconds: (targetSeconds * 1000).round());
+
+      _positionNotifier.value = _position;
 
       _sliderNotifier.value = safeFraction;
     } catch (error) {
-      debugPrint('WebSecureVideoPlayer: slider seek failed: $error');
+      debugPrint(
+        'WebSecureVideoPlayer: '
+        'slider seek failed: $error',
+      );
     }
   }
 
   Future<void> _changePlaybackRate(double rate) async {
     final controller = _controller;
 
-    if (controller == null || !controller.value.isInitialized) {
+    if (controller == null || !_isPlayerUsable(controller)) {
       return;
     }
 
@@ -524,17 +506,24 @@ class _WebSecureVideoPlayerState extends State<WebSecureVideoPlayer> {
     _cancelControlsTimer();
 
     try {
-      await controller.setPlaybackSpeed(rate);
+      await controller.setPlaybackRate(rate);
 
       _playbackRateNotifier.value = rate;
 
-      if (controller.value.isPlaying) {
+      if (controller.value.playerState == PlayerState.playing) {
         _scheduleControlsHide();
       }
     } catch (error) {
-      debugPrint('WebSecureVideoPlayer: playback speed failed: $error');
+      debugPrint(
+        'WebSecureVideoPlayer: '
+        'playback speed failed: $error',
+      );
 
-      _playbackRateNotifier.value = controller.value.playbackSpeed;
+      final currentRate = controller.value.playbackRate;
+
+      if (currentRate > 0) {
+        _playbackRateNotifier.value = currentRate;
+      }
     }
   }
 
@@ -543,26 +532,23 @@ class _WebSecureVideoPlayerState extends State<WebSecureVideoPlayer> {
       return;
     }
 
-    final duration = _duration;
-
-    if (duration <= Duration.zero || duration.inMilliseconds <= 0) {
+    if (_duration <= Duration.zero || _duration.inMilliseconds <= 0) {
       _sliderNotifier.value = 0;
       return;
     }
 
-    final positionMilliseconds = _position.inMilliseconds.clamp(
-      0,
-      duration.inMilliseconds,
-    );
+    final positionMilliseconds = _position.inMilliseconds
+        .clamp(0, _duration.inMilliseconds)
+        .toInt();
 
-    final fraction = positionMilliseconds / duration.inMilliseconds;
+    final fraction = positionMilliseconds / _duration.inMilliseconds;
 
     if (!fraction.isFinite) {
       _sliderNotifier.value = 0;
       return;
     }
 
-    _sliderNotifier.value = fraction.clamp(0.0, 1.0);
+    _sliderNotifier.value = fraction.clamp(0.0, 1.0).toDouble();
   }
 
   void _handleSliderStart(double value) {
@@ -570,7 +556,7 @@ class _WebSecureVideoPlayerState extends State<WebSecureVideoPlayer> {
 
     _isDraggingNotifier.value = true;
 
-    final safeValue = value.isFinite ? value.clamp(0.0, 1.0) : 0.0;
+    final safeValue = _safeFraction(value);
 
     _sliderNotifier.value = safeValue;
 
@@ -578,11 +564,13 @@ class _WebSecureVideoPlayerState extends State<WebSecureVideoPlayer> {
       _position = Duration(
         milliseconds: (_duration.inMilliseconds * safeValue).round(),
       );
+
+      _positionNotifier.value = _position;
     }
   }
 
   void _handleSliderChanged(double value) {
-    final safeValue = value.isFinite ? value.clamp(0.0, 1.0) : 0.0;
+    final safeValue = _safeFraction(value);
 
     _sliderNotifier.value = safeValue;
 
@@ -590,21 +578,27 @@ class _WebSecureVideoPlayerState extends State<WebSecureVideoPlayer> {
       _position = Duration(
         milliseconds: (_duration.inMilliseconds * safeValue).round(),
       );
-    }
 
-    if (mounted) {
-      setState(() {});
+      _positionNotifier.value = _position;
     }
   }
 
   void _handleSliderEnd(double value) {
-    final safeValue = value.isFinite ? value.clamp(0.0, 1.0) : 0.0;
+    final safeValue = _safeFraction(value);
 
     _isDraggingNotifier.value = false;
 
     unawaited(_seekToFraction(safeValue));
 
     _showControlsNow();
+  }
+
+  double _safeFraction(double value) {
+    if (!value.isFinite) {
+      return 0;
+    }
+
+    return value.clamp(0.0, 1.0).toDouble();
   }
 
   void _toggleControls() {
@@ -622,7 +616,8 @@ class _WebSecureVideoPlayerState extends State<WebSecureVideoPlayer> {
 
     final controller = _controller;
 
-    if (controller != null && controller.value.isPlaying) {
+    if (controller != null &&
+        controller.value.playerState == PlayerState.playing) {
       _scheduleControlsHide();
     } else {
       _cancelControlsTimer();
@@ -635,7 +630,7 @@ class _WebSecureVideoPlayerState extends State<WebSecureVideoPlayer> {
     final controller = _controller;
 
     if (controller == null ||
-        !controller.value.isPlaying ||
+        controller.value.playerState != PlayerState.playing ||
         _isDraggingNotifier.value) {
       return;
     }
@@ -648,7 +643,7 @@ class _WebSecureVideoPlayerState extends State<WebSecureVideoPlayer> {
       final currentController = _controller;
 
       if (currentController == null ||
-          !currentController.value.isPlaying ||
+          currentController.value.playerState != PlayerState.playing ||
           _isDraggingNotifier.value) {
         return;
       }
@@ -683,73 +678,34 @@ class _WebSecureVideoPlayerState extends State<WebSecureVideoPlayer> {
     _feedbackTimer = null;
   }
 
-  Widget _buildVideoSurface() {
-    final controller = _controller;
+  Widget _buildPlayerOverlay(YoutubePlayerValue value) {
+    if (value.hasError) {
+      return _buildErrorState(_getErrorMessage(value.error));
+    }
 
-    if (controller == null || !controller.value.isInitialized) {
-      return Container(
-        color: Colors.black,
-        alignment: Alignment.center,
-        child: _buildLoadingState(),
+    if (value.playerState == PlayerState.unknown) {
+      return const Center(
+        child: SizedBox(
+          width: 30,
+          height: 30,
+          child: CircularProgressIndicator(
+            strokeWidth: 2.5,
+            color: Colors.white,
+          ),
+        ),
       );
     }
 
-    return Center(
-      child: AspectRatio(
-        aspectRatio: controller.value.aspectRatio > 0
-            ? controller.value.aspectRatio
-            : 16 / 9,
-        child: VideoPlayer(controller),
-      ),
-    );
-  }
-
-  Widget _buildLoadingState() {
-    final error = _errorNotifier.value;
-
-    if (error != null) {
-      return _buildErrorState(error);
-    }
-
-    return const SizedBox(
-      width: 30,
-      height: 30,
-      child: CircularProgressIndicator(strokeWidth: 2.5, color: Colors.white),
-    );
-  }
-
-  Widget _buildErrorState(String message) {
-    return Padding(
-      padding: const EdgeInsets.all(24),
-      child: Container(
-        constraints: const BoxConstraints(maxWidth: 480),
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(
-              Icons.error_outline_rounded,
-              color: Colors.white70,
-              size: 34,
-            ),
-            const SizedBox(height: 12),
-            Text(
-              message,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
-      ),
+    return Stack(
+      fit: StackFit.expand,
+      clipBehavior: Clip.hardEdge,
+      children: [
+        _buildGestureLayer(),
+        _buildBottomGradient(),
+        _buildCenterControls(value),
+        _buildBottomControls(value),
+        _buildSeekFeedback(),
+      ],
     );
   }
 
@@ -834,13 +790,15 @@ class _WebSecureVideoPlayerState extends State<WebSecureVideoPlayer> {
     );
   }
 
-  Widget _buildCenterControls() {
+  Widget _buildCenterControls(YoutubePlayerValue value) {
     return ValueListenableBuilder<bool>(
       valueListenable: _showControlsNotifier,
       builder: (context, visible, _) {
         if (!visible) {
           return const SizedBox.shrink();
         }
+
+        final isPlaying = value.playerState == PlayerState.playing;
 
         return Positioned(
           left: 0,
@@ -859,7 +817,7 @@ class _WebSecureVideoPlayerState extends State<WebSecureVideoPlayer> {
                   },
                 ),
                 const SizedBox(width: 22),
-                _buildPlayButton(),
+                _buildPlayButton(isPlaying),
                 const SizedBox(width: 22),
                 _buildSeekButton(
                   icon: Icons.forward_10_rounded,
@@ -876,14 +834,7 @@ class _WebSecureVideoPlayerState extends State<WebSecureVideoPlayer> {
     );
   }
 
-  Widget _buildPlayButton() {
-    final controller = _controller;
-
-    final isPlaying =
-        controller != null &&
-        controller.value.isInitialized &&
-        controller.value.isPlaying;
-
+  Widget _buildPlayButton(bool isPlaying) {
     return Material(
       color: Colors.black.withValues(alpha: 0.62),
       shape: const CircleBorder(),
@@ -926,13 +877,15 @@ class _WebSecureVideoPlayerState extends State<WebSecureVideoPlayer> {
     );
   }
 
-  Widget _buildBottomControls() {
+  Widget _buildBottomControls(YoutubePlayerValue value) {
     return ValueListenableBuilder<bool>(
       valueListenable: _showControlsNotifier,
       builder: (context, visible, _) {
         if (!visible) {
           return const SizedBox.shrink();
         }
+
+        final usable = value.playerState != PlayerState.unknown;
 
         return Positioned(
           left: 12,
@@ -941,13 +894,13 @@ class _WebSecureVideoPlayerState extends State<WebSecureVideoPlayer> {
           height: 78,
           child: Column(
             children: [
-              _buildSlider(),
+              _buildSlider(usable),
               const SizedBox(height: 1),
               Row(
                 children: [
                   _buildTimeLabel(),
                   const Spacer(),
-                  _buildPlaybackSpeedButton(),
+                  _buildPlaybackSpeedButton(usable),
                 ],
               ),
             ],
@@ -957,11 +910,13 @@ class _WebSecureVideoPlayerState extends State<WebSecureVideoPlayer> {
     );
   }
 
-  Widget _buildSlider() {
+  Widget _buildSlider(bool usable) {
     return ValueListenableBuilder<double>(
       valueListenable: _sliderNotifier,
       builder: (context, value, _) {
-        final safeValue = value.isFinite ? value.clamp(0.0, 1.0) : 0.0;
+        final safeValue = _safeFraction(value);
+
+        final enabled = usable && _duration > Duration.zero;
 
         return SizedBox(
           height: 34,
@@ -979,9 +934,9 @@ class _WebSecureVideoPlayerState extends State<WebSecureVideoPlayer> {
               value: safeValue,
               min: 0,
               max: 1,
-              onChangeStart: _handleSliderStart,
-              onChanged: _handleSliderChanged,
-              onChangeEnd: _handleSliderEnd,
+              onChangeStart: enabled ? _handleSliderStart : null,
+              onChanged: enabled ? _handleSliderChanged : null,
+              onChangeEnd: enabled ? _handleSliderEnd : null,
             ),
           ),
         );
@@ -990,22 +945,28 @@ class _WebSecureVideoPlayerState extends State<WebSecureVideoPlayer> {
   }
 
   Widget _buildTimeLabel() {
-    return Text(
-      '${_formatDuration(_position)} / '
-      '${_formatDuration(_duration)}',
-      style: const TextStyle(
-        color: Colors.white,
-        fontSize: 11,
-        fontWeight: FontWeight.w600,
-      ),
+    return AnimatedBuilder(
+      animation: Listenable.merge([_positionNotifier, _durationNotifier]),
+      builder: (context, _) {
+        return Text(
+          '${_formatDuration(_positionNotifier.value)} / '
+          '${_formatDuration(_durationNotifier.value)}',
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+          ),
+        );
+      },
     );
   }
 
-  Widget _buildPlaybackSpeedButton() {
+  Widget _buildPlaybackSpeedButton(bool usable) {
     return ValueListenableBuilder<double>(
       valueListenable: _playbackRateNotifier,
       builder: (context, rate, _) {
         return PopupMenuButton<double>(
+          enabled: usable,
           tooltip: 'Playback speed',
           initialValue: rate,
           color: Colors.black87,
@@ -1120,6 +1081,68 @@ class _WebSecureVideoPlayerState extends State<WebSecureVideoPlayer> {
     );
   }
 
+  Widget _buildErrorState(String message) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 480),
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.error_outline_rounded,
+                color: Colors.white70,
+                size: 34,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                message,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _getErrorMessage(YoutubeError error) {
+    switch (error) {
+      case YoutubeError.none:
+        return 'Unable to load this YouTube video.';
+
+      case YoutubeError.invalidParam:
+        return 'Invalid YouTube video URL.';
+
+      case YoutubeError.html5Error:
+        return 'This video cannot be played in the browser.';
+
+      case YoutubeError.videoNotFound:
+      case YoutubeError.cannotFindVideo:
+        return 'This YouTube video is unavailable, private, or deleted.';
+
+      case YoutubeError.notEmbeddable:
+      case YoutubeError.sameAsNotEmbeddable:
+      case YoutubeError.sameAsNotEmbeddable2:
+        return 'This video does not allow playback inside embedded players.';
+
+      case YoutubeError.unknown:
+        return 'Unable to load this YouTube video.';
+    }
+  }
+
   String? _extractVideoId(String value) {
     final input = value.trim();
 
@@ -1127,21 +1150,13 @@ class _WebSecureVideoPlayerState extends State<WebSecureVideoPlayer> {
       return null;
     }
 
-    try {
-      final id = VideoId.parseVideoId(input);
+    final rawIdPattern = RegExp(r'^[a-zA-Z0-9_-]{11}$');
 
-      if (id != null && VideoId.validateVideoId(id)) {
-        return id;
-      }
-    } catch (_) {}
-
-    final idPattern = RegExp(r'^[a-zA-Z0-9_-]{11}$');
-
-    if (idPattern.hasMatch(input)) {
+    if (rawIdPattern.hasMatch(input)) {
       return input;
     }
 
-    return null;
+    return YoutubePlayerController.convertUrlToId(input);
   }
 
   String _formatDuration(Duration duration) {
@@ -1173,57 +1188,82 @@ class _WebSecureVideoPlayerState extends State<WebSecureVideoPlayer> {
 
   @override
   Widget build(BuildContext context) {
-    return ValueListenableBuilder<String?>(
-      valueListenable: _errorNotifier,
-      builder: (context, error, _) {
-        final controller = _controller;
+    final controller = _controller;
 
-        final initialized =
-            controller != null && controller.value.isInitialized;
+    return AspectRatio(
+      aspectRatio: 16 / 9,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(18),
+        child: Container(
+          color: Colors.black,
+          child: controller == null
+              ? ValueListenableBuilder<String?>(
+                  valueListenable: _errorNotifier,
+                  builder: (context, error, _) {
+                    if (error != null) {
+                      return _buildErrorState(error);
+                    }
 
-        return AspectRatio(
-          aspectRatio: 16 / 9,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(18),
-            child: Container(
-              color: Colors.black,
-              child: Stack(
-                fit: StackFit.expand,
-                clipBehavior: Clip.hardEdge,
-                children: [
-                  _buildVideoSurface(),
-
-                  if (error == null && initialized) _buildGestureLayer(),
-
-                  _buildBottomGradient(),
-
-                  if (error == null && initialized) _buildCenterControls(),
-
-                  if (error == null && initialized) _buildBottomControls(),
-
-                  _buildSeekFeedback(),
-                ],
-              ),
-            ),
-          ),
-        );
-      },
+                    return const Center(
+                      child: SizedBox(
+                        width: 30,
+                        height: 30,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2.5,
+                          color: Colors.white,
+                        ),
+                      ),
+                    );
+                  },
+                )
+              : YoutubePlayer(
+                  controller: controller,
+                  aspectRatio: 16 / 9,
+                  autoFullScreen: false,
+                  enableFullScreenOnVerticalDrag: false,
+                  keepAlive: false,
+                  thumbnailQuality: ThumbnailQuality.high,
+                  thumbnailFormat: ThumbnailFormat.webp,
+                  controlsBuilder: (context, isFullscreen) {
+                    return YoutubeValueBuilder(
+                      controller: controller,
+                      builder: (context, value) {
+                        return _buildPlayerOverlay(value);
+                      },
+                    );
+                  },
+                ),
+        ),
+      ),
     );
   }
 
   @override
   void dispose() {
     _disposed = true;
+    ++_loadRequestId;
 
     _cancelControlsTimer();
     _cancelFeedbackTimer();
 
+    final videoStateSubscription = _videoStateSubscription;
+    final playerStateSubscription = _playerStateSubscription;
     final controller = _controller;
 
-    if (controller != null) {
-      controller.removeListener(_handleControllerChanged);
+    _videoStateSubscription = null;
+    _playerStateSubscription = null;
+    _controller = null;
 
-      unawaited(controller.dispose());
+    if (videoStateSubscription != null) {
+      unawaited(videoStateSubscription.cancel());
+    }
+
+    if (playerStateSubscription != null) {
+      unawaited(playerStateSubscription.cancel());
+    }
+
+    if (controller != null) {
+      unawaited(controller.close());
     }
 
     _showControlsNotifier.dispose();
@@ -1232,6 +1272,8 @@ class _WebSecureVideoPlayerState extends State<WebSecureVideoPlayer> {
     _errorNotifier.dispose();
     _seekFeedbackNotifier.dispose();
     _playbackRateNotifier.dispose();
+    _positionNotifier.dispose();
+    _durationNotifier.dispose();
 
     super.dispose();
   }

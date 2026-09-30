@@ -22,7 +22,7 @@ import 'package:hollandkompas/features/lesson/presentation/widgets/lessons%20vie
 import 'package:hollandkompas/features/lesson/presentation/widgets/lessons%20viewers/locked_video.dart';
 import 'package:hollandkompas/features/lesson/presentation/widgets/mobile_secure_video_player.dart';
 import 'package:hollandkompas/features/lesson/presentation/widgets/next_lesson_card.dart';
-import 'package:hollandkompas/features/lesson/presentation/widgets/secure_video_player.dart';
+import 'package:hollandkompas/features/lesson/presentation/widgets/web_secure_video_player.dart';
 import 'package:hollandkompas/features/vocabulary/presentation/screen/widgets/lesson_vocabulary_button.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
