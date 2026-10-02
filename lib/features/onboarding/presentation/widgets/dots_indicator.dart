@@ -19,14 +19,24 @@ class DotsIndicator extends StatelessWidget {
         final isSelected = index == currentIndex;
 
         return AnimatedContainer(
-          duration: const Duration(milliseconds: 300),
-          curve: Curves.easeOut,
-          width: isSelected ? 24 : 8,
+          duration: const Duration(milliseconds: 350),
+          curve: Curves.easeOutCubic,
+          width: isSelected ? 30 : 8,
           height: 8,
           margin: const EdgeInsets.symmetric(horizontal: 4),
           decoration: BoxDecoration(
-            color: isSelected ? AppColors.primary : AppColors.mutedForeground,
+            color: isSelected
+                ? AppColors.primary
+                : AppColors.mutedForeground.withValues(alpha: 0.35),
             borderRadius: BorderRadius.circular(20),
+            boxShadow: isSelected
+                ? [
+                    BoxShadow(
+                      color: AppColors.primary.withValues(alpha: 0.20),
+                      blurRadius: 8,
+                    ),
+                  ]
+                : null,
           ),
         );
       }),

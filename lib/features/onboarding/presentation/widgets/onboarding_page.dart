@@ -4,7 +4,7 @@ import 'package:hollandkompas/features/onboarding/models/onboarding_slide.dart';
 import 'package:hollandkompas/features/onboarding/presentation/widgets/onboarding_device_type.dart';
 import 'package:hollandkompas/features/onboarding/presentation/widgets/onboarding_hero.dart';
 
-class OnboardingPage extends StatelessWidget {
+class OnboardingPage extends StatefulWidget {
   const OnboardingPage({
     super.key,
     required this.slide,
@@ -15,21 +15,165 @@ class OnboardingPage extends StatelessWidget {
   final OnboardingDeviceType deviceType;
 
   @override
+  State<OnboardingPage> createState() => _OnboardingPageState();
+}
+
+class _OnboardingPageState extends State<OnboardingPage>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  late final Animation<double> _pageFade;
+  late final Animation<double> _pageScale;
+  late final Animation<Offset> _pageSlide;
+
+  late final Animation<double> _titleFade;
+  late final Animation<Offset> _titleSlide;
+
+  late final Animation<double> _descriptionFade;
+  late final Animation<Offset> _descriptionSlide;
+
+  late final Animation<double> _tagsFade;
+  late final Animation<Offset> _tagsSlide;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 700),
+    );
+
+    _pageFade = CurvedAnimation(
+      parent: _controller,
+      curve: const Interval(0, 0.55, curve: Curves.easeOut),
+    );
+
+    _pageScale = Tween<double>(begin: 0.96, end: 1).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: const Interval(0, 0.7, curve: Curves.easeOutCubic),
+      ),
+    );
+
+    _pageSlide = Tween<Offset>(begin: const Offset(0, 0.025), end: Offset.zero)
+        .animate(
+          CurvedAnimation(
+            parent: _controller,
+            curve: const Interval(0, 0.65, curve: Curves.easeOutCubic),
+          ),
+        );
+
+    _titleFade = CurvedAnimation(
+      parent: _controller,
+      curve: const Interval(0.18, 0.48, curve: Curves.easeOut),
+    );
+
+    _titleSlide = Tween<Offset>(begin: const Offset(0, 0.08), end: Offset.zero)
+        .animate(
+          CurvedAnimation(
+            parent: _controller,
+            curve: const Interval(0.18, 0.55, curve: Curves.easeOutCubic),
+          ),
+        );
+
+    _descriptionFade = CurvedAnimation(
+      parent: _controller,
+      curve: const Interval(0.32, 0.68, curve: Curves.easeOut),
+    );
+
+    _descriptionSlide =
+        Tween<Offset>(begin: const Offset(0, 0.08), end: Offset.zero).animate(
+          CurvedAnimation(
+            parent: _controller,
+            curve: const Interval(0.32, 0.72, curve: Curves.easeOutCubic),
+          ),
+        );
+
+    _tagsFade = CurvedAnimation(
+      parent: _controller,
+      curve: const Interval(0.48, 0.86, curve: Curves.easeOut),
+    );
+
+    _tagsSlide = Tween<Offset>(begin: const Offset(0, 0.08), end: Offset.zero)
+        .animate(
+          CurvedAnimation(
+            parent: _controller,
+            curve: const Interval(0.48, 0.90, curve: Curves.easeOutCubic),
+          ),
+        );
+
+    _controller.forward();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Directionality(
       textDirection: TextDirection.rtl,
-      child: deviceType.isDesktop
-          ? _DesktopLayout(slide: slide, deviceType: deviceType)
-          : _MobileLayout(slide: slide, deviceType: deviceType),
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, child) {
+          return FadeTransition(
+            opacity: _pageFade,
+            child: SlideTransition(
+              position: _pageSlide,
+              child: ScaleTransition(scale: _pageScale, child: child),
+            ),
+          );
+        },
+        child: widget.deviceType.isDesktop
+            ? _DesktopLayout(
+                slide: widget.slide,
+                deviceType: widget.deviceType,
+                titleFade: _titleFade,
+                titleSlide: _titleSlide,
+                descriptionFade: _descriptionFade,
+                descriptionSlide: _descriptionSlide,
+                tagsFade: _tagsFade,
+                tagsSlide: _tagsSlide,
+              )
+            : _MobileLayout(
+                slide: widget.slide,
+                deviceType: widget.deviceType,
+                titleFade: _titleFade,
+                titleSlide: _titleSlide,
+                descriptionFade: _descriptionFade,
+                descriptionSlide: _descriptionSlide,
+                tagsFade: _tagsFade,
+                tagsSlide: _tagsSlide,
+              ),
+      ),
     );
   }
 }
 
 class _DesktopLayout extends StatelessWidget {
-  const _DesktopLayout({required this.slide, required this.deviceType});
+  const _DesktopLayout({
+    required this.slide,
+    required this.deviceType,
+    required this.titleFade,
+    required this.titleSlide,
+    required this.descriptionFade,
+    required this.descriptionSlide,
+    required this.tagsFade,
+    required this.tagsSlide,
+  });
 
   final OnboardingSlide slide;
   final OnboardingDeviceType deviceType;
+
+  final Animation<double> titleFade;
+  final Animation<Offset> titleSlide;
+  final Animation<double> descriptionFade;
+  final Animation<Offset> descriptionSlide;
+  final Animation<double> tagsFade;
+  final Animation<Offset> tagsSlide;
 
   @override
   Widget build(BuildContext context) {
@@ -39,10 +183,7 @@ class _DesktopLayout extends StatelessWidget {
           flex: 5,
           child: Padding(
             padding: const EdgeInsets.all(16),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(28),
-              child: OnboardingHero(slide: slide),
-            ),
+            child: OnboardingHero(slide: slide),
           ),
         ),
         Expanded(
@@ -50,7 +191,16 @@ class _DesktopLayout extends StatelessWidget {
           child: Center(
             child: SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
-              child: _ContentSection(slide: slide, deviceType: deviceType),
+              child: _ContentSection(
+                slide: slide,
+                deviceType: deviceType,
+                titleFade: titleFade,
+                titleSlide: titleSlide,
+                descriptionFade: descriptionFade,
+                descriptionSlide: descriptionSlide,
+                tagsFade: tagsFade,
+                tagsSlide: tagsSlide,
+              ),
             ),
           ),
         ),
@@ -60,10 +210,26 @@ class _DesktopLayout extends StatelessWidget {
 }
 
 class _MobileLayout extends StatelessWidget {
-  const _MobileLayout({required this.slide, required this.deviceType});
+  const _MobileLayout({
+    required this.slide,
+    required this.deviceType,
+    required this.titleFade,
+    required this.titleSlide,
+    required this.descriptionFade,
+    required this.descriptionSlide,
+    required this.tagsFade,
+    required this.tagsSlide,
+  });
 
   final OnboardingSlide slide;
   final OnboardingDeviceType deviceType;
+
+  final Animation<double> titleFade;
+  final Animation<Offset> titleSlide;
+  final Animation<double> descriptionFade;
+  final Animation<Offset> descriptionSlide;
+  final Animation<double> tagsFade;
+  final Animation<Offset> tagsSlide;
 
   @override
   Widget build(BuildContext context) {
@@ -72,7 +238,16 @@ class _MobileLayout extends StatelessWidget {
       child: Column(
         children: [
           OnboardingHero(slide: slide, height: deviceType.heroHeight),
-          _ContentSection(slide: slide, deviceType: deviceType),
+          _ContentSection(
+            slide: slide,
+            deviceType: deviceType,
+            titleFade: titleFade,
+            titleSlide: titleSlide,
+            descriptionFade: descriptionFade,
+            descriptionSlide: descriptionSlide,
+            tagsFade: tagsFade,
+            tagsSlide: tagsSlide,
+          ),
         ],
       ),
     );
@@ -80,10 +255,26 @@ class _MobileLayout extends StatelessWidget {
 }
 
 class _ContentSection extends StatelessWidget {
-  const _ContentSection({required this.slide, required this.deviceType});
+  const _ContentSection({
+    required this.slide,
+    required this.deviceType,
+    required this.titleFade,
+    required this.titleSlide,
+    required this.descriptionFade,
+    required this.descriptionSlide,
+    required this.tagsFade,
+    required this.tagsSlide,
+  });
 
   final OnboardingSlide slide;
   final OnboardingDeviceType deviceType;
+
+  final Animation<double> titleFade;
+  final Animation<Offset> titleSlide;
+  final Animation<double> descriptionFade;
+  final Animation<Offset> descriptionSlide;
+  final Animation<double> tagsFade;
+  final Animation<Offset> tagsSlide;
 
   @override
   Widget build(BuildContext context) {
@@ -100,27 +291,52 @@ class _ContentSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _DutchTitle(text: slide.titleNl),
-          const SizedBox(height: 10),
-          Text(
-            slide.titleAr,
-            style: textTheme.headlineLarge?.copyWith(
-              fontSize: deviceType.titleSize,
-              fontWeight: FontWeight.w800,
-              height: 1.25,
+          FadeTransition(
+            opacity: titleFade,
+            child: SlideTransition(
+              position: titleSlide,
+              child: _DutchTitle(text: slide.titleNl),
+            ),
+          ),
+          const SizedBox(height: 12),
+          FadeTransition(
+            opacity: titleFade,
+            child: SlideTransition(
+              position: titleSlide,
+              child: Text(
+                slide.titleAr,
+                style: textTheme.headlineLarge?.copyWith(
+                  fontSize: deviceType.titleSize,
+                  fontWeight: FontWeight.w800,
+                  height: 1.25,
+                  letterSpacing: -0.4,
+                ),
+              ),
             ),
           ),
           const SizedBox(height: 18),
-          Text(
-            slide.descAr,
-            style: textTheme.bodyLarge?.copyWith(
-              fontSize: deviceType.descriptionSize,
-              height: 1.8,
-              color: AppColors.subtitleColor(context),
+          FadeTransition(
+            opacity: descriptionFade,
+            child: SlideTransition(
+              position: descriptionSlide,
+              child: Text(
+                slide.descAr,
+                style: textTheme.bodyLarge?.copyWith(
+                  fontSize: deviceType.descriptionSize,
+                  height: 1.8,
+                  color: AppColors.subtitleColor(context),
+                ),
+              ),
             ),
           ),
           const SizedBox(height: 26),
-          _TagList(tags: slide.tags),
+          FadeTransition(
+            opacity: tagsFade,
+            child: SlideTransition(
+              position: tagsSlide,
+              child: _TagList(tags: slide.tags),
+            ),
+          ),
         ],
       ),
     );
@@ -135,18 +351,33 @@ class _DutchTitle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+      padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 7),
       decoration: BoxDecoration(
         color: AppColors.accent,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(11),
+        border: Border.all(color: AppColors.primary.withValues(alpha: 0.08)),
       ),
-      child: Text(
-        text,
-        textDirection: TextDirection.ltr,
-        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-          color: AppColors.primary,
-          fontWeight: FontWeight.w700,
-        ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 7,
+            height: 7,
+            decoration: const BoxDecoration(
+              color: AppColors.primary,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            text,
+            textDirection: TextDirection.ltr,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: AppColors.primary,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -167,18 +398,29 @@ class _TagList extends StatelessWidget {
       children: [
         for (final tag in tags)
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 9),
             decoration: BoxDecoration(
               color: AppColors.cardColor(context),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(13),
               border: Border.all(color: AppColors.borderColor(context)),
             ),
-            child: Text(
-              tag,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: AppColors.textColor(context),
-                fontWeight: FontWeight.w600,
-              ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.check_rounded,
+                  size: 15,
+                  color: AppColors.primary.withValues(alpha: 0.85),
+                ),
+                const SizedBox(width: 5),
+                Text(
+                  tag,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: AppColors.textColor(context),
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
             ),
           ),
       ],

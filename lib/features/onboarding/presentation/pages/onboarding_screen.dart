@@ -17,7 +17,7 @@ class OnboardingScreen extends StatefulWidget {
 }
 
 class _OnboardingScreenState extends State<OnboardingScreen> {
-  static const _pageTransitionDuration = Duration(milliseconds: 450);
+  static const _pageTransitionDuration = Duration(milliseconds: 500);
 
   final PageController _pageController = PageController();
 
@@ -45,7 +45,30 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (_) => const LevelSelectionScreen()),
+      PageRouteBuilder(
+        transitionDuration: const Duration(milliseconds: 450),
+        reverseTransitionDuration: const Duration(milliseconds: 350),
+        pageBuilder: (_, animation, secondaryAnimation) {
+          return const LevelSelectionScreen();
+        },
+        transitionsBuilder: (_, animation, secondaryAnimation, child) {
+          final curved = CurvedAnimation(
+            parent: animation,
+            curve: Curves.easeOutCubic,
+          );
+
+          return FadeTransition(
+            opacity: curved,
+            child: SlideTransition(
+              position: Tween<Offset>(
+                begin: const Offset(0, 0.04),
+                end: Offset.zero,
+              ).animate(curved),
+              child: child,
+            ),
+          );
+        },
+      ),
     );
   }
 
@@ -91,7 +114,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   child: PageView.builder(
                     controller: _pageController,
                     itemCount: onboardingSlides.length,
-                    physics: const BouncingScrollPhysics(),
+                    physics: const BouncingScrollPhysics(
+                      parent: AlwaysScrollableScrollPhysics(),
+                    ),
                     onPageChanged: _handlePageChanged,
                     itemBuilder: (context, index) {
                       return OnboardingPage(
@@ -114,7 +139,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 Padding(
                   padding: EdgeInsets.fromLTRB(
                     deviceType.buttonPadding,
-                    20,
+                    18,
                     deviceType.buttonPadding,
                     deviceType.buttonPadding,
                   ),
@@ -157,7 +182,7 @@ class _ContinueButton extends StatelessWidget {
       height: height,
       child: DecoratedBox(
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(20),
           gradient: const LinearGradient(
             begin: Alignment.centerLeft,
             end: Alignment.centerRight,
@@ -165,9 +190,9 @@ class _ContinueButton extends StatelessWidget {
           ),
           boxShadow: [
             BoxShadow(
-              color: AppColors.primary.withValues(alpha: 0.24),
-              blurRadius: 18,
-              offset: const Offset(0, 8),
+              color: AppColors.primary.withValues(alpha: 0.22),
+              blurRadius: 20,
+              offset: const Offset(0, 9),
             ),
           ],
         ),
@@ -175,13 +200,27 @@ class _ContinueButton extends StatelessWidget {
           color: Colors.transparent,
           child: InkWell(
             onTap: onPressed,
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(20),
+            splashColor: Colors.white.withValues(alpha: 0.12),
+            highlightColor: Colors.white.withValues(alpha: 0.06),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 250),
-                switchInCurve: Curves.easeOutCubic,
+                duration: const Duration(milliseconds: 300),
+                switchInCurve: Curves.easeOutBack,
                 switchOutCurve: Curves.easeInCubic,
+                transitionBuilder: (child, animation) {
+                  return FadeTransition(
+                    opacity: animation,
+                    child: ScaleTransition(
+                      scale: Tween<double>(
+                        begin: 0.92,
+                        end: 1,
+                      ).animate(animation),
+                      child: child,
+                    ),
+                  );
+                },
                 child: Row(
                   key: ValueKey(isLastPage),
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -191,13 +230,14 @@ class _ContinueButton extends StatelessWidget {
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                         color: Colors.white,
                         fontSize: fontSize,
-                        fontWeight: FontWeight.w700,
+                        fontWeight: FontWeight.w800,
                       ),
                     ),
                     const SizedBox(width: 10),
                     AnimatedRotation(
                       turns: isLastPage ? 0.5 : 0,
-                      duration: const Duration(milliseconds: 250),
+                      duration: const Duration(milliseconds: 350),
+                      curve: Curves.easeOutBack,
                       child: const Icon(
                         Icons.arrow_forward_rounded,
                         color: Colors.white,

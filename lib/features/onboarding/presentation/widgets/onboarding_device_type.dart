@@ -23,8 +23,8 @@ enum OnboardingDeviceType {
   double get maxContentWidth {
     return switch (this) {
       mobile => double.infinity,
-      tablet => 900,
-      desktop => 1400,
+      tablet => 1000,
+      desktop => 1440,
     };
   }
 
@@ -55,7 +55,7 @@ enum OnboardingDeviceType {
   double get buttonHeight {
     return switch (this) {
       mobile => 56,
-      tablet => 64,
+      tablet => 62,
       desktop => 68,
     };
   }
@@ -70,8 +70,8 @@ enum OnboardingDeviceType {
 
   double get heroHeight {
     return switch (this) {
-      mobile => 260,
-      tablet => 360,
+      mobile => 270,
+      tablet => 370,
       desktop => 0,
     };
   }
@@ -80,7 +80,7 @@ enum OnboardingDeviceType {
     return switch (this) {
       mobile => 30,
       tablet => 40,
-      desktop => 42,
+      desktop => 44,
     };
   }
 
@@ -97,6 +97,14 @@ enum OnboardingDeviceType {
       mobile => 24,
       tablet => 32,
       desktop => 56,
+    };
+  }
+
+  double get heroRadius {
+    return switch (this) {
+      mobile => 0,
+      tablet => 28,
+      desktop => 32,
     };
   }
 }
