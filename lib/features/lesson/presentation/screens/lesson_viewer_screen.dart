@@ -85,8 +85,52 @@ class _LessonViewerScreenState extends ConsumerState<LessonViewerScreen>
         return;
       }
 
+      ref.invalidate(lessonViewerControllerProvider);
       _loadLessonProgress();
     });
+  }
+
+  @override
+  void didUpdateWidget(covariant LessonViewerScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    if (oldWidget.lesson.id == widget.lesson.id) {
+      return;
+    }
+
+    _resetForNewLesson();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+
+      ref.invalidate(lessonViewerControllerProvider);
+      _loadLessonProgress();
+    });
+  }
+
+  void _resetForNewLesson() {
+    _nextLessonTimer?.cancel();
+    _nextLessonTimer = null;
+
+    _countdownAnimationController
+      ..stop()
+      ..reset();
+
+    _showNextLessonPanel = false;
+    _countdown = 3;
+
+    _isCompletingLesson = false;
+    _isOpeningNextLesson = false;
+
+    if (_scrollController.hasClients) {
+      _scrollController.jumpTo(0);
+    }
+
+    if (mounted) {
+      setState(() {});
+    }
   }
 
   Future<void> _loadLessonProgress() async {
@@ -142,6 +186,7 @@ class _LessonViewerScreenState extends ConsumerState<LessonViewerScreen>
       }
 
       ref.invalidate(enrolledCoursesProvider(user.id));
+
       ref.invalidate(lessonCompletionProvider(widget.lesson.id));
 
       if (nextLesson != null) {
@@ -163,9 +208,11 @@ class _LessonViewerScreenState extends ConsumerState<LessonViewerScreen>
 
       _showErrorSnackBar('Failed to save progress: $e');
     } finally {
-      setState(() {
-        _isCompletingLesson = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isCompletingLesson = false;
+        });
+      }
     }
   }
 
@@ -206,6 +253,7 @@ class _LessonViewerScreenState extends ConsumerState<LessonViewerScreen>
     }
 
     final maxScroll = _scrollController.position.maxScrollExtent;
+
     final target = (maxScroll - 20).clamp(0.0, maxScroll);
 
     await _scrollController.animateTo(
@@ -558,10 +606,12 @@ class _LessonViewerScreenState extends ConsumerState<LessonViewerScreen>
 
     return kIsWeb
         ? WebSecureVideoPlayer(
+            key: ValueKey('web-video-${widget.lesson.id}'),
             videoUrl: videoUrl,
             onVideoCompleted: _markLessonCompleted,
           )
         : MobileSecureVideoPlayer(
+            key: ValueKey('mobile-video-${widget.lesson.id}'),
             videoUrl: videoUrl,
             onVideoCompleted: _markLessonCompleted,
           );
@@ -655,6 +705,7 @@ class _LessonViewerScreenState extends ConsumerState<LessonViewerScreen>
       },
       child: SizedBox(
         key: ValueKey(
+          '${widget.lesson.id}-'
           '${state.isLessonCompleted}-'
           '$_isCompletingLesson-'
           '$_isOpeningNextLesson',
@@ -727,7 +778,7 @@ class _LessonViewerScreenState extends ConsumerState<LessonViewerScreen>
                 isOpening: _isOpeningNextLesson,
               ),
             )
-          : const SizedBox.shrink(key: ValueKey('empty_next_lesson')),
+          : const SizedBox(key: ValueKey('empty_next_lesson')),
     );
   }
 

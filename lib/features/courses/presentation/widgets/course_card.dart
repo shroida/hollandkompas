@@ -24,6 +24,7 @@ class CourseCard extends ConsumerWidget {
     final languageCode = ref.watch(
       appLocaleProvider.select((locale) => locale.languageCode),
     );
+
     final theme = Theme.of(context);
     final subtitleColor = AppColors.subtitleColor(context);
     final description = course.getDescription(languageCode);
@@ -45,12 +46,12 @@ class CourseCard extends ConsumerWidget {
           children: [
             CourseImage(course: course),
             Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   LevelBadge(level: course.level),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 9),
                   Text(
                     course.title,
                     maxLines: 1,
@@ -68,7 +69,7 @@ class CourseCard extends ConsumerWidget {
                       color: subtitleColor,
                     ),
                   ),
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 13),
                   Row(
                     children: [
                       const Icon(
