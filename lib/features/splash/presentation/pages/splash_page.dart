@@ -14,33 +14,83 @@ class SplashPage extends StatefulWidget {
 }
 
 class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
-  late final AnimationController _logoController;
+  late final AnimationController _masterController;
   late final AnimationController _pulseController;
+
+  late final Animation<double> _logoOpacity;
+  late final Animation<double> _logoScale;
+  late final Animation<double> _brandOpacity;
+  late final Animation<double> _brandSlide;
+  late final Animation<double> _subtitleOpacity;
+  late final Animation<double> _descriptionOpacity;
   late final Animation<double> _progress;
+  late final Animation<double> _finishGlow;
 
   @override
   void initState() {
     super.initState();
 
-    _logoController = AnimationController(
+    _masterController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 900),
-    )..forward();
+      duration: const Duration(milliseconds: 2700),
+    );
 
     _pulseController = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 2),
+      duration: const Duration(milliseconds: 2200),
     )..repeat();
 
-    _progress = Tween<double>(begin: 0, end: 100).animate(
-      CurvedAnimation(parent: _logoController, curve: Curves.easeOutCubic),
+    _logoOpacity = CurvedAnimation(
+      parent: _masterController,
+      curve: const Interval(0.00, 0.28, curve: Curves.easeOut),
     );
+
+    _logoScale = Tween<double>(begin: 0.72, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _masterController,
+        curve: const Interval(0.00, 0.34, curve: Curves.easeOutBack),
+      ),
+    );
+
+    _brandOpacity = CurvedAnimation(
+      parent: _masterController,
+      curve: const Interval(0.18, 0.48, curve: Curves.easeOut),
+    );
+
+    _brandSlide = Tween<double>(begin: 18, end: 0).animate(
+      CurvedAnimation(
+        parent: _masterController,
+        curve: const Interval(0.18, 0.48, curve: Curves.easeOutCubic),
+      ),
+    );
+
+    _subtitleOpacity = CurvedAnimation(
+      parent: _masterController,
+      curve: const Interval(0.36, 0.60, curve: Curves.easeOut),
+    );
+
+    _descriptionOpacity = CurvedAnimation(
+      parent: _masterController,
+      curve: const Interval(0.46, 0.70, curve: Curves.easeOut),
+    );
+
+    _progress = CurvedAnimation(
+      parent: _masterController,
+      curve: const Interval(0.34, 0.88, curve: Curves.easeInOutCubic),
+    );
+
+    _finishGlow = CurvedAnimation(
+      parent: _masterController,
+      curve: const Interval(0.84, 1.00, curve: Curves.easeOut),
+    );
+
+    _masterController.forward();
 
     _startSplash();
   }
 
   Future<void> _startSplash() async {
-    await Future<void>.delayed(const Duration(milliseconds: 2400));
+    await Future<void>.delayed(const Duration(milliseconds: 2700));
 
     if (!mounted) {
       return;
@@ -58,7 +108,7 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
 
   @override
   void dispose() {
-    _logoController.dispose();
+    _masterController.dispose();
     _pulseController.dispose();
     super.dispose();
   }
@@ -70,12 +120,18 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
         children: [
           const _SplashBackground(),
           AnimatedBuilder(
-            animation: _progress,
+            animation: Listenable.merge([_masterController, _pulseController]),
             builder: (context, child) {
               return CenterContent(
-                logoController: _logoController,
-                pulseController: _pulseController,
-                progress: _progress.value,
+                logoOpacity: _logoOpacity.value,
+                logoScale: _logoScale.value,
+                brandOpacity: _brandOpacity.value,
+                brandSlide: _brandSlide.value,
+                subtitleOpacity: _subtitleOpacity.value,
+                descriptionOpacity: _descriptionOpacity.value,
+                progress: _progress.value * 100,
+                finishGlow: _finishGlow.value,
+                pulseValue: _pulseController.value,
               );
             },
           ),

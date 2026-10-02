@@ -1,36 +1,53 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:hollandkompas/core/theme/app_colors.dart';
 
 class CenterContent extends StatelessWidget {
   const CenterContent({
     super.key,
-    required this.logoController,
-    required this.pulseController,
+    required this.logoOpacity,
+    required this.logoScale,
+    required this.brandOpacity,
+    required this.brandSlide,
+    required this.subtitleOpacity,
+    required this.descriptionOpacity,
     required this.progress,
+    required this.finishGlow,
+    required this.pulseValue,
   });
 
-  final AnimationController logoController;
-  final AnimationController pulseController;
+  final double logoOpacity;
+  final double logoScale;
+  final double brandOpacity;
+  final double brandSlide;
+  final double subtitleOpacity;
+  final double descriptionOpacity;
   final double progress;
+  final double finishGlow;
+  final double pulseValue;
 
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
 
     return Center(
-      child: FadeTransition(
-        opacity: logoController,
-        child: ScaleTransition(
-          scale: CurvedAnimation(
-            parent: logoController,
-            curve: Curves.elasticOut,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              _Logo(pulseController: pulseController),
-              const SizedBox(height: 28),
-              Text(
+      child: Transform.translate(
+        offset: Offset(0, brandSlide),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Opacity(
+              opacity: logoOpacity,
+              child: Transform.scale(
+                scale: logoScale,
+                child: _Logo(pulseValue: pulseValue, finishGlow: finishGlow),
+              ),
+            ),
+            const SizedBox(height: 28),
+            Opacity(
+              opacity: brandOpacity,
+              child: Text(
                 'HollandKompas',
                 style: textTheme.headlineLarge?.copyWith(
                   color: Colors.white,
@@ -39,25 +56,29 @@ class CenterContent extends StatelessWidget {
                   letterSpacing: -0.5,
                 ),
               ),
-              const SizedBox(height: 8),
-              _AnimatedText(
-                visible: progress > 10,
+            ),
+            const SizedBox(height: 8),
+            Opacity(
+              opacity: subtitleOpacity,
+              child: _AnimatedText(
                 text: 'بوصلتك نحو اللغة الهولندية',
                 style: textTheme.bodyLarge?.copyWith(
                   color: Colors.white70,
                   fontWeight: FontWeight.w500,
                 ),
               ),
-              const SizedBox(height: 4),
-              _AnimatedText(
-                visible: progress > 20,
+            ),
+            const SizedBox(height: 4),
+            Opacity(
+              opacity: descriptionOpacity,
+              child: _AnimatedText(
                 text: 'تعلم الهولندية بطريقة ذكية وممتعة',
                 style: textTheme.bodySmall?.copyWith(color: Colors.white70),
               ),
-              const SizedBox(height: 36),
-              _ProgressIndicator(progress: progress),
-            ],
-          ),
+            ),
+            const SizedBox(height: 36),
+            _ProgressIndicator(progress: progress, finishGlow: finishGlow),
+          ],
         ),
       ),
     );
@@ -65,55 +86,53 @@ class CenterContent extends StatelessWidget {
 }
 
 class _Logo extends StatelessWidget {
-  const _Logo({required this.pulseController});
+  const _Logo({required this.pulseValue, required this.finishGlow});
 
-  final AnimationController pulseController;
+  final double pulseValue;
+  final double finishGlow;
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: pulseController,
-      builder: (context, child) {
-        final pulse = Curves.easeInOut.transform(pulseController.value);
+    final pulse = (math.sin(pulseValue * math.pi * 2) + 1) / 2;
 
-        return Stack(
-          clipBehavior: Clip.none,
-          children: [
-            Container(
-              width: 96,
-              height: 96,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.95),
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.white.withValues(alpha: 0.12 + pulse * 0.18),
-                    blurRadius: 30 + pulse * 20,
-                    spreadRadius: 2 + pulse * 3,
-                  ),
-                  const BoxShadow(color: Colors.black26, blurRadius: 30),
-                ],
+    final glow = 0.10 + (pulse * 0.10) + (finishGlow * 0.12);
+
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Container(
+          width: 96,
+          height: 96,
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.95),
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.white.withValues(alpha: glow),
+                blurRadius: 24 + (pulse * 12),
+                spreadRadius: 2 + (pulse * 2),
               ),
-              clipBehavior: Clip.antiAlias,
-              child: Image.asset(
-                'assets/logo.jpeg',
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return const SizedBox.shrink();
-                },
-              ),
-            ),
-            Positioned(
-              top: -4,
-              right: -4,
-              child: Transform.scale(
-                scale: 1 + pulse * 0.15,
-                child: const _LogoBadge(),
-              ),
-            ),
-          ],
-        );
-      },
+              const BoxShadow(color: Colors.black26, blurRadius: 30),
+            ],
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Image.asset(
+            'assets/logo.jpeg',
+            fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) {
+              return const SizedBox.shrink();
+            },
+          ),
+        ),
+        Positioned(
+          top: -4,
+          right: -4,
+          child: Transform.scale(
+            scale: 1 + (pulse * 0.08),
+            child: const _LogoBadge(),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -146,30 +165,22 @@ class _LogoBadge extends StatelessWidget {
 }
 
 class _AnimatedText extends StatelessWidget {
-  const _AnimatedText({
-    required this.visible,
-    required this.text,
-    required this.style,
-  });
+  const _AnimatedText({required this.text, required this.style});
 
-  final bool visible;
   final String text;
   final TextStyle? style;
 
   @override
   Widget build(BuildContext context) {
-    return AnimatedOpacity(
-      opacity: visible ? 1 : 0,
-      duration: const Duration(milliseconds: 600),
-      child: Text(text, textDirection: TextDirection.rtl, style: style),
-    );
+    return Text(text, textDirection: TextDirection.rtl, style: style);
   }
 }
 
 class _ProgressIndicator extends StatelessWidget {
-  const _ProgressIndicator({required this.progress});
+  const _ProgressIndicator({required this.progress, required this.finishGlow});
 
   final double progress;
+  final double finishGlow;
 
   @override
   Widget build(BuildContext context) {
@@ -180,10 +191,20 @@ class _ProgressIndicator extends StatelessWidget {
       width: 260,
       child: Column(
         children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(100),
-            child: SizedBox(
-              height: 8,
+          Container(
+            height: 8,
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.14),
+              borderRadius: BorderRadius.circular(100),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.white.withValues(alpha: finishGlow * 0.25),
+                  blurRadius: 12,
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(100),
               child: Align(
                 alignment: Alignment.centerLeft,
                 child: FractionallySizedBox(
@@ -206,7 +227,7 @@ class _ProgressIndicator extends StatelessWidget {
                 ),
               ),
               Text(
-                'جاري التحميل...',
+                progress >= 98 ? 'جاهز للانطلاق...' : 'جاري التحميل...',
                 textDirection: TextDirection.rtl,
                 style: textTheme.bodySmall?.copyWith(
                   color: Colors.white54,
