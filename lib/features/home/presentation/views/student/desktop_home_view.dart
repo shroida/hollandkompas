@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:hollandkompas/core/router/route_paths.dart';
+import 'package:hollandkompas/core/theme/app_colors.dart';
 import 'package:hollandkompas/features/courses/domain/entities/course.dart';
 import 'package:hollandkompas/features/courses/presentation/widgets/course_card.dart';
 import 'package:hollandkompas/features/courses/presentation/widgets/section_header.dart';
@@ -13,10 +14,9 @@ import 'package:hollandkompas/features/home/presentation/widgets/vocabulary_home
 class DesktopHomeView extends StudentCoursesView {
   const DesktopHomeView({super.key});
 
+  static const _maxContentWidth = 1440.0;
   static const _horizontalPadding = 32.0;
-  static const _maxContentWidth = 1400.0;
-  static const _gridSpacing = 20.0;
-  static const _courseHeight = 460.0;
+  static const _spacing = 20.0;
 
   @override
   Widget buildContent(
@@ -32,9 +32,17 @@ class DesktopHomeView extends StudentCoursesView {
         child: CustomScrollView(
           physics: const BouncingScrollPhysics(),
           slivers: [
-            const SliverToBoxAdapter(child: SizedBox(height: 32)),
+            const SliverToBoxAdapter(child: SizedBox(height: 18)),
 
-            // Home feature cards
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: _horizontalPadding,
+              ),
+              sliver: const SliverToBoxAdapter(child: _HomeIntro()),
+            ),
+
+            const SliverToBoxAdapter(child: SizedBox(height: 24)),
+
             SliverPadding(
               padding: const EdgeInsets.symmetric(
                 horizontal: _horizontalPadding,
@@ -42,9 +50,9 @@ class DesktopHomeView extends StudentCoursesView {
               sliver: SliverGrid(
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 3,
-                  crossAxisSpacing: _gridSpacing,
-                  mainAxisSpacing: _gridSpacing,
-                  childAspectRatio: 1.65,
+                  crossAxisSpacing: _spacing,
+                  mainAxisSpacing: _spacing,
+                  childAspectRatio: 1.55,
                 ),
                 delegate: SliverChildListDelegate(const [
                   ContinueLearningSection(),
@@ -54,23 +62,23 @@ class DesktopHomeView extends StudentCoursesView {
               ),
             ),
 
-            const SliverToBoxAdapter(child: SizedBox(height: 40)),
+            const SliverToBoxAdapter(child: SizedBox(height: 44)),
 
-            // Courses header
             SliverPadding(
               padding: const EdgeInsets.symmetric(
                 horizontal: _horizontalPadding,
               ),
               sliver: SliverToBoxAdapter(
-                child: _DesktopSectionHeader(
-                  onViewAll: () => context.push('/courses'),
+                child: _CoursesHeader(
+                  onViewAll: () {
+                    context.push('/courses');
+                  },
                 ),
               ),
             ),
 
             const SliverToBoxAdapter(child: SizedBox(height: 18)),
 
-            // Courses
             SliverPadding(
               padding: const EdgeInsets.symmetric(
                 horizontal: _horizontalPadding,
@@ -79,23 +87,28 @@ class DesktopHomeView extends StudentCoursesView {
                 itemCount: sortedCourses.length,
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount: 3,
-                  crossAxisSpacing: _gridSpacing,
-                  mainAxisSpacing: _gridSpacing,
-                  mainAxisExtent: _courseHeight,
+                  crossAxisSpacing: _spacing,
+                  mainAxisSpacing: _spacing,
+                  mainAxisExtent: 420,
                 ),
                 itemBuilder: (context, index) {
                   final course = sortedCourses[index];
 
-                  return CourseCard(
-                    course: course,
-                    isEnrolled: false,
-                    onTap: () => _openCourse(context, course),
+                  return _AnimatedCourseCard(
+                    index: index,
+                    child: CourseCard(
+                      course: course,
+                      isEnrolled: false,
+                      onTap: () {
+                        context.push(RoutePaths.courseLessons, extra: course);
+                      },
+                    ),
                   );
                 },
               ),
             ),
 
-            const SliverToBoxAdapter(child: SizedBox(height: 40)),
+            const SliverToBoxAdapter(child: SizedBox(height: 48)),
           ],
         ),
       ),
@@ -110,14 +123,78 @@ class DesktopHomeView extends StudentCoursesView {
           (levelOrder[a.level] ?? 999).compareTo(levelOrder[b.level] ?? 999),
     );
   }
+}
 
-  void _openCourse(BuildContext context, Course course) {
-    context.push(RoutePaths.courseLessons, extra: course);
+class _HomeIntro extends StatelessWidget {
+  const _HomeIntro();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Your Dutch journey',
+                style: theme.textTheme.headlineMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: -0.5,
+                ),
+              ),
+
+              const SizedBox(height: 4),
+
+              Text(
+                'Learn, practice, and build your Dutch skills every day.',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: AppColors.subtitleColor(context),
+                ),
+              ),
+            ],
+          ),
+        ),
+
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 8),
+          decoration: BoxDecoration(
+            color: AppColors.primary.withValues(
+              alpha: Theme.of(context).brightness == Brightness.dark
+                  ? 0.12
+                  : 0.07,
+            ),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.auto_awesome_rounded,
+                size: 17,
+                color: AppColors.primary,
+              ),
+              const SizedBox(width: 7),
+              Text(
+                'Keep learning',
+                style: theme.textTheme.labelMedium?.copyWith(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
   }
 }
 
-class _DesktopSectionHeader extends StatelessWidget {
-  const _DesktopSectionHeader({required this.onViewAll});
+class _CoursesHeader extends StatelessWidget {
+  const _CoursesHeader({required this.onViewAll});
 
   final VoidCallback onViewAll;
 
@@ -127,16 +204,55 @@ class _DesktopSectionHeader extends StatelessWidget {
       children: [
         const Expanded(
           child: SectionHeader(
-            title: 'Your learning journey',
+            title: 'Your courses',
             subtitle: 'Choose a course and continue learning Dutch.',
           ),
         ),
+
         TextButton.icon(
           onPressed: onViewAll,
-          icon: const Icon(Icons.grid_view_rounded, size: 18),
+          icon: const Icon(Icons.arrow_forward_rounded, size: 17),
           label: const Text('View all'),
         ),
       ],
+    );
+  }
+}
+
+class _AnimatedCourseCard extends StatefulWidget {
+  const _AnimatedCourseCard({required this.index, required this.child});
+
+  final int index;
+  final Widget child;
+
+  @override
+  State<_AnimatedCourseCard> createState() => _AnimatedCourseCardState();
+}
+
+class _AnimatedCourseCardState extends State<_AnimatedCourseCard> {
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) {
+        setState(() => _hovered = true);
+      },
+      onExit: (_) {
+        setState(() => _hovered = false);
+      },
+      child: AnimatedScale(
+        scale: _hovered ? 1.012 : 1,
+        duration: const Duration(milliseconds: 180),
+        curve: Curves.easeOut,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeOut,
+          transform: Matrix4.translationValues(0, _hovered ? -3 : 0, 0),
+          child: widget.child,
+        ),
+      ),
     );
   }
 }

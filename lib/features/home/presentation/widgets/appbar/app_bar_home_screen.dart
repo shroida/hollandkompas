@@ -25,9 +25,7 @@ class AppBarHomeScreen extends ConsumerWidget implements PreferredSizeWidget {
   final VoidCallback? onSettings;
   final VoidCallback? onLogout;
 
-  static const _height = 124.0;
-  static const _contentHeight = 90.0;
-  static const _horizontalPadding = 16.0;
+  static const _height = 106.0;
 
   @override
   Size get preferredSize => const Size.fromHeight(_height);
@@ -35,53 +33,33 @@ class AppBarHomeScreen extends ConsumerWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+
     final isDark = ref.watch(
       themeModeProvider.select((mode) => mode == ThemeMode.dark),
     );
 
     return Material(
-      color: Colors.transparent,
-      child: Container(
-        decoration: BoxDecoration(
-          color: AppColors.headerBlue,
-          borderRadius: const BorderRadius.vertical(
-            bottom: Radius.circular(28),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.headerBlue.withValues(alpha: 0.20),
-              blurRadius: 28,
-              offset: const Offset(0, 10),
-            ),
-          ],
-        ),
-        child: SafeArea(
-          bottom: false,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(
-              _horizontalPadding,
-              10,
-              _horizontalPadding,
-              14,
-            ),
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                return _AppBarContent(
-                  firstName: firstName,
-                  level: level,
-                  isDark: isDark,
-                  isCompact: constraints.maxWidth < 700,
-                  surfaceColor: theme.colorScheme.surface,
-                  onMyCourses: onMyCourses,
-                  onProfile: onProfile,
-                  onSettings: onSettings,
-                  onLogout: onLogout,
-                  onToggleTheme: () {
-                    ref.read(themeModeProvider.notifier).toggleTheme();
-                  },
-                );
-              },
-            ),
+      color: theme.scaffoldBackgroundColor,
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 14, 24, 10),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              return _HomeHeader(
+                firstName: firstName,
+                level: level,
+                isDark: isDark,
+                isCompact: constraints.maxWidth < 760,
+                onMyCourses: onMyCourses,
+                onProfile: onProfile,
+                onSettings: onSettings,
+                onLogout: onLogout,
+                onToggleTheme: () {
+                  ref.read(themeModeProvider.notifier).toggleTheme();
+                },
+              );
+            },
           ),
         ),
       ),
@@ -89,13 +67,12 @@ class AppBarHomeScreen extends ConsumerWidget implements PreferredSizeWidget {
   }
 }
 
-class _AppBarContent extends StatelessWidget {
-  const _AppBarContent({
+class _HomeHeader extends StatelessWidget {
+  const _HomeHeader({
     required this.firstName,
     required this.level,
     required this.isDark,
     required this.isCompact,
-    required this.surfaceColor,
     required this.onToggleTheme,
     this.onMyCourses,
     this.onProfile,
@@ -107,7 +84,6 @@ class _AppBarContent extends StatelessWidget {
   final String level;
   final bool isDark;
   final bool isCompact;
-  final Color surfaceColor;
   final VoidCallback onToggleTheme;
   final VoidCallback? onMyCourses;
   final VoidCallback? onProfile;
@@ -116,18 +92,20 @@ class _AppBarContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Container(
-      height: AppBarHomeScreen._contentHeight,
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      height: 82,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: surfaceColor,
-        borderRadius: BorderRadius.circular(22),
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(24),
         border: Border.all(color: AppColors.borderColor(context)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
+            color: Colors.black.withValues(alpha: isDark ? 0.18 : 0.055),
             blurRadius: 24,
-            offset: const Offset(0, 8),
+            offset: const Offset(0, 7),
           ),
         ],
       ),
@@ -141,18 +119,45 @@ class _AppBarContent extends StatelessWidget {
             onSettings: onSettings,
             onLogout: onLogout,
           ),
-          const SizedBox(width: 12),
+
+          const SizedBox(width: 14),
+
           Expanded(child: WelcomeSection(firstName: firstName)),
+
           if (!isCompact) ...[
-            const SizedBox(width: 10),
+            const SizedBox(width: 12),
             LevelBadge(level: level),
           ],
+
           const SizedBox(width: 8),
-          ThemeToggle(isDark: isDark, onPressed: onToggleTheme),
+
+          _HeaderAction(
+            child: ThemeToggle(isDark: isDark, onPressed: onToggleTheme),
+          ),
+
           const SizedBox(width: 6),
-          const LanguageSelector(),
+
+          _HeaderAction(child: const LanguageSelector()),
         ],
       ),
+    );
+  }
+}
+
+class _HeaderAction extends StatelessWidget {
+  const _HeaderAction({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 44,
+      decoration: BoxDecoration(
+        color: AppColors.mutedColor(context),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: child,
     );
   }
 }
@@ -162,40 +167,45 @@ class LevelBadge extends StatelessWidget {
 
   final String level;
 
-  static const _height = 42.0;
-
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
-      height: _height,
-      padding: const EdgeInsets.symmetric(horizontal: 11),
+      height: 44,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
-        color: AppColors.accent,
+        color: AppColors.primary.withValues(alpha: isDark ? 0.12 : 0.08),
         borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: AppColors.primary.withValues(alpha: isDark ? 0.30 : 0.16),
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: 26,
-            height: 26,
+            width: 28,
+            height: 28,
             decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.12),
+              color: AppColors.primary.withValues(alpha: isDark ? 0.18 : 0.12),
               shape: BoxShape.circle,
             ),
             child: const Icon(
               Icons.school_rounded,
               color: AppColors.primary,
-              size: 15,
+              size: 16,
             ),
           ),
-          const SizedBox(width: 7),
+
+          const SizedBox(width: 8),
+
           Text(
             level.toUpperCase(),
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
               color: AppColors.primary,
               fontWeight: FontWeight.w800,
-              letterSpacing: 0.4,
+              letterSpacing: 0.5,
             ),
           ),
         ],
