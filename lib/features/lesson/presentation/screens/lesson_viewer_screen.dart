@@ -398,6 +398,19 @@ class _LessonViewerScreenState extends ConsumerState<LessonViewerScreen>
     }
   }
 
+  void _goHome() {
+    if (_isOpeningNextLesson) {
+      return;
+    }
+
+    _nextLessonTimer?.cancel();
+    _nextLessonTimer = null;
+
+    _countdownAnimationController.stop();
+
+    context.go(RoutePaths.home);
+  }
+
   void _showErrorSnackBar(String message) {
     if (!mounted) {
       return;
@@ -457,60 +470,71 @@ class _LessonViewerScreenState extends ConsumerState<LessonViewerScreen>
   }
 
   PreferredSizeWidget _buildAppBar(LessonViewerState state) {
+    final theme = Theme.of(context);
+
     return AppBar(
-      leading: IconButton(
-        tooltip: 'Back',
-        icon: const Icon(Icons.arrow_back_rounded),
-        onPressed: _isOpeningNextLesson ? null : _goBack,
+      automaticallyImplyLeading: false,
+      elevation: 0,
+      scrolledUnderElevation: 0,
+      backgroundColor: theme.scaffoldBackgroundColor,
+      surfaceTintColor: Colors.transparent,
+      toolbarHeight: 68,
+      titleSpacing: 0,
+      title: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        child: Row(
+          children: [
+            _buildHomeButton(),
+            const SizedBox(width: 10),
+            _buildBackButton(),
+            const SizedBox(width: 14),
+            Expanded(child: _buildLessonHeaderTitle()),
+            const SizedBox(width: 10),
+            if (hasNextLesson) _buildProgressBadge(),
+            if (!widget.isEnrolled) _buildEnrollButton(),
+          ],
+        ),
       ),
-      titleSpacing: 4,
-      title: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(
-            'Lesson ${widget.currentIndex + 1}',
-            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
-          ),
-          if (widget.lesson.title.trim().isNotEmpty)
-            Text(
-              widget.lesson.title,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: Theme.of(
-                  context,
-                ).textTheme.bodySmall?.color?.withValues(alpha: 0.65),
-                fontSize: 11,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-        ],
-      ),
-      centerTitle: false,
-      actions: [
-        if (hasNextLesson) _buildProgressBadge(),
-        if (!widget.isEnrolled) _buildEnrollButton(),
-      ],
     );
   }
 
-  Widget _buildProgressBadge() {
-    return Padding(
-      padding: const EdgeInsets.only(right: 8),
-      child: Center(
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-          decoration: BoxDecoration(
-            color: AppColors.accent,
-            borderRadius: BorderRadius.circular(20),
+  Widget _buildHomeButton() {
+    return Tooltip(
+      message: 'Home',
+      child: Material(
+        color: AppColors.accent,
+        borderRadius: BorderRadius.circular(14),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(14),
+          onTap: _goHome,
+          child: const SizedBox(
+            width: 44,
+            height: 44,
+            child: Icon(Icons.home_rounded, color: AppColors.primary, size: 22),
           ),
-          child: Text(
-            '${widget.currentIndex + 1} / ${widget.lessons.length}',
-            style: const TextStyle(
-              color: AppColors.primary,
-              fontSize: 12,
-              fontWeight: FontWeight.w800,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBackButton() {
+    final theme = Theme.of(context);
+
+    return Tooltip(
+      message: 'Back',
+      child: Material(
+        color: theme.cardColor,
+        borderRadius: BorderRadius.circular(14),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(14),
+          onTap: _isOpeningNextLesson ? null : _goBack,
+          child: SizedBox(
+            width: 44,
+            height: 44,
+            child: Icon(
+              Icons.arrow_back_rounded,
+              color: theme.iconTheme.color,
+              size: 21,
             ),
           ),
         ),
@@ -518,13 +542,75 @@ class _LessonViewerScreenState extends ConsumerState<LessonViewerScreen>
     );
   }
 
+  Widget _buildLessonHeaderTitle() {
+    final theme = Theme.of(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          widget.course.title,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: theme.textTheme.titleMedium?.copyWith(
+            fontWeight: FontWeight.w800,
+            letterSpacing: -0.2,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          widget.lesson.title.trim().isNotEmpty
+              ? widget.lesson.title
+              : 'Lesson ${widget.currentIndex + 1}',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: theme.textTheme.bodySmall?.color?.withValues(alpha: 0.60),
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildProgressBadge() {
+    return Container(
+      margin: const EdgeInsets.only(left: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: AppColors.accent,
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Text(
+        '${widget.currentIndex + 1} / ${widget.lessons.length}',
+        style: const TextStyle(
+          color: AppColors.primary,
+          fontSize: 12,
+          fontWeight: FontWeight.w800,
+        ),
+      ),
+    );
+  }
+
   Widget _buildEnrollButton() {
     return Padding(
-      padding: const EdgeInsets.only(right: 12),
-      child: IconButton(
-        tooltip: 'Enroll',
-        onPressed: _showEnrollmentDialog,
-        icon: const Icon(Icons.school_rounded),
+      padding: const EdgeInsets.only(left: 6),
+      child: Tooltip(
+        message: 'Enroll',
+        child: Material(
+          color: AppColors.primary,
+          borderRadius: BorderRadius.circular(14),
+          child: InkWell(
+            borderRadius: BorderRadius.circular(14),
+            onTap: _showEnrollmentDialog,
+            child: const SizedBox(
+              width: 44,
+              height: 44,
+              child: Icon(Icons.school_rounded, color: Colors.white, size: 21),
+            ),
+          ),
+        ),
       ),
     );
   }
