@@ -97,56 +97,54 @@ class _CourseCardState extends ConsumerState<CourseCard> {
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   _CourseImageHeader(
                     course: widget.course,
                     hovered: _hovered,
                     isEnrolled: widget.isEnrolled,
                   ),
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              LevelBadge(level: widget.course.level),
-                              const Spacer(),
-                              if (widget.isEnrolled) _EnrolledBadge(),
-                            ],
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Row(
+                          children: [
+                            LevelBadge(level: widget.course.level),
+                            const Spacer(),
+                            if (widget.isEnrolled) const _EnrolledBadge(),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          widget.course.title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.2,
                           ),
-                          const SizedBox(height: 10),
-                          Text(
-                            widget.course.title,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: theme.textTheme.titleLarge?.copyWith(
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: -0.2,
-                            ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          description,
+                          maxLines: 3,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            height: 1.45,
+                            color: subtitleColor,
                           ),
-                          const SizedBox(height: 6),
-                          Expanded(
-                            child: Text(
-                              description,
-                              maxLines: 3,
-                              overflow: TextOverflow.ellipsis,
-                              style: theme.textTheme.bodyMedium?.copyWith(
-                                height: 1.45,
-                                color: subtitleColor,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          _CourseBottomBar(
-                            course: widget.course,
-                            isEnrolled: widget.isEnrolled,
-                            subtitleColor: subtitleColor,
-                            onTap: widget.onTap,
-                          ),
-                        ],
-                      ),
+                        ),
+                        const SizedBox(height: 12),
+                        _CourseBottomBar(
+                          course: widget.course,
+                          isEnrolled: widget.isEnrolled,
+                          subtitleColor: subtitleColor,
+                          onTap: widget.onTap,
+                        ),
+                      ],
                     ),
                   ),
                 ],
