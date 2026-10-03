@@ -16,6 +16,7 @@ class FlashcardsScreen extends ConsumerStatefulWidget {
 
 class _FlashcardsScreenState extends ConsumerState<FlashcardsScreen> {
   int _currentIndex = 0;
+  int? _totalCards;
 
   @override
   Widget build(BuildContext context) {
@@ -34,9 +35,15 @@ class _FlashcardsScreenState extends ConsumerState<FlashcardsScreen> {
 
     debugPrint('[FLASHCARDS-SCREEN] cards=${cards.length}');
 
+    if (_totalCards == null && cards.isNotEmpty) {
+      _totalCards = cards.length;
+    }
+
     if (cards.isEmpty) {
       return _buildEmptyState(context, state);
     }
+
+    final totalCards = _totalCards ?? cards.length;
 
     final safeIndex = _currentIndex >= cards.length
         ? cards.length - 1
@@ -50,7 +57,11 @@ class _FlashcardsScreenState extends ConsumerState<FlashcardsScreen> {
         actions: [
           PopupMenuButton<FlashcardsMode>(
             onSelected: (mode) {
-              _currentIndex = 0;
+              setState(() {
+                _currentIndex = 0;
+                _totalCards = null;
+              });
+
               controller.load(mode: mode);
             },
             itemBuilder: (_) => const [
@@ -101,12 +112,10 @@ class _FlashcardsScreenState extends ConsumerState<FlashcardsScreen> {
                   child: Column(
                     children: [
                       ReviewProgress(
-                        current: safeIndex + 1,
-                        total: cards.length,
+                        current: (_currentIndex + 1).clamp(1, totalCards),
+                        total: totalCards,
                       ),
-
                       SizedBox(height: isMobile ? 16 : 24),
-
                       Expanded(
                         child: Dismissible(
                           key: ValueKey(card.id),
@@ -117,16 +126,11 @@ class _FlashcardsScreenState extends ConsumerState<FlashcardsScreen> {
                                 ? false
                                 : true;
 
-                            await controller.review(
+                            await _reviewCard(
+                              controller: controller,
                               card: card,
                               remembered: remembered,
                             );
-
-                            if (mounted) {
-                              setState(() {
-                                _currentIndex = 0;
-                              });
-                            }
 
                             return false;
                           },
@@ -148,31 +152,22 @@ class _FlashcardsScreenState extends ConsumerState<FlashcardsScreen> {
                           ),
                         ),
                       ),
-
                       SizedBox(height: isMobile ? 16 : 24),
-
                       ReviewButtons(
                         enabled: !state.isReviewing,
                         onRemember: () async {
-                          await controller.review(card: card, remembered: true);
-
-                          if (mounted) {
-                            setState(() {
-                              _currentIndex = 0;
-                            });
-                          }
+                          await _reviewCard(
+                            controller: controller,
+                            card: card,
+                            remembered: true,
+                          );
                         },
                         onForget: () async {
-                          await controller.review(
+                          await _reviewCard(
+                            controller: controller,
                             card: card,
                             remembered: false,
                           );
-
-                          if (mounted) {
-                            setState(() {
-                              _currentIndex = 0;
-                            });
-                          }
                         },
                       ),
                     ],
@@ -184,6 +179,24 @@ class _FlashcardsScreenState extends ConsumerState<FlashcardsScreen> {
         ),
       ),
     );
+  }
+
+  Future<void> _reviewCard({
+    required FlashcardsController controller,
+    required dynamic card,
+    required bool remembered,
+  }) async {
+    await controller.review(card: card, remembered: remembered);
+
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      if (_currentIndex < (_totalCards ?? 1) - 1) {
+        _currentIndex++;
+      }
+    });
   }
 
   Widget _swipeBackground(BuildContext context, {required bool isRemember}) {
@@ -237,7 +250,11 @@ class _FlashcardsScreenState extends ConsumerState<FlashcardsScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.style_rounded, size: 72, color: AppColors.primary),
+                  const Icon(
+                    Icons.style_rounded,
+                    size: 72,
+                    color: AppColors.primary,
+                  ),
                   const SizedBox(height: 20),
                   Text(
                     modeText,
