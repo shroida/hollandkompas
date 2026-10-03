@@ -22,6 +22,7 @@ class TabletHomeView extends StudentCoursesView {
     BuildContext context,
     WidgetRef ref,
     List<Course> courses,
+    Set<String> enrolledCourseIds,
   ) {
     final sortedCourses = _sortCoursesByLevel(courses);
 
@@ -30,7 +31,6 @@ class TabletHomeView extends StudentCoursesView {
       slivers: [
         const SliverToBoxAdapter(child: SizedBox(height: 24)),
 
-        // Continue Learning
         const SliverPadding(
           padding: EdgeInsets.symmetric(horizontal: _horizontalPadding),
           sliver: SliverToBoxAdapter(child: ContinueLearningSection()),
@@ -38,7 +38,6 @@ class TabletHomeView extends StudentCoursesView {
 
         const SliverToBoxAdapter(child: SizedBox(height: 16)),
 
-        // Vocabulary
         const SliverPadding(
           padding: EdgeInsets.symmetric(horizontal: _horizontalPadding),
           sliver: SliverToBoxAdapter(child: VocabularyHomeCard()),
@@ -46,7 +45,6 @@ class TabletHomeView extends StudentCoursesView {
 
         const SliverToBoxAdapter(child: SizedBox(height: 16)),
 
-        // Flashcards
         const SliverPadding(
           padding: EdgeInsets.symmetric(horizontal: _horizontalPadding),
           sliver: SliverToBoxAdapter(child: FlashcardsHomeCard()),
@@ -54,7 +52,6 @@ class TabletHomeView extends StudentCoursesView {
 
         const SliverToBoxAdapter(child: SizedBox(height: 32)),
 
-        // Courses header
         const SliverPadding(
           padding: EdgeInsets.symmetric(horizontal: _horizontalPadding),
           sliver: SliverToBoxAdapter(
@@ -67,7 +64,6 @@ class TabletHomeView extends StudentCoursesView {
 
         const SliverToBoxAdapter(child: SizedBox(height: 16)),
 
-        // Courses
         SliverPadding(
           padding: const EdgeInsets.symmetric(horizontal: _horizontalPadding),
           sliver: SliverGrid.builder(
@@ -81,9 +77,11 @@ class TabletHomeView extends StudentCoursesView {
             itemBuilder: (context, index) {
               final course = sortedCourses[index];
 
+              final isEnrolled = enrolledCourseIds.contains(course.id);
+
               return CourseCard(
                 course: course,
-                isEnrolled: false,
+                isEnrolled: isEnrolled,
                 onTap: () => _openCourse(context, course),
               );
             },

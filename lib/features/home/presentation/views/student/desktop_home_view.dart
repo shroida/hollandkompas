@@ -23,6 +23,7 @@ class DesktopHomeView extends StudentCoursesView {
     BuildContext context,
     WidgetRef ref,
     List<Course> courses,
+    Set<String> enrolledCourseIds,
   ) {
     final sortedCourses = _sortCoursesByLevel(courses);
 
@@ -33,16 +34,13 @@ class DesktopHomeView extends StudentCoursesView {
           physics: const BouncingScrollPhysics(),
           slivers: [
             const SliverToBoxAdapter(child: SizedBox(height: 18)),
-
             SliverPadding(
               padding: const EdgeInsets.symmetric(
                 horizontal: _horizontalPadding,
               ),
               sliver: const SliverToBoxAdapter(child: _HomeIntro()),
             ),
-
             const SliverToBoxAdapter(child: SizedBox(height: 24)),
-
             SliverPadding(
               padding: const EdgeInsets.symmetric(
                 horizontal: _horizontalPadding,
@@ -61,24 +59,9 @@ class DesktopHomeView extends StudentCoursesView {
                 ]),
               ),
             ),
-
             const SliverToBoxAdapter(child: SizedBox(height: 44)),
 
-            SliverPadding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: _horizontalPadding,
-              ),
-              sliver: SliverToBoxAdapter(
-                child: _CoursesHeader(
-                  onViewAll: () {
-                    context.push('/courses');
-                  },
-                ),
-              ),
-            ),
-
             const SliverToBoxAdapter(child: SizedBox(height: 18)),
-
             SliverPadding(
               padding: const EdgeInsets.symmetric(
                 horizontal: _horizontalPadding,
@@ -94,11 +77,13 @@ class DesktopHomeView extends StudentCoursesView {
                 itemBuilder: (context, index) {
                   final course = sortedCourses[index];
 
+                  final isEnrolled = enrolledCourseIds.contains(course.id);
+
                   return _AnimatedCourseCard(
                     index: index,
                     child: CourseCard(
                       course: course,
-                      isEnrolled: false,
+                      isEnrolled: isEnrolled,
                       onTap: () {
                         context.push(RoutePaths.courseLessons, extra: course);
                       },
@@ -107,7 +92,6 @@ class DesktopHomeView extends StudentCoursesView {
                 },
               ),
             ),
-
             const SliverToBoxAdapter(child: SizedBox(height: 48)),
           ],
         ),
@@ -146,9 +130,7 @@ class _HomeIntro extends StatelessWidget {
                   letterSpacing: -0.5,
                 ),
               ),
-
               const SizedBox(height: 4),
-
               Text(
                 'Learn, practice, and build your Dutch skills every day.',
                 style: theme.textTheme.bodyMedium?.copyWith(
@@ -158,7 +140,6 @@ class _HomeIntro extends StatelessWidget {
             ],
           ),
         ),
-
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 8),
           decoration: BoxDecoration(
@@ -207,12 +188,6 @@ class _CoursesHeader extends StatelessWidget {
             title: 'Your courses',
             subtitle: 'Choose a course and continue learning Dutch.',
           ),
-        ),
-
-        TextButton.icon(
-          onPressed: onViewAll,
-          icon: const Icon(Icons.arrow_forward_rounded, size: 17),
-          label: const Text('View all'),
         ),
       ],
     );

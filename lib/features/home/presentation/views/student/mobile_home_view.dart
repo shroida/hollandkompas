@@ -21,6 +21,7 @@ class MobileHomeView extends StudentCoursesView {
     BuildContext context,
     WidgetRef ref,
     List<Course> courses,
+    Set<String> enrolledCourseIds,
   ) {
     final sortedCourses = _sortCoursesByLevel(courses);
 
@@ -48,12 +49,10 @@ class MobileHomeView extends StudentCoursesView {
           sliver: SliverToBoxAdapter(child: VocabularyHomeCard()),
         ),
         const SliverToBoxAdapter(child: SizedBox(height: 16)),
-
         const SliverPadding(
           padding: EdgeInsets.symmetric(horizontal: _horizontalPadding),
           sliver: SliverToBoxAdapter(child: FlashcardsHomeCard()),
         ),
-
         const SliverToBoxAdapter(child: SizedBox(height: 28)),
         const SliverToBoxAdapter(child: SizedBox(height: 28)),
         SliverPadding(
@@ -63,11 +62,13 @@ class MobileHomeView extends StudentCoursesView {
             itemBuilder: (context, index) {
               final course = sortedCourses[index];
 
+              final isEnrolled = enrolledCourseIds.contains(course.id);
+
               return Padding(
                 padding: const EdgeInsets.only(bottom: _courseSpacing),
                 child: CourseCard(
                   course: course,
-                  isEnrolled: false,
+                  isEnrolled: isEnrolled,
                   onTap: () => _openCourse(context, course),
                 ),
               );
