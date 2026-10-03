@@ -624,25 +624,49 @@ class _WordsLoadingState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-      child: Column(
-        children: [
-          const SizedBox(
-            width: 26,
-            height: 26,
-            child: CircularProgressIndicator(
-              strokeWidth: 2.5,
-              color: AppColors.primary,
+      padding: const EdgeInsets.fromLTRB(16, 20, 16, 40),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+        decoration: BoxDecoration(
+          color: AppColors.cardColor(context),
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: AppColors.borderColor(context)),
+        ),
+        child: Column(
+          children: [
+            Container(
+              width: 58,
+              height: 58,
+              decoration: BoxDecoration(
+                color: AppColors.accent,
+                borderRadius: BorderRadius.circular(18),
+              ),
+              child: const Padding(
+                padding: EdgeInsets.all(15),
+                child: CircularProgressIndicator(
+                  strokeWidth: 3,
+                  color: AppColors.primary,
+                ),
+              ),
             ),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            'جاري تحميل الكلمات...',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: AppColors.subtitleColor(context),
+            const SizedBox(height: 18),
+            Text(
+              'جاري تحميل الكلمات...',
+              style: Theme.of(
+                context,
+              ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w700),
             ),
-          ),
-        ],
+            const SizedBox(height: 6),
+            Text(
+              'بنجهز قاعدة الكلمات الخاصة بك',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: AppColors.subtitleColor(context),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
