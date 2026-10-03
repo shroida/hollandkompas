@@ -1,62 +1,137 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hollandkompas/core/localization/app_locale.dart';
+import 'package:hollandkompas/core/localization/app_strings.dart';
 import 'package:hollandkompas/core/router/route_paths.dart';
 import 'package:hollandkompas/core/theme/app_colors.dart';
 import 'package:hollandkompas/features/home/domain/entities/continue_learning.dart';
 import 'package:hollandkompas/features/home/presentation/providers/continue_learning_provider.dart';
 
-class ContinueLearningCard extends StatelessWidget {
+class ContinueLearningCard extends ConsumerStatefulWidget {
   const ContinueLearningCard({super.key, required this.data});
 
   final ContinueLearning data;
 
   @override
+  ConsumerState<ContinueLearningCard> createState() =>
+      _ContinueLearningCardState();
+}
+
+class _ContinueLearningCardState extends ConsumerState<ContinueLearningCard> {
+  bool _hovered = false;
+  bool _pressed = false;
+
+  @override
   Widget build(BuildContext context) {
+    final locale = ref.watch(appLocaleProvider);
+    final strings = AppStrings(locale);
     final theme = Theme.of(context);
-    final progress = data.progress.clamp(0.0, 1.0);
+    final isDark = theme.brightness == Brightness.dark;
+
+    final progress = widget.data.progress.clamp(0.0, 1.0);
     final percent = (progress * 100).round();
 
-    return Card(
-      elevation: 0,
-      margin: EdgeInsets.zero,
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) {
+        setState(() => _hovered = true);
+      },
+      onExit: (_) {
+        setState(() {
+          _hovered = false;
+          _pressed = false;
+        });
+      },
+      child: GestureDetector(
+        onTapDown: (_) {
+          setState(() => _pressed = true);
+        },
+        onTapUp: (_) {
+          setState(() => _pressed = false);
+        },
+        onTapCancel: () {
+          setState(() => _pressed = false);
+        },
         onTap: () => _openLesson(context),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _ContinueLearningHeader(data: data),
-              const SizedBox(height: 20),
-              Text(
-                data.lesson.title,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.w800,
+        child: AnimatedScale(
+          scale: _pressed
+              ? 0.985
+              : _hovered
+              ? 1.008
+              : 1,
+          duration: const Duration(milliseconds: 160),
+          curve: Curves.easeOutCubic,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 220),
+            curve: Curves.easeOutCubic,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(
+                    alpha: isDark
+                        ? (_hovered ? 0.25 : 0.16)
+                        : (_hovered ? 0.12 : 0.07),
+                  ),
+                  blurRadius: _hovered ? 28 : 18,
+                  spreadRadius: _hovered ? 1 : 0,
+                  offset: Offset(0, _hovered ? 10 : 6),
+                ),
+              ],
+            ),
+            child: Card(
+              margin: EdgeInsets.zero,
+              elevation: 0,
+              clipBehavior: Clip.antiAlias,
+              color: theme.cardColor,
+              surfaceTintColor: Colors.transparent,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _ContinueLearningHeader(
+                      data: widget.data,
+                      strings: strings,
+                      hovered: _hovered,
+                    ),
+                    const SizedBox(height: 20),
+                    Text(
+                      widget.data.lesson.title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.25,
+                      ),
+                    ),
+                    const SizedBox(height: 7),
+                    Text(
+                      strings.lessonNumber(
+                        widget.data.currentIndex + 1,
+                        widget.data.lessons.length,
+                      ),
+                      style: theme.textTheme.bodySmall?.copyWith(
+                        color: AppColors.subtitleColor(context),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 15),
+                    _ProgressIndicator(progress: progress, percent: percent),
+                    const SizedBox(height: 18),
+                    _ContinueButton(
+                      label: strings.continueButton,
+                      hovered: _hovered,
+                      onTap: () => _openLesson(context),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 8),
-              Text(
-                'Lesson ${data.currentIndex + 1} of ${data.lessons.length}',
-                style: theme.textTheme.bodySmall?.copyWith(
-                  color: AppColors.subtitleColor(context),
-                ),
-              ),
-              const SizedBox(height: 14),
-              _ProgressIndicator(progress: progress, percent: percent),
-              const SizedBox(height: 18),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton.icon(
-                  onPressed: () => _openLesson(context),
-                  icon: const Icon(Icons.play_arrow_rounded),
-                  label: const Text('Continue'),
-                ),
-              ),
-            ],
+            ),
           ),
         ),
       ),
@@ -67,21 +142,27 @@ class ContinueLearningCard extends StatelessWidget {
     context.push(
       RoutePaths.lessonViewer,
       extra: {
-        'course': data.course,
-        'lesson': data.lesson,
-        'lessons': data.lessons,
-        'currentIndex': data.currentIndex,
+        'course': widget.data.course,
+        'lesson': widget.data.lesson,
+        'lessons': widget.data.lessons,
+        'currentIndex': widget.data.currentIndex,
         'isEnrolled': true,
-        'totalLessons': data.lessons.length,
+        'totalLessons': widget.data.lessons.length,
       },
     );
   }
 }
 
 class _ContinueLearningHeader extends StatelessWidget {
-  const _ContinueLearningHeader({required this.data});
+  const _ContinueLearningHeader({
+    required this.data,
+    required this.strings,
+    required this.hovered,
+  });
 
   final ContinueLearning data;
+  final AppStrings strings;
+  final bool hovered;
 
   @override
   Widget build(BuildContext context) {
@@ -89,14 +170,14 @@ class _ContinueLearningHeader extends StatelessWidget {
 
     return Row(
       children: [
-        const _ContinueLearningIcon(),
+        _ContinueLearningIcon(hovered: hovered),
         const SizedBox(width: 14),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Continue Learning',
+                strings.continueLearning,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: theme.textTheme.titleMedium?.copyWith(
@@ -123,20 +204,41 @@ class _ContinueLearningHeader extends StatelessWidget {
 }
 
 class _ContinueLearningIcon extends StatelessWidget {
-  const _ContinueLearningIcon();
+  const _ContinueLearningIcon({required this.hovered});
+
+  final bool hovered;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 50,
-      height: 50,
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOutCubic,
+      width: hovered ? 54 : 50,
+      height: hovered ? 54 : 50,
       decoration: BoxDecoration(
         gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
           colors: [AppColors.secondary, AppColors.primary],
         ),
-        borderRadius: BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withValues(alpha: hovered ? 0.25 : 0.14),
+            blurRadius: hovered ? 14 : 8,
+            offset: const Offset(0, 5),
+          ),
+        ],
       ),
-      child: const Icon(Icons.play_lesson_rounded, color: Colors.white),
+      child: AnimatedRotation(
+        turns: hovered ? 0.015 : 0,
+        duration: const Duration(milliseconds: 220),
+        child: const Icon(
+          Icons.play_lesson_rounded,
+          color: Colors.white,
+          size: 24,
+        ),
+      ),
     );
   }
 }
@@ -149,7 +251,7 @@ class _CourseLevelBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: AppColors.accent,
         borderRadius: BorderRadius.circular(20),
@@ -160,6 +262,7 @@ class _CourseLevelBadge extends StatelessWidget {
           color: AppColors.primary,
           fontSize: 10,
           fontWeight: FontWeight.w800,
+          letterSpacing: 0.5,
         ),
       ),
     );
@@ -179,25 +282,73 @@ class _ProgressIndicator extends StatelessWidget {
     return Row(
       children: [
         Expanded(
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child: LinearProgressIndicator(
-              value: progress,
-              minHeight: 8,
-              backgroundColor: AppColors.muted,
-              color: AppColors.primary,
-            ),
+          child: TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0, end: progress),
+            duration: const Duration(milliseconds: 700),
+            curve: Curves.easeOutCubic,
+            builder: (context, value, child) {
+              return ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: LinearProgressIndicator(
+                  value: value,
+                  minHeight: 9,
+                  backgroundColor: AppColors.muted,
+                  color: AppColors.primary,
+                ),
+              );
+            },
           ),
         ),
         const SizedBox(width: 12),
-        Text(
-          '$percent%',
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: AppColors.primary,
-            fontWeight: FontWeight.w800,
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 250),
+          child: Text(
+            '$percent%',
+            key: ValueKey(percent),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: AppColors.primary,
+              fontWeight: FontWeight.w800,
+            ),
           ),
         ),
       ],
+    );
+  }
+}
+
+class _ContinueButton extends StatelessWidget {
+  const _ContinueButton({
+    required this.label,
+    required this.hovered,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool hovered;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      height: 46,
+      child: FilledButton.icon(
+        onPressed: onTap,
+        icon: AnimatedSlide(
+          offset: hovered ? const Offset(0.08, 0) : Offset.zero,
+          duration: const Duration(milliseconds: 180),
+          curve: Curves.easeOut,
+          child: const Icon(Icons.play_arrow_rounded, size: 20),
+        ),
+        label: Text(label, style: const TextStyle(fontWeight: FontWeight.w700)),
+        style: FilledButton.styleFrom(
+          elevation: hovered ? 3 : 0,
+          shadowColor: AppColors.primary.withValues(alpha: 0.25),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(13),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -235,11 +386,13 @@ class _ContinueLearningLoading extends StatelessWidget {
   }
 }
 
-class _NoContinueLearning extends StatelessWidget {
+class _NoContinueLearning extends ConsumerWidget {
   const _NoContinueLearning();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final locale = ref.watch(appLocaleProvider);
+    final strings = AppStrings(locale);
     final theme = Theme.of(context);
 
     return _ContinueLearningContainer(
@@ -253,14 +406,14 @@ class _NoContinueLearning extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'No lesson to continue',
+                  strings.noLessonToContinue,
                   style: theme.textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w800,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Complete or start a lesson to see it here.',
+                  strings.startOrCompleteLesson,
                   style: theme.textTheme.bodySmall?.copyWith(
                     color: AppColors.subtitleColor(context),
                   ),
@@ -291,13 +444,15 @@ class _EmptyLearningIcon extends StatelessWidget {
   }
 }
 
-class _ContinueLearningError extends StatelessWidget {
+class _ContinueLearningError extends ConsumerWidget {
   const _ContinueLearningError({required this.message});
 
   final String message;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final locale = ref.watch(appLocaleProvider);
+    final strings = AppStrings(locale);
     final theme = Theme.of(context);
 
     return _ContinueLearningContainer(
@@ -311,7 +466,7 @@ class _ContinueLearningError extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           Text(
-            'Unable to load Continue Learning',
+            strings.unableToLoadContinueLearning,
             style: theme.textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w800,
             ),
@@ -336,9 +491,23 @@ class _ContinueLearningContainer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      elevation: 0,
-      margin: EdgeInsets.zero,
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOutCubic,
+      decoration: BoxDecoration(
+        color: theme.cardColor,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: isDark ? 0.16 : 0.06),
+            blurRadius: 18,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
       child: Padding(padding: const EdgeInsets.all(20), child: child),
     );
   }

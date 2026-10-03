@@ -165,6 +165,104 @@ class AppStrings {
   }
 
   // =========================
+  // Continue Learning
+  // =========================
+  String get continueLearning {
+    if (isArabic) return 'كمّل التعلُّم';
+    if (isDutch) return 'Ga verder met leren';
+    return 'Continue Learning';
+  }
+
+  String lessonNumber(int current, int total) {
+    if (isArabic) return 'الدرس $current من $total';
+    if (isDutch) return 'Les $current van $total';
+    return 'Lesson $current of $total';
+  }
+
+  String get noLessonToContinue {
+    if (isArabic) return 'مفيش درس تكمّل منه';
+    if (isDutch) return 'Geen les om verder te gaan';
+    return 'No lesson to continue';
+  }
+
+  String get startOrCompleteLesson {
+    if (isArabic) return 'ابدأ أو كمّل درس عشان يظهر هنا.';
+    if (isDutch) return 'Start of voltooi een les om deze hier te zien.';
+    return 'Start or complete a lesson to see it here.';
+  }
+
+  String get unableToLoadContinueLearning {
+    if (isArabic) return 'مش قادرين نحمّل تقدم التعلُّم';
+    if (isDutch) return 'Je leerprogressie kan niet worden geladen';
+    return 'Unable to load your learning progress';
+  }
+
+  // =========================
+  // flashcards
+  // =========================
+  String get flashcards {
+    if (isArabic) return 'بطاقات المراجعة';
+    if (isDutch) return 'Flashcards';
+    return 'Flashcards';
+  }
+
+  String get yourWordsReadyForReview {
+    if (isArabic) return 'كلماتك جاهزة للمراجعة';
+    if (isDutch) return 'Je woorden zijn klaar om te herhalen';
+    return 'Your words are ready for review';
+  }
+
+  String wordsReadyForReview(int count) {
+    if (isArabic) return '$count كلمة جاهزة للمراجعة';
+    if (isDutch) return '$count woorden klaar om te herhalen';
+    return '$count words ready for review';
+  }
+
+  String get dueToday {
+    if (isArabic) return 'مستحقة اليوم';
+    if (isDutch) return 'Vandaag';
+    return 'Due today';
+  }
+
+  String get weakWords {
+    if (isArabic) return 'كلمات صعبة';
+    if (isDutch) return 'Moeilijke woorden';
+    return 'Weak words';
+  }
+
+  String get loadingYourWords {
+    if (isArabic) return 'جاري تحميل كلماتك...';
+    if (isDutch) return 'Je woorden worden geladen...';
+    return 'Loading your words...';
+  }
+
+  // =========================
+  // Vocabulary
+  // =========================
+  String get vocabulary {
+    if (isArabic) return 'المفردات';
+    if (isDutch) return 'Woordenschat';
+    return 'Vocabulary';
+  }
+
+  String get words {
+    if (isArabic) return 'كلمات';
+    if (isDutch) return 'WOORDEN';
+    return 'WORDS';
+  }
+
+  String get learnAndReviewDutchWords {
+    if (isArabic) return 'اتعلّم وراجع الكلمات الهولندية';
+    if (isDutch) return 'Leer en herhaal Nederlandse woorden';
+    return 'Learn and review Dutch words';
+  }
+
+  String get buildYourVocabulary {
+    if (isArabic) return 'طوّر حصيلتك اللغوية';
+    if (isDutch) return 'Bouw je woordenschat op';
+    return 'Build your vocabulary';
+  }
+  // =========================
   // Courses
   // =========================
 

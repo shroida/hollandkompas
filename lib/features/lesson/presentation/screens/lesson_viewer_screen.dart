@@ -13,7 +13,6 @@ import 'package:hollandkompas/features/lesson/domain/entities/lesson.dart';
 import 'package:hollandkompas/features/lesson/presentation/providers/controllers/lesson_viewer_controller.dart';
 import 'package:hollandkompas/features/lesson/presentation/providers/lesson_completion_provider.dart';
 import 'package:hollandkompas/features/lesson/presentation/providers/lesson_viewer_provider.dart';
-import 'package:hollandkompas/features/lesson/presentation/widgets/lessons%20viewers/continue_learning_card.dart';
 import 'package:hollandkompas/features/lesson/presentation/widgets/lessons%20viewers/free_lesson_card.dart';
 import 'package:hollandkompas/features/lesson/presentation/widgets/lessons%20viewers/lesson_description.dart';
 import 'package:hollandkompas/features/lesson/presentation/widgets/lessons%20viewers/lesson_header.dart';
@@ -679,8 +678,6 @@ class _LessonViewerScreenState extends ConsumerState<LessonViewerScreen>
 
     return Column(
       children: [
-        const ContinueLearningCard(),
-        const SizedBox(height: 16),
         LessonVocabularyButton(lesson: widget.lesson),
         const SizedBox(height: 16),
         _buildCompletionButton(state),
