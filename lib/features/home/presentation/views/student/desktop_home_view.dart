@@ -5,7 +5,6 @@ import 'package:hollandkompas/core/router/route_paths.dart';
 import 'package:hollandkompas/core/theme/app_colors.dart';
 import 'package:hollandkompas/features/courses/domain/entities/course.dart';
 import 'package:hollandkompas/features/courses/presentation/widgets/course_card.dart';
-import 'package:hollandkompas/features/courses/presentation/widgets/section_header.dart';
 import 'package:hollandkompas/features/flashcards/presentation/widgets/flashcards_home_card.dart';
 import 'package:hollandkompas/features/home/presentation/views/student/student_courses_view.dart';
 import 'package:hollandkompas/features/home/presentation/widgets/continue_learning_card.dart';
@@ -167,26 +166,6 @@ class _HomeIntro extends StatelessWidget {
                 ),
               ),
             ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _CoursesHeader extends StatelessWidget {
-  const _CoursesHeader({required this.onViewAll});
-
-  final VoidCallback onViewAll;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        const Expanded(
-          child: SectionHeader(
-            title: 'Your courses',
-            subtitle: 'Choose a course and continue learning Dutch.',
           ),
         ),
       ],
